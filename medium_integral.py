@@ -75,24 +75,19 @@ def moment_integral(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
             i_integrand = lambda x: (x ** (1 + (K / 2))) * ((3 * x + 2) / ((x + 1) ** 3))
             return quad(i_integrand, 0, np.inf)[0]
 
-    def i_int(t):
-        return i_integral(t)   # Get just integral value, not error est.
-
-    # Define integrand
+    # Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
     def integrand(t):
-        return i_int(t)*(u_perp(t) / (1 - u_par(t))) * (mu(t) ** (K + 2)) * rho(t) * sigma(t)
+        return (i_integral(t)[0])*(u_perp(t) / (1 - u_par(t))) * (mu(t) ** (K + 2)) * rho(t) * sigma(t)
 
     # Calculate moment point
     print('Evaluating moment integral...')
     raw_quad = sp.integrate.quad(integrand, t_naut, t_final)
-    # Tack I(k) integral on
+    # Tack constants on
     moment = (1 / JET_E)*raw_quad[0]
-    # Tack I(k) integral error on
-    moment_error = raw_quad[0] # * i_int_error + raw_quad[1]
+    # Error on moment
+    moment_error = raw_quad[1] # Not including I(k) error
 
-    print('Jet ' + str(id) + 'Complete')
-
-    return moment # NOT OUTPUTTING ERROR!!! THAT'S BAD!!!
+    return moment, moment_error
 
 
 # Error on the integral I is something to consider. Maxes out around 5 x 10^-8.

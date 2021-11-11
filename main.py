@@ -1,15 +1,6 @@
-# Import system packages
-import sys
-import csv
-
-# Import public packages
+import os
 import numpy as np
-import scipy as sp
 import pandas as pd
-import matplotlib.pyplot as plt
-
-# Import project modules
-sys.path.append(".")
 import grid_reader as gr
 import medium_integral as mi
 
@@ -21,7 +12,7 @@ vel_x_func_array = np.array([])
 vel_y_func_array = np.array([])
 
 # Temporary file array for testing
-folder_list = np.array(['viscous_14_moments_evo.dat'])
+folder_list = os.listdir(path='backgrounds/')
 
 # Iterate through list of backgrounds and interpolate each one
 # Append callable interpolating function to array of functions
@@ -66,6 +57,7 @@ results = pd.DataFrame(
             "Y0": [],
             "theta0": [],
             "pT_moment": [],
+            "pT_moment_error": [],
         }
     )
 
@@ -82,15 +74,15 @@ results.to_csv('results/results' + str(result_id) + '.csv', mode='a', index=Fals
 # Each sample has: event_num, X0, Y0, theta0
 # Adds each result to array of moments, with associated arrays of input parameters
 print("Calculating moments for " + str(N) + ' jets...')
-for id in range(N):
-    print("Calculating moment for jet " + str(id) + '...')
+for ID in range(N):
+    print("Calculating moment for jet " + str(ID) + '...')
     # Pick event
     event_num = np.random.randint(0, NUM_BACKGROUNDS)  # random integer on [0,numBackgrounds)
 
     # Generate random initial conditions
-    X0 = 0  #np.random.uniform(-1, 1)
-    Y0 = 0  #np.random.uniform(-1, 1)
-    theta0 = (2*np.pi/(N))*(id+1)  #np.random.uniform(0, 2 * np.pi)
+    X0 = 0  # np.random.uniform(-1, 1)
+    Y0 = 0  # np.random.uniform(-1, 1)
+    theta0 = (2*np.pi/(N))*(ID + 1)  # np.random.uniform(0, 2 * np.pi)
 
     # Calculate moment
     moment = mi.moment_integral(temp_func_array[event_num], vel_x_func_array[event_num],
@@ -99,19 +91,20 @@ for id in range(N):
     # Write data to a new dataframe
     currentResults = pd.DataFrame(
             {
-                "JET_ID": [id],
+                "JET_ID": [ID],
                 "event_num": [event_num],
                 "X0": [X0],
                 "Y0": [Y0],
                 "theta0": [theta0],
-                "pT_moment": [moment],
+                "pT_moment": [moment[0]],
+                "pT_moment_error": [moment[1]],
             }
         )
 
     # Append current result step to dataframe
     results = results.append(currentResults)
 
-    if (id != 0 and id % 100 == 0):
+    if (ID != 0 and ID % 100 == 0):
         # Write to csv
         print('Saving progress...')
         results.to_csv('results/results' + str(result_id) + '.csv', mode='a', index=False, header=False)
@@ -119,12 +112,15 @@ for id in range(N):
         # Recreate empty results dataframe
         column_names = [x for x in results.columns]
         results = pd.DataFrame(columns=column_names)
-    elif id == N - 1:
+    elif ID == N - 1:
         # Write to csv
         print('Saving results...')
         results.to_csv('results/results' + str(result_id) + '.csv', mode='a', index=False, header=False)
     else:
         pass
+
+    print('Jet ' + str(ID) + ' Complete')
+
 
 # Remind user of ID and quit
 print("Results saved with ID number: " + str(result_id))

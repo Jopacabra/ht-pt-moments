@@ -10,12 +10,16 @@ def moment_integral(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
     JET_E = 10 ** 9  # Jet energy in GeV
     V0 = 1
 
+    # Determine final time for integral
+    t_naut = np.amin(temp_raw.grid[0])
+    t_final = np.amax(temp_raw.grid[0])
+
     # Parameterize path in terms of t from initial conditions
     def x_pos(t):
-        return X0 + (V0 * np.cos(THETA0) * t)
+        return X0 + (V0 * np.cos(THETA0) * (t-t_naut))
 
     def y_pos(t):
-        return Y0 + (V0 * np.cos(THETA0) * t)
+        return Y0 + (V0 * np.cos(THETA0) * (t-t_naut))
 
     # Set up perp and parallel velocity components
     def u_perp(t):
@@ -40,6 +44,8 @@ def moment_integral(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
     def pos_cut(t):
         if x_pos(t) > np.amax(temp_raw.grid[1]) or y_pos(t) > np.amax(temp_raw.grid[2]):
             return False
+        elif x_pos(t) < np.amin(temp_raw.grid[1]) or y_pos(t) < np.amin(temp_raw.grid[2]):
+            return False
         else:
             return True
 
@@ -49,9 +55,7 @@ def moment_integral(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
         else:
             return True
 
-    # Determine final time for integral
-    t_naut = np.amin(temp_raw.grid[0])
-    t_final = np.amax(temp_raw.grid[0])
+
 
     # Define Debye mass and density
     def rho(t):
@@ -77,7 +81,10 @@ def moment_integral(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
 
     # Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
     def integrand(t):
-        return (i_integral(t)[0])*(u_perp(t) / (1 - u_par(t))) * (mu(t) ** (K + 2)) * rho(t) * sigma(t)
+        if pos_cut(t) and time_cut(t) and temp_cut(t):
+            return (i_integral(t)[0])*(u_perp(t) / (1 - u_par(t))) * (mu(t) ** (K + 2)) * rho(t) * sigma(t)
+        else:
+            return 0
 
     # Calculate moment point
     print('Evaluating moment integral...')

@@ -24,17 +24,14 @@ for file in folder_list:
     grid_data, grid_width, NT = gr.load_grid_file(file)
 
     # Interpolate temperatures
-    print('Interpolating temp grid data ... event ' + str(i))
     temp_func = gr.interpolate_temp_grid(grid_data, grid_width, NT)
     temp_func_array = np.append(temp_func_array, temp_func)
 
     # Interpolate x velocities
-    print('Interpolating x vel. grid data ... event ' + str(i))
     vel_x_func = gr.interpolate_x_vel_grid(grid_data, grid_width, NT)
     vel_x_func_array = np.append(vel_x_func_array, vel_x_func)
 
     # Interpolate y velocities
-    print('Interpolating y vel. grid data ... event ' + str(i))
     vel_y_func = gr.interpolate_y_vel_grid(grid_data, grid_width, NT)
     vel_y_func_array = np.append(vel_y_func_array, vel_x_func)
 

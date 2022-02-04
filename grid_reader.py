@@ -6,10 +6,14 @@ from scipy.interpolate import RegularGridInterpolator
 
 def load_grid_file(grid_file_name):
     # Load grid data from file
+    print('Loading grid data from file ...')
     grid_data = pd.read_fwf('backgrounds/' + grid_file_name, header=None,
                             names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
     # Set grid parameters
-    grid_width = 165  # Will be data-dependent in the future.
+    # Grid is always square. Number of lines of the same time is
+    # the number of grid squares == grid_width**2.
+    print('Calculating grid parameters ...')
+    grid_width = int(np.sqrt(grid_data['time'].value_counts().to_numpy()[-1]))  # Will be data-source-dependent in the future.
     n_grid_spaces = grid_width ** 2  # n_grid_spaces is total number of grid spaces / bins. Assumes square grid.
     # Number of time steps is grid_data's time column divided by number of grid spaces.
     NT = int(len(grid_data['time']) / n_grid_spaces)
@@ -20,7 +24,7 @@ def load_grid_file(grid_file_name):
 # Function to interpolate a grid file
 # Returns interpolating callable function
 def interpolate_temp_grid(grid_data, grid_width, NT):
-
+    print('Interpolating temp grid data ...')
 
     # Cut temp data out and convert to numpy array #
     temp_data_cut = grid_data[['temp']]
@@ -51,6 +55,7 @@ def interpolate_temp_grid(grid_data, grid_width, NT):
 # Function to interpolate the x velocities from a grid file
 # Returns interpolating callable function
 def interpolate_x_vel_grid(grid_data, grid_width, NT):
+    print('Interpolating x vel. grid data ...')
     # Cut x velocity data out and convert to numpy array #
     vel_x_data = pd.DataFrame(grid_data['xvel']).to_numpy()
 
@@ -76,6 +81,7 @@ def interpolate_x_vel_grid(grid_data, grid_width, NT):
 # Function to interpolate the x velocities from a grid file
 # Returns interpolating callable function
 def interpolate_y_vel_grid(grid_data, grid_width, NT):
+    print('Interpolating y vel. grid data ...')
     # Cut y vel data out and convert to numpy array #
     vel_y_data = pd.DataFrame(grid_data['yvel']).to_numpy()
 
@@ -118,4 +124,136 @@ def temp_plot(temp_func, time, resolution):
     temp_points = temp_func(points)
 
     plt.contour(x_space, x_space, temp_points)
+    return plt.show()
+
+# Function to plot interpolated temperature function
+def temp_plot_contour(temp_func, time, resolution):
+    # Domains of physical positions to plot at (in fm)
+    # These limits of the linear space obtain the largest and smallest input value for
+    # the interpolating function's position inputs.
+    x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), resolution)
+
+    # Create arrays of each coordinate
+    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+    # We necessarily must set time equal to a constant to plot in 2D.
+    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
+    # t_coords set to be an array matching the length of x_coords full of constant time
+    t_coords = np.full_like(x_coords, time)
+
+    # Put coordinates together into an ordered pair.
+    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
+
+    temp_points = temp_func(points)
+    
+    plt.contour(x_space, x_space, temp_points, cmap='plasma')
+    plt.colorbar()
+    return plt.show()
+
+# Function to plot interpolated temperature function
+def temp_plot_density(temp_func, time, resolution):
+    # Domains of physical positions to plot at (in fm)
+    # These limits of the linear space obtain the largest and smallest input value for
+    # the interpolating function's position inputs.
+    x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), resolution)
+
+    # Create arrays of each coordinate
+    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+    # We necessarily must set time equal to a constant to plot in 2D.
+    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
+    # t_coords set to be an array matching the length of x_coords full of constant time
+    t_coords = np.full_like(x_coords, time)
+
+    # Put coordinates together into an ordered pair.
+    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
+
+    temp_points = temp_func(points)
+    
+    plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto')
+    plt.colorbar()
+    return plt.show()
+
+# Function to plot interpolated velocity function
+def vel_plot(vel_x_func, vel_y_func, time, resolution):
+    # Domains of physical positions to plot at (in fm)
+    # These limits of the linear space obtain the largest and smallest input value for
+    # the interpolating function's position inputs.
+    x_space = np.linspace(np.amin(vel_x_func.grid[1]), np.amax(vel_x_func.grid[1]), resolution)
+
+    # Create arrays of each coordinate
+    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+    # We necessarily must set time equal to a constant to plot in 2D.
+    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
+    # t_coords set to be an array matching the length of x_coords full of constant time
+    t_coords = np.full_like(x_coords, time)
+
+    # Put coordinates together into an ordered pair.
+    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
+
+    x_vels = vel_x_func(points)
+    y_vels = vel_y_func(points)
+
+    plt.quiver(x_space, x_space, x_vels, y_vels)
+    return plt.show()
+
+# Function to plot interpolated temperature function and / or velocity field
+# Can plot contour or density / colormesh for temps, stream or quiver for velocities
+# Takes the callable interpolated temperature function, x velocity function, and y velocity function. 
+# Other options can adjust the output.
+# Returns the plt.show() command to get the plot out.
+def qgp_plot(temp_func, vel_x_func, vel_y_func, time, resolution=100, velresolution=20,
+             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True):
+    
+    if plot_temp == True:
+        # Domains of physical positions to plot at (in fm)
+        # These limits of the linear space obtain the largest and smallest input value for
+        # the interpolating function's position inputs.
+        x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), resolution)
+
+        # Create arrays of each coordinate
+        # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+        # We necessarily must set time equal to a constant to plot in 2D.
+        x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
+        # t_coords set to be an array matching the length of x_coords full of constant time
+        t_coords = np.full_like(x_coords, time)
+
+        # Put coordinates together into an ordered pair.
+        points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
+
+        # Calculate temperatures
+        temp_points = temp_func(points)
+    
+    if plot_vel == True:
+        # Domains of physical positions to plot at (in fm)
+        # These limits of the linear space obtain the largest and smallest input value for
+        # the interpolating function's position inputs.
+        vel_x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), velresolution)
+        
+        # Create arrays of each coordinate
+        # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+        # We necessarily must set time equal to a constant to plot in 2D.
+        vel_x_coords, vel_y_coords = np.meshgrid(vel_x_space, vel_x_space, indexing='ij')
+        
+        # t_coords set to be an array matching the length of x_coords full of constant time
+        vel_t_coords = np.full_like(vel_x_coords, time)
+        
+        # t_coords set to be an array matching the length of x_coords full of constant time
+        vel_points = np.transpose(np.array([vel_t_coords, vel_x_coords, vel_y_coords]), (1, 2, 0))
+
+        # Calculate velocities
+        x_vels = vel_x_func(vel_points)
+        y_vels = vel_y_func(vel_points)
+
+    # Make plots    
+    if temptype == 'density' and plot_temp == True:
+        temps = plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto')
+    if temptype == 'contour' and plot_temp == True:
+        temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma')
+    if veltype == 'stream' and plot_vel == True:
+        vels = plt.streamplot(vel_x_space, vel_x_space, x_vels, y_vels, color=np.sqrt(x_vels**2 + y_vels**2), linewidth=1, cmap='rainbow')
+        plt.colorbar(vels.lines)
+    if veltype == 'quiver' and plot_vel == True:
+        vels = plt.quiver(vel_x_space, vel_x_space, x_vels, y_vels, np.sqrt(x_vels**2 + y_vels**2), linewidth=1, cmap='rainbow')
+        plt.colorbar(vels)
+    plt.colorbar(temps)
+    
     return plt.show()

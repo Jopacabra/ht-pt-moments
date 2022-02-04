@@ -7,7 +7,7 @@ from scipy.interpolate import RegularGridInterpolator
 def load_grid_file(grid_file_name):
     # Load grid data from file
     print('Loading grid data from file ...')
-    grid_data = pd.read_fwf('backgrounds/' + grid_file_name, header=None,
+    grid_data = pd.read_table('backgrounds/' + grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
                             names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
     # Set grid parameters
     # Grid is always square. Number of lines of the same time is

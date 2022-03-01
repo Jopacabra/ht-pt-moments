@@ -171,7 +171,7 @@ def temp_6th_sample(temp_func, maxAttempts=5, time='i', batch=1000):
                 # print(point)
                 # print("Random height: " + str(zPoints[i]))
                 # print("Target <= height: " + str(float(targetTemp)))
-                return point[0:1]
+                return point[0:2]
         print("Jet Production Sampling Attempt: " + str(attempt) + " failed.")
         attempt += 1
     print("Catastrophic error in jet production point sampling!")

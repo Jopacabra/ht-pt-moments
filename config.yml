@@ -2,7 +2,7 @@ mode: # Operation mode flags
     RANDOM_EVENT: True # Determines if we select a random event or iterate through each
     RANDOM_ANGLE: True # Determines if we select a random angle or do a complete sweep
     VARY_POINT: True # Determines if we vary the prod point or set it to (0,0)
-    WEIGHT_POINT: True # Determines if we weight point selection by T^6 in event - Needs VARYPOINT. - NON-FUNCTIONAL
+    WEIGHT_POINT: True # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
 jet_parameters: # Parameters for the jets to be run
     NUM_JETS: 10 # Number of jets to produce
     JET_ENERGY: 1000000000 # Jet energy - NON-FUNCTIONAL

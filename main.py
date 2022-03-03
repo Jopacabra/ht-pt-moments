@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import grid_reader as gr
+import hard_scattering as hs
 import medium_interaction as mi
 import yaml
 
@@ -17,7 +18,7 @@ RANDOM_EVENT = bool(cfg['mode']['RANDOM_EVENT'])  # Determines if we select a ra
 RANDOM_ANGLE = bool(cfg['mode']['RANDOM_ANGLE'])  # Determines if we select a random angle or do a complete sweep
 VARY_POINT = bool(cfg['mode']['VARY_POINT'])  # Determines if we vary the prod point or set it to (0,0)
 WEIGHT_POINT = bool(cfg['mode'][
-                        'WEIGHT_POINT'])  # NON-FUNCTIONAL - Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
+                        'WEIGHT_POINT'])  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
 
 # Set jet parameters
 N = int(cfg['jet_parameters']['NUM_JETS'])  # Number of jets to produce
@@ -194,9 +195,8 @@ elif RANDOM_EVENT == True:
             X0 = np.random.uniform(-TARGETRADIUS, TARGETRADIUS)
             Y0 = np.random.uniform(-TARGETRADIUS, TARGETRADIUS)
         elif VARY_POINT == True and WEIGHT_POINT == True:
-            # BROKEN!!!
-            X0 = np.random.uniform(-TARGETRADIUS, TARGETRADIUS)
-            Y0 = np.random.uniform(-TARGETRADIUS, TARGETRADIUS)
+            newPoint = hs.generate_jet_point(temp_func_array[event_num])
+            X0, Y0 = newPoint[0], newPoint[1]
         elif VARY_POINT == False:
             X0 = 0
             Y0 = 0

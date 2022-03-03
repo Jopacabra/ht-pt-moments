@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import grid_reader as gr
-import medium_integral as mi
+import medium_interaction as mi
 import yaml
 
 # Read config file and parse settings
@@ -22,7 +22,7 @@ WEIGHT_POINT = bool(cfg['mode'][
 # Set jet parameters
 N = int(cfg['jet_parameters']['NUM_JETS'])  # Number of jets to produce
 JET_ENERGY = int(
-    cfg['jet_parameters']['JET_ENERGY'])  # Jet energy - NON-FUNCTIONAL - Currently set in medium_integral.py
+    cfg['jet_parameters']['JET_ENERGY'])  # Jet energy - NON-FUNCTIONAL - Currently set in medium_interaction.py
 
 # Set moment parameters
 K = int(cfg['moment_parameters']['MOMENT_K'])  # Which k-moment to calculate
@@ -60,6 +60,8 @@ folder_list = os.listdir(path='backgrounds/')
 # Append callable interpolating function to array of functions
 i = 0
 for file in folder_list:
+    if file == 'README.md':
+        continue
     # read the grid file
     print('Reading grid data ... event ' + str(i))
     grid_data, grid_width, NT = gr.load_grid_file(file)

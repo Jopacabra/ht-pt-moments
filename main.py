@@ -23,7 +23,7 @@ WEIGHT_POINT = bool(cfg['mode'][
 # Set jet parameters
 N = int(cfg['jet_parameters']['NUM_JETS'])  # Number of jets to produce
 JET_ENERGY = int(
-    cfg['jet_parameters']['JET_ENERGY'])  # Jet energy - NON-FUNCTIONAL - Currently set in medium_interaction.py
+    cfg['jet_parameters']['JET_ENERGY'])  # Jet energy - Needs Testing
 
 # Set moment parameters
 K = int(cfg['moment_parameters']['MOMENT_K'])  # Which k-moment to calculate
@@ -86,10 +86,10 @@ NUM_BACKGROUNDS = len(temp_func_array)
 print("Number of Backgrounds: " + str(NUM_BACKGROUNDS))
 
 
-def CalcMoments(event_num, X0, Y0, theta0):
+def CalcMoments(event_num, X0, Y0, theta0, JET_E=10):
     # Calculate moment
     moment = mi.moment_integral(temp_func_array[event_num], vel_x_func_array[event_num],
-                                vel_y_func_array[event_num], X0, Y0, theta0, K)
+                                vel_y_func_array[event_num], X0, Y0, theta0, K, JET_E=JET_E)
     return moment
 
 
@@ -215,7 +215,7 @@ elif RANDOM_EVENT == True:
             theta0 = 0
 
         # Calculate moment
-        moment = CalcMoments(event_num, X0, Y0, theta0)
+        moment = CalcMoments(event_num, X0, Y0, theta0, JET_E=JET_ENERGY)
 
         # Write data to a new dataframe
         currentResults = WriteDataLine(ID, event_num, X0, Y0, theta0, moment[0], moment[1])

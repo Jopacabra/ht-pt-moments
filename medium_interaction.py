@@ -2,6 +2,8 @@ import numpy as np
 import scipy as sp
 from scipy.integrate import quad
 
+# FUTURE THREADING!!!!!!!
+G = 2
 
 # Function to find initial time of a given interpolated grid
 def t_naut(temp_func):
@@ -66,8 +68,20 @@ def temp(temp_func, t, X0, Y0, THETA0, V0=1):
     return temp_func(np.array([t, x_pos(t, X0, THETA0, V0=V0, t_naut=t_naut(temp_func)), y_pos(t, Y0, THETA0, V0=V0, t_naut=t_naut(temp_func))]))
 
 
+# Define Debye mass and density
+def rho(temp_func, t, X0, Y0, THETA0, V0=1):
+    return 1.202056903159594 * 16 * (1 / (np.pi ** 2)) \
+           * temp(temp_func, t, X0, Y0, THETA0,
+                  V0=V0) ** 3  # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
+
+def mu(temp_func, t, X0, Y0, THETA0, V0=1):
+    return G * temp(temp_func, t, X0, Y0, THETA0, V0=V0)
+
+def sigma(temp_func, t, X0, Y0, THETA0, V0=1):
+    return np.pi * G ** 4 / (mu(temp_func, t, X0, Y0, THETA0, V0=V0) ** 2)
+
 # Function to calculate moment given initial conditions & interpolating functions
-def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10 ** 9, V0=1, tempCutoff=0):
+def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10, V0=1, tempCutoff=0):
     # Determine final time for integral
 
     # Set time at which plasma integral will begin to return 0.
@@ -145,7 +159,7 @@ def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10 
 def moment_integral_legacy(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
     # Set integration constants and such
     G = 2
-    JET_E = 10 ** 9  # Jet energy in GeV
+    JET_E = 10  # Jet energy in GeV
     V0 = 1
 
     # Determine final time for integral

@@ -148,9 +148,10 @@ def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10,
     print('Evaluating moment integral...')
     raw_quad = sp.integrate.quad(integrand(temp_func, X0, Y0, THETA0, V0=V0, K=K), t_naut(temp_func), t_final(temp_func))
     # Tack constants on
-    moment = (1 / JET_E) * raw_quad[0]
+    FERMItoGeV = (1 / 0.19732687)
+    moment = FERMItoGeV * (1 / JET_E) * raw_quad[0] # The FERMItoGeV factor of ~5 converts unit factor of fm from line integration over fm to GeV
     # Error on moment
-    moment_error = (1 / JET_E) * raw_quad[1]  # Not including I(k) error
+    moment_error = FERMItoGeV * (1 / JET_E) * raw_quad[1]  # Not including I(k) error
 
     return moment, moment_error
 

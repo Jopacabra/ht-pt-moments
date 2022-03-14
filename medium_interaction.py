@@ -84,10 +84,37 @@ def sigma(temp_func, t, X0, Y0, THETA0, V0=1):
 def i_int_factor(temp_func, t, X0, Y0, THETA0, V0=1, JET_E=10):
     return 3 * np.log(JET_E / mu(temp_func, t, X0, Y0, THETA0, V0=V0))
 
+# Functions that set the bounds of interaction with a grid
+# Set time at which plasma integral will begin to return 0.
+def time_cut(temp_func, t):
+    # NOTE: This is really valuable... Gets max time of interpolated function
+    if t > t_final(temp_func):
+        return False
+    else:
+        return True
+
+# Set position at which plasma integral will begin to return 0.
+def pos_cut(temp_func, t, X0, Y0, THETA0, V0=1):
+    if x_pos(t, X0, THETA0, V0=V0, t_naut=t_naut(temp_func)) > grid_x_max(temp_func) or y_pos(t, Y0, THETA0, V0=V0, t_naut=t_naut(temp_func)) > grid_y_max(temp_func):
+        return False
+    elif x_pos(t, X0, THETA0, V0=V0, t_naut=t_naut(temp_func)) < grid_y_min(temp_func) or y_pos(t, Y0, THETA0, V0=V0, t_naut=t_naut(temp_func)) < grid_y_min(temp_func):
+        return False
+    else:
+        return True
+
+# Set temperature at which plasma integral will begin to return 0.
+def temp_cut(temp_func, t, X0, Y0, THETA0, V0=1, tempCutoff=0):
+    if temp(temp_func, t, X0, Y0, THETA0, V0=V0) < tempCutoff:
+        return False
+    else:
+        return True
+
+
 # Function to calculate moment given initial conditions & interpolating functions
 def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10, V0=1, tempCutoff=0):
     # Determine final time for integral
 
+    """
     # Set time at which plasma integral will begin to return 0.
     def time_cut(temp_func, t):
         # NOTE: This is really valuable... Gets max time of interpolated function
@@ -112,7 +139,7 @@ def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10,
         else:
             return True
 
-    """
+
     # Define Debye mass and density
     def rho(temp_func, t, X0, Y0, THETA0, V0=1):
         return 1.202056903159594 * 16 * (1 / (np.pi ** 2)) \
@@ -148,7 +175,7 @@ def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10,
                           * sigma(temp_func, t, X0, Y0, THETA0, V0=V0)) if pos_cut(temp_func, t, X0, Y0, THETA0,
                                                                                    V0=V0) and time_cut(temp_func,
                                                                                                        t) and temp_cut(
-            temp_func, t, X0, Y0, THETA0, V0=V0) else 0
+            temp_func, t, X0, Y0, THETA0, V0=V0, tempCutoff=tempCutoff) else 0
 
     # Calculate moment point
     print('Evaluating moment integral...')

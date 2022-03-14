@@ -30,7 +30,7 @@ def grid_y_max(temp_func):
     return np.amax(temp_func.grid[2])
 
 
-# Function to find minimum x bound of grid
+# Function to find minimum y bound of grid
 def grid_y_min(temp_func):
     return np.amin(temp_func.grid[2])
 
@@ -43,6 +43,7 @@ def x_pos(t, X0, THETA0, V0=1, t_naut=0.5):
 
 # Parameterization of path in terms of time t from initial conditions
 # Returns y-coordinate of a jet for given parameters
+# Recall fix - this is sine function
 def y_pos(t, Y0, THETA0, V0=1, t_naut=0.5):
     return Y0 + (V0 * np.sin(THETA0) * (t - t_naut))
 

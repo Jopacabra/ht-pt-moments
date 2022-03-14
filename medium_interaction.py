@@ -44,7 +44,7 @@ def x_pos(t, X0, THETA0, V0=1, t_naut=0.5):
 # Parameterization of path in terms of time t from initial conditions
 # Returns y-coordinate of a jet for given parameters
 def y_pos(t, Y0, THETA0, V0=1, t_naut=0.5):
-    return Y0 + (V0 * np.cos(THETA0) * (t - t_naut))
+    return Y0 + (V0 * np.sin(THETA0) * (t - t_naut))
 
 
 # Returns component of medium velocity perpendicular to the jet axis
@@ -78,7 +78,10 @@ def mu(temp_func, t, X0, Y0, THETA0, V0=1):
     return G * temp(temp_func, t, X0, Y0, THETA0, V0=V0)
 
 def sigma(temp_func, t, X0, Y0, THETA0, V0=1):
-    return np.pi * G ** 4 / (mu(temp_func, t, X0, Y0, THETA0, V0=V0) ** 2)
+    return np.pi * G ** 4 / (mu(temp_func, t, X0, Y0, THETA0, V0=V0) ** 2) # Total GW cross section, as per Sievert, Yoon, et. al.
+
+def i_int_factor(temp_func, t, X0, Y0, THETA0, V0=1, JET_E=10):
+    return 3 * np.log(JET_E / mu(temp_func, t, X0, Y0, THETA0, V0=V0))
 
 # Function to calculate moment given initial conditions & interpolating functions
 def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10, V0=1, tempCutoff=0):
@@ -108,6 +111,7 @@ def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10,
         else:
             return True
 
+    """
     # Define Debye mass and density
     def rho(temp_func, t, X0, Y0, THETA0, V0=1):
         return 1.202056903159594 * 16 * (1 / (np.pi ** 2)) \
@@ -119,6 +123,7 @@ def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10,
 
     def sigma(temp_func, t, X0, Y0, THETA0, V0=1):
         return np.pi * G ** 4 / (mu(temp_func, t, X0, Y0, THETA0, V0=V0) ** 2)
+    """
 
     # Set up I(k) business
     def i_integral(temp_func, t, X0, Y0, THETA0, V0=1):
@@ -155,7 +160,7 @@ def moment_integral(temp_func, x_vel, y_vel, X0, Y0, THETA0, K=0, G=2, JET_E=10,
 
     return moment, moment_error
 
-
+"""
 # Function to calculate moment given initial conditions & interpolating functions
 def moment_integral_legacy(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
     # Set integration constants and such
@@ -246,7 +251,7 @@ def moment_integral_legacy(temp_raw, x_vel, y_vel, X0, Y0, THETA0, K):
     moment_error = raw_quad[1]  # Not including I(k) error
 
     return moment, moment_error
-
+"""
 
 # Error on the integral I is something to consider. Maxes out around 5 x 10^-8.
 

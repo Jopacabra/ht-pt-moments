@@ -1,9 +1,9 @@
 import os
 import numpy as np
 import pandas as pd
-import grid_reader as gr
+import plasma_grid_reader as gr
 import hard_scattering as hs
-import medium_interaction as mi
+import plasma_interaction as mi
 import yaml
 
 # Read config file and parse settings

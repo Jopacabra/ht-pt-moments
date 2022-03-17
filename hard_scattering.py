@@ -1,5 +1,5 @@
 import numpy as np
-import grid_reader as gr
+import plasma_grid_reader as gr
 import matplotlib.pyplot as plt
 
 """

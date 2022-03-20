@@ -169,8 +169,8 @@ time_slider = Slider(
 ##########################
 
 # Create the jet-medium plots that will dynamically update
-fig1, axs = plt.subplots(3,4)
-fig1.tight_layout() # Set plots not to overlap
+fig1, axs = plt.subplots(3, 4, constrained_layout=True) # Constrained layout does some magic to organize the plots
+
 
 # Set time as range from initial to final interaction times
 t_final = pi.t_final(temp_func)

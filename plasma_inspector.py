@@ -39,6 +39,10 @@ tempMin = 0
 t_naut = pi.t_naut(temp_func)
 t_final = pi.t_final(temp_func)
 
+# Set moment to zero
+moment = 0
+angleDeflection = 0
+
 """
 Define functions to calculate properties of the medium.
 """
@@ -172,6 +176,17 @@ time_slider = Slider(
     valmin=t_naut,
     valmax=t_final,
     valinit=init_time,
+)
+
+# Make a vertically oriented slider to control the jet energy
+axEn = plt.axes([0.95, 0.25, 0.0225, 0.63])
+En_slider = Slider(
+    ax=axEn,
+    label="Energy [GeV]",
+    valmin=1,
+    valmax=1000,
+    valinit=100,
+    orientation="vertical"
 )
 
 """
@@ -350,6 +365,29 @@ def update(val):
     # Refresh the canvas
     redraw(0)
 
+# Set up update moment function
+
+def update_with_moment(val):
+    global moment
+    global angleDeflection
+    global temp_func
+    global vel_x_func
+    global vel_y_func
+
+    moment = pi.moment_integral(temp_func, vel_x_func,
+                                vel_y_func, X0_slider.val, Y0_slider.val, THETA0_slider.val, 0,
+                                JET_E=En_slider.val)  # conversion factor fm from integration to GeV
+
+    angleDeflection = np.arctan((moment[0] / En_slider.val)) * (180 / np.pi)
+
+    print("Jet produced at (" + str(X0_slider.val) + ", " + str(Y0_slider.val) + ") running at angle " + str(THETA0_slider.val) + ".")
+    print("k=0 moment: " + str(moment[0]) + " GeV")
+    print('Angular Deflection: ' + str(angleDeflection) + " deg.")
+
+
+    update(val)
+
+
 """
 Set up button and slider functions on change / click
 """
@@ -361,11 +399,13 @@ updateButton.on_clicked(redraw)
 velTypeButton.on_clicked(swap_velType)
 
 # register the update function with each slider
-time_slider.on_changed(update)
-X0_slider.on_changed(update)
-Y0_slider.on_changed(update)
-THETA0_slider.on_changed(update)
+time_slider.on_changed(update_with_moment)
+X0_slider.on_changed(update_with_moment)
+Y0_slider.on_changed(update_with_moment)
+THETA0_slider.on_changed(update_with_moment)
+En_slider.on_changed(update_with_moment)
 velTypeButton.on_clicked(update)
+
 
 
 """
@@ -374,195 +414,7 @@ Generate data and plot figures
 
 # Draw all of the plots for the current (initial) slider positions
 velType = 'stream'  # set default velocity plot type
-update(0)
+update_with_moment(0)
 
 # Show the figures and wait for updates
 plt.show()
-
-"""
-# Set time as range from initial to final interaction times
-t_final = pi.t_final(temp_func)
-timeRange = np.arange(t_naut, t_final, 0.1)
-t = np.array([])
-for time in timeRange:
-    if pi.time_cut(temp_func, time) and pi.pos_cut(temp_func, time, init_X0, init_Y0, init_THETA0, V0=1) and pi.temp_cut(temp_func,
-                                                                                                          time, init_X0, init_Y0,
-                                                                                                          init_THETA0, V0=1,
-                                                                                                          tempCutoff=0):
-        t = np.append(t, time)
-    else:
-        break
-
-# Initialize empty arrays for the plot data
-uPerpArray = np.array([])
-uParArray = np.array([])
-tempArray = np.array([])
-velArray = np.array([])
-overLambdaArray = np.array([])
-iIntArray = np.array([])
-XArray = np.array([])
-YArray = np.array([])
-
-# Calculate plot data
-for time in t:
-    uPerp = pi.u_perp(temp_func, vel_x_func, vel_y_func, time, init_X0, init_Y0, init_THETA0)
-    uPar = pi.u_par(temp_func, vel_x_func, vel_y_func, time, init_X0, init_Y0, init_THETA0)
-    temp = pi.temp(temp_func, time, init_X0, init_Y0, init_THETA0)
-    vel = pi.vel_mag(temp_func, vel_x_func, vel_y_func, time, init_X0, init_Y0, init_THETA0)
-    overLambda = pi.rho(temp_func, time, init_X0, init_Y0, init_THETA0) * pi.sigma(temp_func, time, init_X0, init_Y0, init_THETA0)
-    iInt = pi.i_int_factor(temp_func, time, init_X0, init_Y0, init_THETA0, V0=1, JET_E=10)
-    xPOS = pi.x_pos(time, init_X0, init_THETA0, V0=1, t_naut=0.5)
-    yPOS = pi.y_pos(time, init_Y0, init_THETA0, V0=1, t_naut=0.5)
-
-    uPerpArray = np.append(uPerpArray, uPerp)
-    uParArray = np.append(uParArray, uPar)
-    tempArray = np.append(tempArray, temp)
-    velArray = np.append(velArray, vel)
-
-    overLambdaArray = np.append(overLambdaArray, overLambda)
-
-    iIntArray = np.append(iIntArray, iInt)
-
-    XArray = np.append(XArray, xPOS)
-    YArray = np.append(YArray, yPOS)
-
-
-axs[0, 0].plot(t, uPerpArray)
-axs[0, 0].set_title("U_perp")
-axs[0, 1].plot(t, uParArray)
-axs[0, 1].set_title("U_par")
-axs[1, 0].plot(t, tempArray)
-axs[1, 0].set_title("Temp (GeV)")
-axs[1, 1].plot(t, velArray)
-axs[1, 1].set_title("Vel. Mag.")
-axs[2, 0].plot(t, (uPerpArray / (1 - uParArray)))
-axs[2, 0].set_title("perp / (1-par) (No Units)")
-axs[2, 1].plot(t, 1 / (5 * overLambdaArray))
-axs[2, 1].set_title("Lambda (fm)")
-axs[1, 2].plot(t, 1 / (overLambdaArray))
-axs[1, 2].set_title("Lambda (GeV^-1)")
-axs[2, 2].plot(t, 4 * tempArray ** 2)
-axs[2, 2].set_title("(gT)^2 ((GeV^2))")
-axs[0, 2].plot(t, iIntArray)
-axs[0, 2].set_title("I(k) Factor")
-axs[0, 3].plot(t, XArray)
-axs[0, 3].set_title("X Pos")
-axs[1, 3].plot(t, YArray)
-axs[1, 3].set_title("Y Pos")
-
-# Plot jet trajectory
-jetInitialX = pi.x_pos(t[0], init_X0, init_THETA0, V0=1, t_naut=t[0])
-jetInitialY = pi.y_pos(t[0], init_Y0, init_THETA0, V0=1, t_naut=t[0])
-jetFinalX = pi.x_pos(t[-1], init_X0, init_THETA0, V0=1, t_naut=t[0])
-jetFinalY = pi.y_pos(t[-1], init_Y0, init_THETA0, V0=1, t_naut=t[0])
-
-ax.plot([jetInitialX, jetFinalX], [jetInitialY, jetFinalY], ls=(0,(0.01,2)), color='w')
-
-"""
-
-"""
-# Function to update medium properties
-def update_medium(val):
-    # Clear the plots (without this, things will just stack)
-    axs[0, 0].clear()
-    axs[0, 0].clear()
-    axs[0, 1].clear()
-    axs[0, 1].clear()
-    axs[1, 0].clear()
-    axs[1, 0].clear()
-    axs[1, 1].clear()
-    axs[1, 1].clear()
-    axs[2, 0].clear()
-    axs[2, 0].clear()
-    axs[2, 1].clear()
-    axs[2, 1].clear()
-    axs[1, 2].clear()
-    axs[1, 2].clear()
-    axs[2, 2].clear()
-    axs[2, 2].clear()
-    axs[0, 2].clear()
-    axs[0, 2].clear()
-    axs[0, 3].clear()
-    axs[0, 3].clear()
-    axs[1, 3].clear()
-    axs[1, 3].clear()
-
-    timeRange = np.arange(t_naut, t_final, 0.1)
-    t = np.array([])
-    for time in timeRange:
-        if pi.time_cut(temp_func, time) and pi.pos_cut(temp_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val,
-                                                       V0=1) and pi.temp_cut(temp_func,
-                                                                             time, X0_slider.val, Y0_slider.val, THETA0_slider.val, V0=1,
-                                                                             tempCutoff=0):
-            t = np.append(t, time)
-        else:
-            break
-
-    # Initialize empty arrays for the plot data
-    uPerpArray = np.array([])
-    uParArray = np.array([])
-    tempArray = np.array([])
-    velArray = np.array([])
-    overLambdaArray = np.array([])
-    iIntArray = np.array([])
-    XArray = np.array([])
-    YArray = np.array([])
-
-    # Calculate plot data
-    for time in t:
-        uPerp = pi.u_perp(temp_func, vel_x_func, vel_y_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val)
-        uPar = pi.u_par(temp_func, vel_x_func, vel_y_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val)
-        temp = pi.temp(temp_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val)
-        vel = pi.vel_mag(temp_func, vel_x_func, vel_y_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val)
-        overLambda = pi.rho(temp_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val) * pi.sigma(temp_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val)
-        iInt = pi.i_int_factor(temp_func, time, X0_slider.val, Y0_slider.val, THETA0_slider.val, V0=1, JET_E=10)
-        xPOS = pi.x_pos(time, X0_slider.val, THETA0_slider.val, V0=1, t_naut=0.5)
-        yPOS = pi.y_pos(time, Y0_slider.val, THETA0_slider.val, V0=1, t_naut=0.5)
-
-        uPerpArray = np.append(uPerpArray, uPerp)
-        uParArray = np.append(uParArray, uPar)
-        tempArray = np.append(tempArray, temp)
-        velArray = np.append(velArray, vel)
-
-        overLambdaArray = np.append(overLambdaArray, overLambda)
-
-        iIntArray = np.append(iIntArray, iInt)
-
-        XArray = np.append(XArray, xPOS)
-        YArray = np.append(YArray, yPOS)
-
-    axs[0, 0].plot(t, uPerpArray)
-    axs[0, 0].set_title("U_perp")
-    axs[0, 1].plot(t, uParArray)
-    axs[0, 1].set_title("U_par")
-    axs[1, 0].plot(t, tempArray)
-    axs[1, 0].set_title("Temp (GeV)")
-    axs[1, 1].plot(t, velArray)
-    axs[1, 1].set_title("Vel. Mag.")
-    axs[2, 0].plot(t, (uPerpArray / (1 - uParArray)))
-    axs[2, 0].set_title("perp / (1-par) (No Units)")
-    axs[2, 1].plot(t, 1 / (5 * overLambdaArray))
-    axs[2, 1].set_title("Lambda (fm)")
-    axs[1, 2].plot(t, 1 / (overLambdaArray))
-    axs[1, 2].set_title("Lambda (GeV^-1)")
-    axs[2, 2].plot(t, 4 * tempArray ** 2)
-    axs[2, 2].set_title("(gT)^2 ((GeV^2))")
-    axs[0, 2].plot(t, iIntArray)
-    axs[0, 2].set_title("I(k) Factor")
-    axs[0, 3].plot(t, XArray)
-    axs[0, 3].set_title("X Pos")
-    axs[1, 3].plot(t, YArray)
-    axs[1, 3].set_title("Y Pos")
-
-    # Plot jet trajectory
-    jetInitialX = pi.x_pos(t[0], init_X0, init_THETA0, V0=1, t_naut=t[0])
-    jetInitialY = pi.y_pos(t[0], init_Y0, init_THETA0, V0=1, t_naut=t[0])
-    jetFinalX = pi.x_pos(t[-1], init_X0, init_THETA0, V0=1, t_naut=t[0])
-    jetFinalY = pi.y_pos(t[-1], init_Y0, init_THETA0, V0=1, t_naut=t[0])
-
-    ax.plot([jetInitialX, jetFinalX], [jetInitialY, jetFinalY], ls=(0, (0.01, 2)), color='w')
-
-    # Refresh the canvas
-    redraw(0)
-"""
-

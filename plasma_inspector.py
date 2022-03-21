@@ -14,7 +14,7 @@ from tkinter.filedialog import askopenfilename
 
 Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
 gridFilePath = askopenfilename(initialdir='/share/apps/Hybrid-Transport/hic-eventgen/results/')  # show an "Open" dialog box and return the path to the selected file
-print(gridFilePath)
+print('Selected file: ' + str(gridFilePath))
 
 """
 Select and load plasma grid file
@@ -103,14 +103,14 @@ Generate plot objects
 ############
 
 # Create the QGP Plot that will dynamically update
-fig, ax = plt.subplots(constrained_layout=True)
+fig, ax = plt.subplots()
 
 # Set plot labels
 ax.set_xlabel('X Position [fm]')
 ax.set_ylabel('Y Position [fm]')
 
 # adjust the main QGP plot to make room for the sliders
-#plt.subplots_adjust(left=0.25, bottom=0.25)
+plt.subplots_adjust(left=0.1, bottom=0.1, top=0.9)
 
 ##########################
 # Medium properties plot #
@@ -134,7 +134,7 @@ init_THETA0 = 0
 init_time = t_naut
 
 # Make a horizontal slider to control the jet initial x position
-axX0 = plt.axes([0.25, 0.1, 0.65, 0.03])
+axX0 = plt.axes([0.25, 0.04, 0.65, 0.03])
 X0_slider = Slider(
     ax=axX0,
     label='X0 [fm]',
@@ -144,7 +144,7 @@ X0_slider = Slider(
 )
 
 # Make a vertically oriented slider to control the jet initial Y position
-axY0 = plt.axes([0.1, 0.25, 0.0225, 0.63])
+axY0 = plt.axes([0.05, 0.25, 0.0225, 0.63])
 Y0_slider = Slider(
     ax=axY0,
     label="Y0 [fm]",
@@ -155,7 +155,7 @@ Y0_slider = Slider(
 )
 
 # Make a horizontal slider to control the initial jet angle.
-axTHETA0 = plt.axes([0.25, 0.9, 0.65, 0.03])
+axTHETA0 = plt.axes([0.25, 0.97, 0.65, 0.03])
 THETA0_slider = Slider(
     ax=axTHETA0,
     label='THETA0 [rad]',
@@ -165,7 +165,7 @@ THETA0_slider = Slider(
 )
 
 # Make a horizontal slider to control the time.
-axTime = plt.axes([0.25, 0.05, 0.65, 0.03])
+axTime = plt.axes([0.25, 0, 0.65, 0.03])
 time_slider = Slider(
     ax=axTime,
     label='Time [fm]',
@@ -182,19 +182,19 @@ Create button objects
 plt.figure(fig.number)
 
 # Create a `matplotlib.widgets.Button` to reset the sliders to initial values.
-resetax = plt.axes([0.8, 0.025, 0.1, 0.04])
+resetax = plt.axes([0, 0.06, 0.1, 0.02])
 resetButton = Button(resetax, 'Reset', hovercolor='0.975')
 
 # Create a `matplotlib.widgets.Button` to randomly sample a jet position
-sampleAx = plt.axes([0.9, 0.025, 0.1, 0.04])
+sampleAx = plt.axes([0, 0.04, 0.1, 0.02])
 sampleButton = Button(sampleAx, 'Sample Jet', hovercolor='0.975')
 
 # Create a `matplotlib.widgets.Button` to update everything by force.
-updateax = plt.axes([0.7, 0.025, 0.1, 0.04])
+updateax = plt.axes([0, 0.02, 0.1, 0.02])
 updateButton = Button(updateax, 'Update', hovercolor='0.975')
 
 # Create a `matplotlib.widgets.Button` to swap velocity plot type
-axVelType = plt.axes([0.01, 0.01, 0.2, 0.03])
+axVelType = plt.axes([0, 0, 0.1, 0.02])
 velTypeButton = Button(
     axVelType,
     'Vel Type',
@@ -249,14 +249,17 @@ def update(val):
     newVels = qgp_vels(vel_x_func, vel_y_func, time_slider.val, velresolution=20)
 
     # Plot new temperatures & velocities
-    ax.contourf(newTemps[0], newTemps[1], newTemps[2], cmap='plasma', vmin=tempMin, vmax=tempMax)
+    tempPlot = ax.contourf(newTemps[0], newTemps[1], newTemps[2], cmap='plasma', vmin=tempMin, vmax=tempMax)
+    fig.colorbar(tempPlot, ax=ax)
 
     if velType == 'quiver':
-        ax.quiver(newVels[0], newVels[1], newVels[2], newVels[3], np.sqrt(newVels[2] ** 2 + newVels[3] ** 2),
+        velPlot = ax.quiver(newVels[0], newVels[1], newVels[2], newVels[3], np.sqrt(newVels[2] ** 2 + newVels[3] ** 2),
                             linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
+        plt.colorbar(velPlot, ax=ax)
     elif velType == 'stream':
-        ax.streamplot(newVels[0], newVels[1], newVels[2], newVels[3], color=np.sqrt(newVels[2] ** 2 + newVels[3] ** 2),
+        velPlot = ax.streamplot(newVels[0], newVels[1], newVels[2], newVels[3], color=np.sqrt(newVels[2] ** 2 + newVels[3] ** 2),
               linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
+        plt.colorbar(velPlot.lines, ax=ax)
 
     # Plot new jet position
     ax.plot(pi.x_pos(time_slider.val, X0_slider.val, THETA0_slider.val, t_naut=t_naut), pi.y_pos(time_slider.val, Y0_slider.val, THETA0_slider.val, t_naut=t_naut), 'ro')

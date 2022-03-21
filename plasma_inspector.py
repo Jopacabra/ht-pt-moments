@@ -250,16 +250,16 @@ def update(val):
 
     # Plot new temperatures & velocities
     tempPlot = ax.contourf(newTemps[0], newTemps[1], newTemps[2], cmap='plasma', vmin=tempMin, vmax=tempMax)
-    fig.colorbar(tempPlot, ax=ax)
+    # plt.colorbar(tempPlot, ax=ax)  # Currently stacking...
 
     if velType == 'quiver':
         velPlot = ax.quiver(newVels[0], newVels[1], newVels[2], newVels[3], np.sqrt(newVels[2] ** 2 + newVels[3] ** 2),
                             linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
-        plt.colorbar(velPlot, ax=ax)
+        # plt.colorbar(velPlot, ax=ax)  # Currently stacking...
     elif velType == 'stream':
         velPlot = ax.streamplot(newVels[0], newVels[1], newVels[2], newVels[3], color=np.sqrt(newVels[2] ** 2 + newVels[3] ** 2),
               linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
-        plt.colorbar(velPlot.lines, ax=ax)
+        # plt.colorbar(velPlot.lines, ax=ax)  # Currently stacking...
 
     # Plot new jet position
     ax.plot(pi.x_pos(time_slider.val, X0_slider.val, THETA0_slider.val, t_naut=t_naut), pi.y_pos(time_slider.val, Y0_slider.val, THETA0_slider.val, t_naut=t_naut), 'ro')

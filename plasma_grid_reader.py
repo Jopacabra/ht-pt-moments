@@ -5,11 +5,16 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
 
 # Function to load a hydro grid as output by OSU-Hydro
-def load_grid_file(grid_file_name):
+def load_grid_file(grid_file_name, absolute=False):
     # Load grid data from file
     print('Loading grid data from file ...')
-    grid_data = pd.read_table('backgrounds/' + grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
+    if absolute == False:
+        grid_data = pd.read_table('backgrounds/' + grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
                               names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
+    elif absolute == True:
+        grid_data = pd.read_table(grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
+                                  names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
+
     # Set grid parameters
     # Grid is always square. Number of lines of the same time is
     # the number of grid squares == grid_width**2.

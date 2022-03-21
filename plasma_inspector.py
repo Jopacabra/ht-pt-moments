@@ -216,6 +216,14 @@ velTypeButton = Button(
     hovercolor='0.975'
 )
 
+# Create a `matplotlib.widgets.Button` to swap velocity plot type
+axMoment = plt.axes([0, 0.08, 0.1, 0.02])
+momentButton = Button(
+    axMoment,
+    'Moment',
+    hovercolor='0.975'
+)
+
 """
 Functions for buttons and such
 """
@@ -367,7 +375,7 @@ def update(val):
 
 # Set up update moment function
 
-def update_with_moment(val):
+def calc_moment(val):
     global moment
     global angleDeflection
     global temp_func
@@ -385,9 +393,6 @@ def update_with_moment(val):
     print('Angular Deflection: ' + str(angleDeflection) + " deg.")
 
 
-    update(val)
-
-
 """
 Set up button and slider functions on change / click
 """
@@ -397,14 +402,14 @@ resetButton.on_clicked(reset)
 sampleButton.on_clicked(sample_jet)
 updateButton.on_clicked(redraw)
 velTypeButton.on_clicked(swap_velType)
+momentButton.on_clicked(calc_moment)
 
 # register the update function with each slider
-time_slider.on_changed(update_with_moment)
-X0_slider.on_changed(update_with_moment)
-Y0_slider.on_changed(update_with_moment)
-THETA0_slider.on_changed(update_with_moment)
-En_slider.on_changed(update_with_moment)
-velTypeButton.on_clicked(update)
+time_slider.on_changed(update)
+X0_slider.on_changed(update)
+Y0_slider.on_changed(update)
+THETA0_slider.on_changed(update)
+En_slider.on_changed(update)
 
 
 
@@ -414,7 +419,7 @@ Generate data and plot figures
 
 # Draw all of the plots for the current (initial) slider positions
 velType = 'stream'  # set default velocity plot type
-update_with_moment(0)
+update(0)
 
 # Show the figures and wait for updates
 plt.show()

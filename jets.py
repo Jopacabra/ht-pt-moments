@@ -3,9 +3,12 @@ import hard_scattering as hs
 
 
 # Jet object class. Useful for plotting and simplifying everything.
+# Note jet energy (energy) in GeV
+# Note jet velocity (v0) in fraction of speed of light
+# Note jet angle (theta0) in radians
 class jet:
     # Instantiation statement. All parameters optional.
-    def __init__(self, x0=None, y0=None, theta0=0, v0=1, t0=None, event=None):
+    def __init__(self, x0=None, y0=None, theta0=0, v0=1, t0=None, event=None, energy=100):
         # Set default values
         default_t0 = 0.5  # Set default initial time for jet parametrization
         point = [0, 0]  # Set default jet production point
@@ -13,6 +16,7 @@ class jet:
         # Initialize basic parameters
         self.theta0 = theta0
         self.v0 = v0
+        self.energy = energy
 
         # If an event was provided for jet instantiation and either initial position was not defined,
         # try to sample the event for jet production. If this fails, set it to the default.
@@ -46,7 +50,7 @@ class jet:
                 self.t0 = default_t0
                 print("Event object has no t0 and / or tf. Read failed. Jet t0 set to default, no tf.")
 
-    # Method to obtain the current coordinates of the jet
+    # Method to obtain the current 2D coordinates of the jet
     def coords(self, time=None):
         if time is None:
             xpos = self.x0
@@ -54,7 +58,13 @@ class jet:
         else:
             xpos = self.x0 + (self.v0 * np.cos(self.theta0) * (time - self.t0))
             ypos = self.y0 + (self.v0 * np.sin(self.theta0) * (time - self.t0))
-        return [xpos, ypos]
+        return np.array([xpos, ypos])
+
+    # Method to obtain the current (2+1) coordinates of the jet
+    def coords3(self, time=None):
+        xpos = self.x0 + (self.v0 * np.cos(self.theta0) * (time - self.t0))
+        ypos = self.y0 + (self.v0 * np.sin(self.theta0) * (time - self.t0))
+        return np.array([time, xpos, ypos])
 
     # Method to obtain the current coordinates of the jet
     def xpos(self, time=None):

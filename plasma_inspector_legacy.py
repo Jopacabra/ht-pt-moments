@@ -3,8 +3,8 @@ import os
 import matplotlib.colors as colors
 import numpy as np
 import pandas as pd
-import plasma_grid_reader as pgr
-import plasma_interaction as pi
+import plasma as pgr
+import plasma_interaction_legacy as pi
 import hard_scattering as hs
 # import ipympl
 import matplotlib.pyplot as plt

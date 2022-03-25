@@ -3,6 +3,8 @@ import pandas as pd
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
+from scipy.integrate import quad
+from config import G  # Coupling constant for strong interaction
 
 class plasma_event:
     def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, g=None):
@@ -31,6 +33,98 @@ class plasma_event:
             return 2*np.pi + arctan2  # Here we add the negative angle, reducing to corresponding value on [0, 2pi]
         else:
             return arctan2
+
+    # Method to return velocity perpendicular to given jet's trajectory at given time
+    def u_perp(self, jet, time):
+        return -self.x_vel(jet.coords3(time=time)) * np.sin(jet.theta0) \
+               + self.y_vel(np.array(jet.coords3(time=time))) * np.cos(jet.theta0)
+
+    # Method to return velocity parallel to given jet's trajectory at given time
+    def u_par(self, jet, time):
+        return self.x_vel(jet.coords3(time=time)) * np.cos(jet.theta0) \
+               + self.y_vel(np.array(jet.coords3(time=time))) * np.sin(jet.theta0)
+
+    # Method to return density at a particular point
+    # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
+    def rho(self, point=None, jet=None, time=None):
+        # In point mode, give the density at the given point
+        if jet is None and not point is None:
+            current_point = point
+        # In jet mode, return the density at the jet's position at given time
+        elif not jet is None and point is None:
+            current_point = jet.coords3(time=time)
+        else:
+            current_point = point
+            print("Ill-defined density call")
+
+        density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * self.temp(current_point) ** 3
+
+        return density
+
+    # Method to return DeBye mass at a particular point
+    # Chosen to be simple approximation. Ref - ???
+    def mu(self, point=None, jet=None, time=None):
+        # In point mode, give the DeBye mass at the given point
+        if jet is None and not point is None:
+            current_point = point
+        # In jet mode, return the DeBye mass at the jet's position at given time
+        elif not jet is None and point is None:
+            current_point = jet.coords3(time=time)
+        else:
+            current_point = point
+            print("Ill-defined DeBye mass call")
+
+        debye_mass = G * self.temp(current_point)
+
+        return debye_mass
+
+    # Method to return total cross section at a particular point
+    # Total GW cross section, as per Sievert, Yoon, et. al.
+    def sigma(self, point=None, jet=None, time=None):
+        """
+        In the future, we can put in an if statement that determines if we're in a plasma state or hadron gas state.
+        We can then return the appropriate cross section. This would require that this plasma object one day becomes
+        simply an event object. This might make the object too heavy weight, but it would give us some very interesting
+        powers.
+        """
+        # In point mode, give the cross section at the given point
+        if jet is None and not point is None:
+            current_point = point
+        # In jet mode, return the cross section at the jet's position at given time
+        elif not jet is None and point is None:
+            current_point = jet.coords3(time=time)
+        else:
+            current_point = point
+            print("Ill-defined cross section call")
+
+        cross_section = np.pi * G ** 4 / (self.mu(point=current_point) ** 2)
+
+        return cross_section
+
+    def i_int_factor(self, point=None, jet=None, time=None, k=0, jetE=100):
+        # In point mode, give the I(k) at the given point
+        if jet is None and not point is None:
+            current_point = point
+            jetEnergy = jetE
+        # In jet mode, return the I(k) at the jet's position at given time
+        elif not jet is None and point is None:
+            current_point = jet.coords3(time=time)
+            jetEnergy = jet.energy
+        else:
+            jetEnergy = jet.energy
+            current_point = point
+            print("Ill-defined I(k) call")
+
+        if k == 0:
+            Ik = 3 * np.log(jetEnergy / self.mu(point=current_point))  # No idea what the error should be here
+        else:  # Not really a thing.
+            print('I(k) for k =/= 0 is not functional. Using k=0 form.')
+            Ik = 3 * np.log(jetEnergy / self.mu(point=current_point))  # No idea what the error should be here
+
+        return Ik
+
+
+
 
 
 

@@ -4,6 +4,37 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
 
+class plasma_event:
+    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, g=None):
+        # Initialize all the ordinary grid parameters
+        self.temp = temp_func
+        self.x_vel = x_vel_func
+        self.y_vel = y_vel_func
+        self.t0 = np.amin(self.temp.grid[0])
+        self.tf = np.amax(self.temp.grid[0])
+        self.xmin = np.amin(temp_func.grid[1])
+        self.xmax = np.amax(temp_func.grid[1])
+        self.ymin = np.amin(temp_func.grid[2])
+        self.ymax = np.amax(temp_func.grid[2])
+
+    # Method to return the total magnitude of the velocity at a given point
+    def vel(self, point):
+        return np.sqrt(self.x_vel(point)**2 + self.y_vel(point)**2)
+
+    # Method to return angle of velocity vector at a given point
+    def vel_angle(self, point):
+        # np.arctan2 gives a signed angle, as opposed to np.arctan
+        arctan2 = np.arctan2(self.y_vel(point), self.x_vel(point))
+
+        # if the angle was negative, we need to correct it to return an angle on the domain [0, 2pi]
+        if arctan2 < 0:
+            return 2*np.pi + arctan2  # Here we add the negative angle, reducing to corresponding value on [0, 2pi]
+        else:
+            return arctan2
+
+
+
+
 # Function to load a hydro grid as output by OSU-Hydro
 def load_grid_file(grid_file_name, absolute=False):
     # Load grid data from file
@@ -11,7 +42,7 @@ def load_grid_file(grid_file_name, absolute=False):
     if absolute == False:
         grid_data = pd.read_table('backgrounds/' + grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
                               names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
-    elif absolute == True:
+    else:
         grid_data = pd.read_table(grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
                                   names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
 

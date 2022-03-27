@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
-from scipy.integrate import quad
 from config import G  # Coupling constant for strong interaction
 
 
@@ -63,6 +62,14 @@ class osu_hydro_file:
         # Domain of space values
         self.xspace = np.linspace(np.amin(self.xlist), np.amax(self.xlist), self.grid_width)
 
+        # Determine minimum and maximum grid values
+        self.gridMin = np.amin(self.xspace)
+        self.gridMax = np.amax(self.xspace)
+
+        # Determine initial and final times
+        self.t0 = np.amin(self.tspace)
+        self.tf = np.amax(self.tspace)
+
     # Method to get raw temp data
     def temp_array(self):
         # Cut temp data out and convert to numpy array
@@ -107,8 +114,7 @@ class osu_hydro_file:
         temp_data_cut = self.grid_data[['temp']]
         temp_data = pd.DataFrame(temp_data_cut).to_numpy()
 
-        plt.contourf(temp_data[time, :, :])
-        plt.show
+        return plt.contourf(temp_data[time, :, :])
 
     # Method to return interpolated function object from data
     # Function to interpolate a grid file
@@ -153,11 +159,39 @@ class osu_hydro_file:
 
         return interp_y_vel
 
+    # Method to find the maximum temperature of a hydro file object
+    def max_temp(self, time='i'):
+        if time == 'i':
+            time = self.t0
+        elif time == 'f':
+            time = self.tf
+        else:
+            pass
+
+        # Calculate temperatures and take maximum.
+        maxTemp = np.amax(self.temp_array()[time, :, :])
+
+        return maxTemp
+
+    # Method to find the minimum temperature of a hydro file object
+    def min_temp(self, time='i'):
+        if time == 'i':
+            time = self.t0
+        elif time == 'f':
+            time = self.tf
+        else:
+            pass
+
+        # Calculate temperatures and take maximum.
+        minTemp = np.amin(self.temp_array()[time, :, :])
+
+        return minTemp
+
 
 
 # Plasma object as used for integration and muckery
 class plasma_event:
-    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, g=None):
+    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, g=None, name=None):
         # Initialize all the ordinary plasma parameters
         self.temp = temp_func
         self.x_vel = x_vel_func
@@ -169,14 +203,36 @@ class plasma_event:
         self.ymin = np.amin(temp_func.grid[2])
         self.ymax = np.amax(temp_func.grid[2])
 
+    # Method to get array on space domain of event with given resolution
+    def xspace(self, resolution=100):
+        return np.arange(start=self.xmin, stop=self.xmax, step=((self.xmax-self.xmin)/resolution))
+
+    # Method to get array on time domain of event with given resolution
+    def tspace(self, resolution=100):
+        return np.arange(start=self.t0, stop=self.tf, step=((self.tf-self.t0)/resolution))
+
+    # For multi-modal property calls. Determines what point to evaluate at.
+    def decide(self, point, jet, time):
+        if point is None:
+            current_point = jet.coords3(time)
+        elif jet is None and time is None:
+            current_point = point
+        else:
+            current_point = [0, 0, 0]
+
+        return current_point
+
     # Method to return the total magnitude of the velocity at a given point
-    def vel(self, point):
-        return np.sqrt(self.x_vel(point)**2 + self.y_vel(point)**2)
+    def vel(self, point=None, jet=None, time=None):
+        current_point = self.decide(point, jet, time)
+        return np.sqrt(self.x_vel(current_point)**2 + self.y_vel(current_point)**2)
 
     # Method to return angle of velocity vector at a given point
-    def vel_angle(self, point):
+    def vel_angle(self, point=None, jet=None, time=None):
+        current_point = self.decide(point, jet, time)
+
         # np.arctan2 gives a signed angle, as opposed to np.arctan
-        arctan2 = np.arctan2(self.y_vel(point), self.x_vel(point))
+        arctan2 = np.arctan2(self.y_vel(current_point), self.x_vel(current_point))
 
         # if the angle was negative, we need to correct it to return an angle on the domain [0, 2pi]
         if arctan2 < 0:
@@ -197,15 +253,7 @@ class plasma_event:
     # Method to return density at a particular point
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
     def rho(self, point=None, jet=None, time=None):
-        # In point mode, give the density at the given point
-        if jet is None and not point is None:
-            current_point = point
-        # In jet mode, return the density at the jet's position at given time
-        elif not jet is None and point is None:
-            current_point = jet.coords3(time=time)
-        else:
-            current_point = point
-            print("Ill-defined density call")
+        current_point = self.decide(point, jet, time)
 
         density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * self.temp(current_point) ** 3
 
@@ -214,15 +262,7 @@ class plasma_event:
     # Method to return DeBye mass at a particular point
     # Chosen to be simple approximation. Ref - ???
     def mu(self, point=None, jet=None, time=None):
-        # In point mode, give the DeBye mass at the given point
-        if jet is None and not point is None:
-            current_point = point
-        # In jet mode, return the DeBye mass at the jet's position at given time
-        elif not jet is None and point is None:
-            current_point = jet.coords3(time=time)
-        else:
-            current_point = point
-            print("Ill-defined DeBye mass call")
+        current_point = self.decide(point, jet, time)
 
         debye_mass = G * self.temp(current_point)
 
@@ -237,15 +277,7 @@ class plasma_event:
         simply an event object. This might make the object too heavy weight, but it would give us some very interesting
         powers.
         """
-        # In point mode, give the cross section at the given point
-        if jet is None and not point is None:
-            current_point = point
-        # In jet mode, return the cross section at the jet's position at given time
-        elif not jet is None and point is None:
-            current_point = jet.coords3(time=time)
-        else:
-            current_point = point
-            print("Ill-defined cross section call")
+        current_point = self.decide(point, jet, time)
 
         cross_section = np.pi * G ** 4 / (self.mu(point=current_point) ** 2)
 
@@ -273,241 +305,152 @@ class plasma_event:
 
         return Ik
 
+    # Method to find the maximum temperature of a plasma object
+    def max_temp(self, resolution=100, time='i'):
+        if time == 'i':
+            time = self.t0
+        elif time == 'f':
+            time = self.tf
+        else:
+            pass
 
-# Function to plot interpolated temperature function
-def temp_plot(temp_func, time, resolution):
-    # Domains of physical positions to plot at (in fm)
-    # These limits of the linear space obtain the largest and smallest input value for
-    # the interpolating function's position inputs.
-    x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), resolution)
-
-    # Create arrays of each coordinate
-    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
-    # We necessarily must set time equal to a constant to plot in 2D.
-    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
-    # t_coords set to be an array matching the length of x_coords full of constant time
-    t_coords = np.full_like(x_coords, time)
-
-    # Put coordinates together into an ordered pair.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
-
-    temp_points = temp_func(points)
-
-    plt.contour(x_space, x_space, temp_points)
-    return plt.show()
-
-
-# Function to plot interpolated temperature function
-def temp_plot_contour(temp_func, time, resolution):
-    # Domains of physical positions to plot at (in fm)
-    # These limits of the linear space obtain the largest and smallest input value for
-    # the interpolating function's position inputs.
-    x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), resolution)
-
-    # Create arrays of each coordinate
-    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
-    # We necessarily must set time equal to a constant to plot in 2D.
-    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
-    # t_coords set to be an array matching the length of x_coords full of constant time
-    t_coords = np.full_like(x_coords, time)
-
-    # Put coordinates together into an ordered pair.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
-
-    temp_points = temp_func(points)
-
-    plt.contour(x_space, x_space, temp_points, cmap='plasma')
-    plt.colorbar()
-    return plt.show()
-
-
-# Function to plot interpolated temperature function
-def temp_plot_density(temp_func, time, resolution):
-    # Domains of physical positions to plot at (in fm)
-    # These limits of the linear space obtain the largest and smallest input value for
-    # the interpolating function's position inputs.
-    x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), resolution)
-
-    # Create arrays of each coordinate
-    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
-    # We necessarily must set time equal to a constant to plot in 2D.
-    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
-    # t_coords set to be an array matching the length of x_coords full of constant time
-    t_coords = np.full_like(x_coords, time)
-
-    # Put coordinates together into an ordered pair.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
-
-    temp_points = temp_func(points)
-
-    plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto')
-    plt.colorbar()
-    return plt.show()
-
-
-# Function to plot interpolated velocity function
-def vel_plot(vel_x_func, vel_y_func, time, resolution):
-    # Domains of physical positions to plot at (in fm)
-    # These limits of the linear space obtain the largest and smallest input value for
-    # the interpolating function's position inputs.
-    x_space = np.linspace(np.amin(vel_x_func.grid[1]), np.amax(vel_x_func.grid[1]), resolution)
-
-    # Create arrays of each coordinate
-    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
-    # We necessarily must set time equal to a constant to plot in 2D.
-    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
-    # t_coords set to be an array matching the length of x_coords full of constant time
-    t_coords = np.full_like(x_coords, time)
-
-    # Put coordinates together into an ordered pair.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
-
-    x_vels = vel_x_func(points)
-    y_vels = vel_y_func(points)
-
-    plt.quiver(x_space, x_space, x_vels, y_vels)
-    return plt.show()
-
-
-# Function to find the maximum temperature of a particular grid at the initial time or a particular time.
-def max_temp(temp_func, resolution=100, time='i'):
-    # Find max temp
-    # Get initial timestep temperature grid with given resolution
-    gridMin = np.amin(temp_func.grid[1])
-    gridMax = np.amax(temp_func.grid[1])
-
-    if time == 'i':
-        time = np.amin(temp_func.grid[0])
-    elif time == 'f':
-        time = np.amax(temp_func.grid[0])
-    else:
-        pass
-
-    # Adapted from grid_reader.qgp_plot()
-    #
-    # Domains of physical positions to plot at (in fm)
-    # These limits of the linear space obtain the largest and smallest input value for
-    # the interpolating function's position inputs.
-    x_space = np.linspace(gridMin, gridMax, resolution)
-
-    # Create arrays of each coordinate
-    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
-    # We necessarily must set time equal to a constant to plot in 2D.
-    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
-    # t_coords set to be an array matching the length of x_coords full of constant time
-    # Note that we select "initial time" as 0.5 fs by default
-    t_coords = np.full_like(x_coords, time)
-
-    # Put coordinates together into ordered pairs.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
-
-    # Calculate temperatures and take maximum.
-    maxTemp = np.amax(temp_func(points))
-
-    return maxTemp
-
-# Function to find the minimum temperature of a particular grid at the initial time or a particular time.
-def min_temp(temp_func, resolution=100, time='i'):
-    # Get initial timestep temperature grid with given resolution
-    gridMin = np.amin(temp_func.grid[1])
-    gridMax = np.amax(temp_func.grid[1])
-
-    if time == 'i':
-        time = np.amin(temp_func.grid[0])
-    elif time == 'f':
-        time = np.amax(temp_func.grid[0])
-    else:
-        pass
-
-    # Adapted from grid_reader.qgp_plot()
-    #
-    # Domains of physical positions to plot at (in fm)
-    # These limits of the linear space obtain the largest and smallest input value for
-    # the interpolating function's position inputs.
-    x_space = np.linspace(gridMin, gridMax, resolution)
-
-    # Create arrays of each coordinate
-    # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
-    # We necessarily must set time equal to a constant to plot in 2D.
-    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
-    # t_coords set to be an array matching the length of x_coords full of constant time
-    # Note that we select "initial time" as 0.5 fs by default
-    t_coords = np.full_like(x_coords, time)
-
-    # Put coordinates together into ordered pairs.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
-
-    # Calculate temperatures and take maximum.
-    minTemp = np.amin(temp_func(points))
-
-    return minTemp
-
-# Function to plot interpolated temperature function and / or velocity field
-# Can plot contour or density / colormesh for temps, stream or quiver for velocities
-# Takes the callable interpolated temperature function, x velocity function, and y velocity function. 
-# Other options can adjust the output.
-# Returns the plt.show() command to get the plot out.
-def qgp_plot(temp_func, vel_x_func, vel_y_func, time, resolution=100, velresolution=20,
-             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True):
-    tempMax = max_temp(temp_func)
-
-    if plot_temp == True:
+        # Adapted from grid_reader.qgp_plot()
+        #
         # Domains of physical positions to plot at (in fm)
         # These limits of the linear space obtain the largest and smallest input value for
         # the interpolating function's position inputs.
-        x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), resolution)
+        x_sample_space = self.xspace(resolution=resolution)
 
         # Create arrays of each coordinate
         # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
         # We necessarily must set time equal to a constant to plot in 2D.
-        x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
+        x_coords, y_coords = np.meshgrid(x_sample_space, x_sample_space, indexing='ij')
         # t_coords set to be an array matching the length of x_coords full of constant time
+        # Note that we select "initial time" as 0.5 fs by default
         t_coords = np.full_like(x_coords, time)
 
-        # Put coordinates together into an ordered pair.
-        points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
+        # Put coordinates together into ordered pairs.
+        points = np.transpose(np.array([t_coords, x_coords, y_coords]), (2, 1, 0))
 
-        # Calculate temperatures
-        temp_points = temp_func(points)
+        # Calculate temperatures and take maximum.
+        maxTemp = np.amax(self.temp(points))
 
-    if plot_vel == True:
+        return maxTemp
+
+    # Method to find the maximum temperature of a plasma object
+    def min_temp(self, resolution=100, time='i'):
+        if time == 'i':
+            time = self.t0
+        elif time == 'f':
+            time = self.tf
+        else:
+            pass
+
+        # Adapted from grid_reader.qgp_plot()
+        #
         # Domains of physical positions to plot at (in fm)
         # These limits of the linear space obtain the largest and smallest input value for
         # the interpolating function's position inputs.
-        vel_x_space = np.linspace(np.amin(temp_func.grid[1]), np.amax(temp_func.grid[1]), velresolution)
+        x_sample_space = np.linspace(self.xmin, self.xmax, resolution)
 
         # Create arrays of each coordinate
         # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
         # We necessarily must set time equal to a constant to plot in 2D.
-        vel_x_coords, vel_y_coords = np.meshgrid(vel_x_space, vel_x_space, indexing='ij')
-
+        x_coords, y_coords = np.meshgrid(x_sample_space, x_sample_space, indexing='ij')
         # t_coords set to be an array matching the length of x_coords full of constant time
-        vel_t_coords = np.full_like(vel_x_coords, time)
+        # Note that we select "initial time" as 0.5 fs by default
+        t_coords = np.full_like(x_coords, time)
 
-        # t_coords set to be an array matching the length of x_coords full of constant time
-        vel_points = np.transpose(np.array([vel_t_coords, vel_x_coords, vel_y_coords]), (1, 2, 0))
+        # Put coordinates together into ordered pairs.
+        points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
 
-        # Calculate velocities
-        x_vels = vel_x_func(vel_points)
-        y_vels = vel_y_func(vel_points)
+        # Calculate temperatures and take maximum.
+        minTemp = np.amin(self.temp(points))
 
-    # Make plots    
-    if temptype == 'density' and plot_temp == True:
-        temps = plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto', vmin=0, vmax=tempMax)
-        plt.colorbar(temps)
-    if temptype == 'contour' and plot_temp == True:
-        temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma', vmin=0, vmax=tempMax)
-        plt.colorbar(temps)
-    if veltype == 'stream' and plot_vel == True:
-        vels = plt.streamplot(vel_x_space, vel_x_space, x_vels, y_vels, color=np.sqrt(x_vels ** 2 + y_vels ** 2),
-                              linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
-        plt.colorbar(vels.lines)
-    if veltype == 'quiver' and plot_vel == True:
-        vels = plt.quiver(vel_x_space, vel_x_space, x_vels, y_vels, np.sqrt(x_vels ** 2 + y_vels ** 2), linewidth=1,
-                          cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
-        plt.colorbar(vels)
+        return minTemp
 
+    # Method to plot interpolated temperature function and / or velocity field
+    # Can plot contour or density / colormesh for temps, stream or quiver for velocities
+    # Other options can adjust the output.
+    # Returns the plot object to make integration elsewhere nicer.
+    def plot(self, time, temp_resolution=100, vel_resolution=30,
+             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True):
+        tempMax = self.max_temp()
 
+        # Domains of physical positions to plot at (in fm)
+        # These limits of the linear space obtain the largest and smallest input value for
+        # the interpolating function's position inputs.
+        x_space = self.xspace(resolution=temp_resolution)
 
-    
+        transposeAxes = (2, 1, 0)
+
+        if plot_temp:
+            # Create arrays of each coordinate
+            # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+            # We necessarily must set time equal to a constant to plot in 2D.
+            x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
+
+            # t_coords set to be an array matching the length of x_coords full of constant time
+            t_coords = np.full_like(x_coords, time)
+
+            # Put coordinates together into an ordered pair.
+            points = np.transpose(np.array([t_coords, x_coords, y_coords]), transposeAxes)
+
+            # Calculate temperatures
+            temp_points = self.temp(points)
+        else:
+            temp_points = 0
+
+        if plot_vel:
+
+            # Create arrays of each coordinate
+            # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+            # We necessarily must set time equal to a constant to plot in 2D.
+            x_space_vel = self.xspace(resolution=vel_resolution)
+            vel_x_coords, vel_y_coords = np.meshgrid(x_space_vel, x_space_vel, indexing='ij')
+
+            # t_coords set to be an array matching the length of x_coords full of constant time
+            vel_t_coords = np.full_like(vel_x_coords, time)
+
+            # t_coords set to be an array matching the length of x_coords full of constant time
+            vel_points = np.transpose(np.array([vel_t_coords, vel_x_coords, vel_y_coords]), transposeAxes)
+
+            # Calculate velocities
+            x_vels = self.x_vel(vel_points)
+            y_vels = self.y_vel(vel_points)
+
+        else:
+            x_vels = 0
+            y_vels = 0
+
+        # Make temperature plot
+        if temptype == 'density' and plot_temp:
+            temps = plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto',
+                                   norm=colors.Normalize(vmin=0, vmax=tempMax))
+            tempcb = plt.colorbar(temps)
+        elif temptype == 'contour' and plot_temp:
+            temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma',
+                                 norm=colors.Normalize(vmin=0, vmax=tempMax))
+            tempcb = plt.colorbar(temps)
+        else:
+            temps = 0
+            tempcb = 0
+
+        # Make velocity plot
+        if veltype == 'stream' and plot_vel:
+            vels = plt.streamplot(x_space_vel, x_space_vel, x_vels, y_vels,
+                                  color=np.sqrt(x_vels ** 2 + y_vels ** 2),
+                                  linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
+            velcb = plt.colorbar(vels.lines)
+        elif veltype == 'quiver' and plot_vel:
+            vels = plt.quiver(x_space_vel, x_space_vel, x_vels, y_vels, np.sqrt(x_vels ** 2 + y_vels ** 2),
+                              linewidth=1,
+                              cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
+            velcb = plt.colorbar(vels)
+        else:
+            vels = 0
+            velcb = 0
+
+        return temps, vels, tempcb, velcb
+
 

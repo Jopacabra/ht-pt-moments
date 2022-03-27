@@ -10,7 +10,7 @@ class jet:
     # Instantiation statement. All parameters optional.
     def __init__(self, x0=None, y0=None, theta0=0, v0=1, t0=None, event=None, energy=100):
         # Set default values
-        default_t0 = 0.5  # Set default initial time for jet parametrization
+        default_t0 = 0.48125  # Set default initial time for jet parametrization
         point = [0, 0]  # Set default jet production point
 
         # Initialize basic parameters
@@ -50,22 +50,6 @@ class jet:
                 self.t0 = default_t0
                 print("Event object has no t0 and / or tf. Read failed. Jet t0 set to default, no tf.")
 
-    # Method to obtain the current 2D coordinates of the jet
-    def coords(self, time=None):
-        if time is None:
-            xpos = self.x0
-            ypos = self.y0
-        else:
-            xpos = self.x0 + (self.v0 * np.cos(self.theta0) * (time - self.t0))
-            ypos = self.y0 + (self.v0 * np.sin(self.theta0) * (time - self.t0))
-        return np.array([xpos, ypos])
-
-    # Method to obtain the current (2+1) coordinates of the jet
-    def coords3(self, time=None):
-        xpos = self.x0 + (self.v0 * np.cos(self.theta0) * (time - self.t0))
-        ypos = self.y0 + (self.v0 * np.sin(self.theta0) * (time - self.t0))
-        return np.array([time, xpos, ypos])
-
     # Method to obtain the current coordinates of the jet
     def xpos(self, time=None):
         if time is None:
@@ -81,6 +65,22 @@ class jet:
         else:
             ypos = self.y0 + (self.v0 * np.sin(self.theta0) * (time - self.t0))
         return ypos
+
+    # Method to obtain the current 2D coordinates of the jet
+    def coords(self, time=None):
+        if time is None:
+            xpos = self.x0
+            ypos = self.y0
+        else:
+            xpos = self.xpos(time)
+            ypos = self.ypos(time)
+        return np.array([xpos, ypos])
+
+    # Method to obtain the current (2+1) coordinates of the jet
+    def coords3(self, time=None):
+        xpos = self.xpos(time)
+        ypos = self.ypos(time)
+        return np.array([time, xpos, ypos])
 
     # Method to obtain the current velocity of the jet
     # As of now, the velocity is always zero.

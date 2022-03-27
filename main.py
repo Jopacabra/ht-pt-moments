@@ -144,7 +144,7 @@ for ID in range(config.N):
 
     # Select jet production point
     if config.VARY_POINT:
-        newPoint = hs.generate_jet_point(event_array[event_num].temp)
+        newPoint = hs.generate_jet_point(event_array[event_num])
         current_x0, current_y0 = newPoint[0], newPoint[1]
     elif not config.VARY_POINT:
         current_x0 = 0

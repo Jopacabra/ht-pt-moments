@@ -137,7 +137,10 @@ def cube_random(num=1, boxSize=1, maxProb=1):
 
 # Function to rejection sample a given interpolated temperature function^6 for jet production.
 # Returns an accepted (x, y) sample point as a numpy array.
-def temp_6th_sample(temp_func, maxAttempts=5, time='i', batch=1000):
+def temp_6th_sample(event, maxAttempts=5, time='i', batch=1000):
+    # Get temperature function
+    temp_func = event.temp
+
     # Set time
     np.amin(temp_func.grid[0])
     if time == 'i':
@@ -148,7 +151,7 @@ def temp_6th_sample(temp_func, maxAttempts=5, time='i', batch=1000):
         pass
 
     # Find max temp
-    maxTemp = gr.max_temp(temp_func, time=time)
+    maxTemp = event.max_temp(time=time)
 
     # Find grid bounds
     gridMin = np.amin(temp_func.grid[1])
@@ -181,10 +184,10 @@ def temp_6th_sample(temp_func, maxAttempts=5, time='i', batch=1000):
 
 # Function to generate a given number of jet production points
 # sampled from the temperature^6 profile.
-def generate_jet_point(temp_func, num=1):
+def generate_jet_point(event, num=1):
     pointArray = np.array([])
     for i in np.arange(0, num):
-        newPoint = temp_6th_sample(temp_func)
+        newPoint = temp_6th_sample(event)
         if i == 0:
             pointArray = newPoint
         else:

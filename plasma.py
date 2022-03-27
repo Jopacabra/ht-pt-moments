@@ -6,9 +6,159 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.integrate import quad
 from config import G  # Coupling constant for strong interaction
 
+
+class osu_hydro_file:
+    def __init__(self, file_path, event_name=None):
+        # Store your original file location and event number
+        self.file_path = file_path
+        self.name = event_name
+
+        # Announce initialization
+        print('Reading osu-hydro file ... event: ' + str(self.name))
+
+        # Store grid data
+        self.grid_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
+                              names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
+
+        # Initialize all the ordinary grid parameters
+
+        # Grid is always square. Number of lines of the same time is the number of grid squares == grid_width**2.
+        # Note that we check the END timestep because the first timestep may be repeated
+        self.grid_width = int(np.sqrt(self.grid_data[['time']].value_counts().to_numpy()[-1]))
+
+        # n_grid_spaces is total number of grid spaces / bins. Assumes square grid.
+        self.n_grid_spaces = self.grid_width ** 2
+
+        # Number of time steps is grid_data's time column divided by number of grid spaces.
+        self.NT = int(len(self.grid_data[['time']]) / self.n_grid_spaces)
+
+        # Set grid space & time domains & lists
+
+        # We get lists of time and space coordinates from the file
+        # These are literally just numpy arrays of the xpos and time columns
+        # Use this to match up to NT x grid_width x grid_width array of values for interpolation
+        self.xlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['xpos']]).to_numpy())
+        self.tlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['time']]).to_numpy())
+
+        # Difference in absolute time between steps in simulation
+        # Note that we find the timestep from the end of the list. In files from osu-hydro,
+        # the first two timesteps are labeled with the same absolute time.
+        self.timestep = self.tlist[-1] - self.tlist[-1 - int(self.n_grid_spaces)]
+
+        # Domains of physical times and positions
+        """
+        Absolute time for the first two steps from osu-hydro are the same.
+        If we shift the first time step's absolute time back by the difference in timesteps,
+        we can relabel the first step and keep the absolute times matching for every other step.
+    
+        If we do nothing, creating this linear time space will smoosh an extra timestep into the
+        same initial and final time bounds. This, in principle, causes the evolution to happen 
+        in the interpolated functions ever so slightly faster than it actually does in osu-hydro.
+        This may be a small difference, but it is certainly non-physical.
+    
+        For now, we choose to shift back the first timestep by default.
+        """
+        # Domain of corrected time values
+        self.tspace = np.linspace(np.amin(self.tlist) - self.timestep, np.amax(self.tlist), self.NT)
+        # Domain of space values
+        self.xspace = np.linspace(np.amin(self.xlist), np.amax(self.xlist), self.grid_width)
+
+    # Method to get raw temp data
+    def temp_array(self):
+        # Cut temp data out and convert to numpy array
+        temp_column = self.grid_data[['temp']]
+        temp_data = pd.DataFrame(temp_column).to_numpy()
+
+        # Reshape this nonsense into an array with first index time, then x, then y.
+        # You can get the temperature at the grid indexes (ix,iy) at timestep 'it' as temp_array[it,ix,iy].
+        temp_data = np.transpose(np.reshape(temp_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
+
+        return temp_data
+
+    # Method to get raw x velocity data
+    def x_vel_array(self):
+        # Cut x velocity data out and convert to numpy array
+        x_vel_column = self.grid_data[['xvel']]
+        x_vel_data = pd.DataFrame(x_vel_column).to_numpy()
+
+        # Reshape this nonsense into an array with first index time, then x, then y.
+        # You can get the x velocity at the grid point (ix,iy) at timestep it as vel_x_data[it,ix,iy].
+        # The transposition has been confirmed against data.
+        x_vel_data = np.transpose(np.reshape(x_vel_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
+
+        return x_vel_data
+
+    # Method to get raw y velocity data
+    def y_vel_array(self):
+        # Cut x velocity data out and convert to numpy array
+        y_vel_column = self.grid_data[['yvel']]
+        y_vel_data = pd.DataFrame(y_vel_column).to_numpy()
+
+        # Reshape this nonsense into an array with first index time, then x, then y.
+        # You can get the x velocity at the grid point (ix,iy) at timestep it as vel_x_data[it,ix,iy].
+        # The transposition has been confirmed against data.
+        y_vel_data = np.transpose(np.reshape(y_vel_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
+
+        return y_vel_data
+
+    # Method to plot raw temp data
+    def plot_temps(self, time):
+        # Cut temp data out and convert to numpy array #
+        temp_data_cut = self.grid_data[['temp']]
+        temp_data = pd.DataFrame(temp_data_cut).to_numpy()
+
+        plt.contourf(temp_data[time, :, :])
+        plt.show
+
+    # Method to return interpolated function object from data
+    # Function to interpolate a grid file
+    # Returns interpolating callable function
+    def interpolate_temp_grid(self):
+        print('Interpolating temp grid data for event: ' + str(self.name))
+
+        # Cut temp data out and convert to numpy array
+        temp_data = self.temp_array()
+
+        # Interpolate data!
+        # The final temperatures have been confirmed directly against absolute coordinates in data.
+        interp_temps = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), temp_data)
+
+        return interp_temps
+
+    # Method to interpolate the x velocities from a grid file
+    # Returns interpolating callable function
+    def interpolate_x_vel_grid(self):
+        print('Interpolating x vel. grid data for event: ' + str(self.name))
+
+        # Cut x velocity data out and convert to numpy array
+        x_vel_array = self.x_vel_array()
+
+        # Interpolate data!
+        # The final velocities have been confirmed directly against absolute coordinates in data.
+        interp_x_vel = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), x_vel_array)
+
+        return interp_x_vel
+
+    # Method to interpolate the y velocities from a grid file
+    # Returns interpolating callable function
+    def interpolate_y_vel_grid(self):
+        print('Interpolating y vel. grid data for event: ' + str(self.name))
+
+        # Cut y velocity data out and convert to numpy array
+        y_vel_array = self.y_vel_array()
+
+        # Interpolate data!
+        # The final velocities have been confirmed directly against absolute coordinates in data.
+        interp_y_vel = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), y_vel_array)
+
+        return interp_y_vel
+
+
+
+# Plasma object as used for integration and muckery
 class plasma_event:
     def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, g=None):
-        # Initialize all the ordinary grid parameters
+        # Initialize all the ordinary plasma parameters
         self.temp = temp_func
         self.x_vel = x_vel_func
         self.y_vel = y_vel_func
@@ -124,118 +274,6 @@ class plasma_event:
         return Ik
 
 
-
-
-
-
-
-# Function to load a hydro grid as output by OSU-Hydro
-def load_grid_file(grid_file_name, absolute=False):
-    # Load grid data from file
-    print('Loading grid data from file ...')
-    if absolute == False:
-        grid_data = pd.read_table('backgrounds/' + grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
-                              names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
-    else:
-        grid_data = pd.read_table(grid_file_name, header=None, delim_whitespace=True, dtype=np.float64,
-                                  names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
-
-    # Set grid parameters
-    # Grid is always square. Number of lines of the same time is
-    # the number of grid squares == grid_width**2.
-    print('Calculating grid parameters ...')
-    grid_width = int(
-        np.sqrt(grid_data['time'].value_counts().to_numpy()[-1]))  # Will be data-source-dependent in the future.
-    n_grid_spaces = grid_width ** 2  # n_grid_spaces is total number of grid spaces / bins. Assumes square grid.
-    # Number of time steps is grid_data's time column divided by number of grid spaces.
-    NT = int(len(grid_data['time']) / n_grid_spaces)
-    # Spit the data out
-    return grid_data, grid_width, NT
-
-
-# Function to interpolate a grid file
-# Returns interpolating callable function
-def interpolate_temp_grid(grid_data, grid_width, NT):
-    print('Interpolating temp grid data ...')
-
-    # Cut temp data out and convert to numpy array #
-    temp_data_cut = grid_data[['temp']]
-    temp_data = pd.DataFrame(temp_data_cut).to_numpy()
-
-    # Reshape this nonsense into an array with first index time, then x, then y.
-    # You can get the temperature at the grid point (ix,iy) at timestep it as temp_data[it,ix,iy].
-    temp_data = np.reshape(temp_data, [NT, grid_width, grid_width])
-    # Plot contour data
-    # plt.contour(temp_data[0,:,:])
-    # plt.show()
-
-    # We get domains of time and space sets
-    # Use this to match up to NT x grid_width x grid_width array of temperatures
-    tList = np.ndarray.flatten(pd.DataFrame(grid_data['time']).to_numpy())  # Lists of time points individually
-    xList = np.ndarray.flatten(pd.DataFrame(grid_data['xpos']).to_numpy())  # Lists of space points individually
-
-    # Domains of physical times and positions individually
-    tSpace = np.linspace(np.amin(tList), np.amax(tList), NT)  # Domain of time values
-    xSpace = np.linspace(np.amin(xList), np.amax(xList), grid_width)  # Domain of space values
-
-    # Interpolate data!
-    interp_temps = RegularGridInterpolator((tSpace, xSpace, xSpace), temp_data)
-
-    return interp_temps
-
-
-# Function to interpolate the x velocities from a grid file
-# Returns interpolating callable function
-def interpolate_x_vel_grid(grid_data, grid_width, NT):
-    print('Interpolating x vel. grid data ...')
-    # Cut x velocity data out and convert to numpy array #
-    vel_x_data = pd.DataFrame(grid_data['xvel']).to_numpy()
-
-    # Reshape this nonsense into an array with first index time, then x, then y.
-    # You can get the x velocity at the grid point (ix,iy) at timestep it as vel_x_data[it,ix,iy].
-    vel_x_data = np.reshape(vel_x_data, [NT, grid_width, grid_width])
-
-    # We get domains of time and space sets
-    # Use this to match up to NT x grid_width x grid_width array of temperatures
-    tList = np.ndarray.flatten(pd.DataFrame(grid_data['time']).to_numpy())  # Lists of time points individually
-    xList = np.ndarray.flatten(pd.DataFrame(grid_data['xpos']).to_numpy())  # Lists of space points individually
-
-    # Domains of physical times and positions individually
-    tSpace = np.linspace(np.amin(tList), np.amax(tList), NT)  # Domain of time values
-    xSpace = np.linspace(np.amin(xList), np.amax(xList), grid_width)  # Domain of space values
-
-    # Interpolate data!
-    interp_vel_x = RegularGridInterpolator((tSpace, xSpace, xSpace), vel_x_data)
-
-    return interp_vel_x
-
-
-# Function to interpolate the x velocities from a grid file
-# Returns interpolating callable function
-def interpolate_y_vel_grid(grid_data, grid_width, NT):
-    print('Interpolating y vel. grid data ...')
-    # Cut y vel data out and convert to numpy array #
-    vel_y_data = pd.DataFrame(grid_data['yvel']).to_numpy()
-
-    # Reshape this nonsense into an array with first index time, then x, then y.
-    # You can get the y velocity at the grid point (ix,iy) at timestep it as vel_y_data[it,ix,iy].
-    vel_y_data = np.reshape(vel_y_data, [NT, grid_width, grid_width])
-
-    # We get domains of time and space sets
-    # Use this to match up to NT x grid_width x grid_width array of temperatures
-    tList = np.ndarray.flatten(pd.DataFrame(grid_data['time']).to_numpy())  # Lists of time points individually
-    xList = np.ndarray.flatten(pd.DataFrame(grid_data['ypos']).to_numpy())  # Lists of space points individually
-
-    # Domains of physical times and positions individually
-    tSpace = np.linspace(np.amin(tList), np.amax(tList), NT)  # Domain of time values
-    xSpace = np.linspace(np.amin(xList), np.amax(xList), grid_width)  # Domain of space values
-
-    # Interpolate data!
-    interp_vel_y = RegularGridInterpolator((tSpace, xSpace, xSpace), vel_y_data)
-
-    return interp_vel_y
-
-
 # Function to plot interpolated temperature function
 def temp_plot(temp_func, time, resolution):
     # Domains of physical positions to plot at (in fm)
@@ -329,6 +367,7 @@ def vel_plot(vel_x_func, vel_y_func, time, resolution):
 
     plt.quiver(x_space, x_space, x_vels, y_vels)
     return plt.show()
+
 
 # Function to find the maximum temperature of a particular grid at the initial time or a particular time.
 def max_temp(temp_func, resolution=100, time='i'):
@@ -469,4 +508,6 @@ def qgp_plot(temp_func, vel_x_func, vel_y_func, time, resolution=100, velresolut
         plt.colorbar(vels)
 
 
-    return plt.show()
+
+    
+

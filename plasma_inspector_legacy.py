@@ -21,8 +21,8 @@ Select and load plasma grid file
 """
 
 # Open grid file
-# grid_data, grid_width, NT = pgr.load_grid_file('AuAu_Event_10.dat')  # Hard code a file
-grid_data, grid_width, NT = pgr.load_grid_file(gridFilePath, absolute=True)  # Select a file on run
+# grid_data, grid_width, NT = pgr.load_osu_hydro_file('AuAu_Event_10.dat')  # Hard code a file
+grid_data, grid_width, NT = pgr.load_osu_hydro_file(gridFilePath, absolute=True)  # Select a file on run
 
 # Interpolate temperatures
 temp_func = pgr.interpolate_temp_grid(grid_data, grid_width, NT)

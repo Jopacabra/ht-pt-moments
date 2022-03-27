@@ -25,7 +25,8 @@ TEMP_CUTOFF = float(cfg['moment_parameters']['TEMP_CUTOFF'])  # Temp at which to
 # Set all the global constants
 G = float(cfg['global_constants']['G'])  # Coupling constant for strong interaction
 
-# Set config settings
+"""
+# Declare config settings
 
 if RANDOM_ANGLE == False and VARY_POINT == False and RANDOM_EVENT == False:
     print('Calculating angular sweep of moments for central jets in each background...')
@@ -43,3 +44,5 @@ else:
     print('VARY_POINT = ' + str(VARY_POINT))
     print('RANDOM_EVENT = ' + str(RANDOM_EVENT))
     print('WEIGHT_POINT = ' + str(WEIGHT_POINT))
+
+"""

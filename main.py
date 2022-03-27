@@ -12,30 +12,28 @@ import config
 # Initialize empty array for plasma background objects
 event_array = np.array([])
 
-# Temporary file array for testing
-folder_list = os.listdir(path='backgrounds/')
+# Build array of files in directory
+hydroResultsPath = 'backgrounds/'
+file_list = os.listdir(path=hydroResultsPath)
 
 # Iterate through list of backgrounds and interpolate each one
 # Append callable interpolating function to array of functions
 i = 0
-for file in folder_list:
-    if file == 'README.md':
+for file_name in file_list:
+    if file_name == 'README.md':
         continue
+
+    current_file_path = hydroResultsPath + str(file_name)
     # read the grid file
-    print('Reading grid data ... event ' + str(i))
-    grid_data, grid_width, NT = gr.load_grid_file(file)
+    current_file = gr.osu_hydro_file(file_path=current_file_path, event_name=i)
 
-    # Interpolate temperatures
-    temp_func = gr.interpolate_temp_grid(grid_data, grid_width, NT)
+    # Interpolate temperatures and velocities
+    temp_func = current_file.interpolate_temp_grid()
+    x_vel_func = current_file.interpolate_x_vel_grid()
+    y_vel_func = current_file.interpolate_y_vel_grid()
 
-    # Interpolate x velocities
-    vel_x_func = gr.interpolate_x_vel_grid(grid_data, grid_width, NT)
-
-    # Interpolate y velocities
-    vel_y_func = gr.interpolate_y_vel_grid(grid_data, grid_width, NT)
-
-    # Create event object and append to event array
-    new_event = np.array([gr.plasma_event(temp_func=temp_func, x_vel_func=vel_x_func, y_vel_func=vel_y_func)])
+    # Create event object and append to event object array
+    new_event = np.array([gr.plasma_event(temp_func=temp_func, x_vel_func=x_vel_func, y_vel_func=y_vel_func)])
     event_array = np.append(event_array, new_event)
 
     i += 1

@@ -16,31 +16,30 @@ event_array = np.array([])
 hydroResultsPath = 'backgrounds/'
 file_list = os.listdir(path=hydroResultsPath)
 
-# Iterate through list of backgrounds and interpolate each one
-# Append callable interpolating function to array of functions
+# Iterate through list of backgrounds and interpolate each one.
+# Append callable interpolating function to array of functions.
 i = 0
 for file_name in file_list:
     if file_name == 'README.md':
         continue
 
+    # Specify the current file.
     current_file_path = hydroResultsPath + str(file_name)
-    # read the grid file
+
+    # Open the hydro file and create file object for manipulation.
     current_file = gr.osu_hydro_file(file_path=current_file_path, event_name=i)
 
-    # Interpolate temperatures and velocities
-    temp_func = current_file.interpolate_temp_grid()
-    x_vel_func = current_file.interpolate_x_vel_grid()
-    y_vel_func = current_file.interpolate_y_vel_grid()
-
-    # Create event object and append to event object array
-    new_event = np.array([gr.plasma_event(temp_func=temp_func, x_vel_func=x_vel_func, y_vel_func=y_vel_func)])
+    # Create event object and append to event object array.
+    # This asks the hydro file object to interpolate the relevant functions
+    # and pass them on to the plasma object.
+    new_event = np.array([gr.plasma_event(event=current_file)])
     event_array = np.append(event_array, new_event)
 
     i += 1
 
-# Count and print number of backgrounds loaded
-NUM_BACKGROUNDS = len(event_array)
-print("Number of Backgrounds: " + str(NUM_BACKGROUNDS))
+# Count and print number of events loaded
+NUM_EVENTS = len(event_array)
+print("Number of Backgrounds: " + str(NUM_EVENTS))
 
 
 # Call particular temp function with:
@@ -105,7 +104,7 @@ SAVE_EVERY = 10  # Set how many jets to calculate before each dump to file.
 """
 # Operation mode for scanning each event. Old and deprecated, but it works if you wanna run a test case.
 if RANDOM_EVENT == False:
-    for event_num in range(NUM_BACKGROUNDS):
+    for event_num in range(NUM_EVENTS):
         for ID in range(N):
             print("Calculating moment for jet " + str(ID) + ' for event ' + str(event_num) + '...')
             # All events cycled through with complete angular profile.
@@ -140,7 +139,7 @@ if RANDOM_EVENT == False:
 for ID in range(config.N):
 
     # Randomly select event
-    event_num = np.random.randint(0, NUM_BACKGROUNDS)  # random integer on [0,numBackgrounds)
+    event_num = np.random.randint(0, NUM_EVENTS)  # random integer on [0,numBackgrounds)
 
     # Select jet production point
     if config.VARY_POINT:

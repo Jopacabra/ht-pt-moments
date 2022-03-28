@@ -25,12 +25,12 @@ Select and load plasma grid file
 hydro_file = plasma.osu_hydro_file(file_path=hydro_file_path)
 
 # Interpolate temperatures and velocities
-interp_temp_func = hydro_file.interpolate_temp_grid()
-interp_x_vel_func = hydro_file.interpolate_x_vel_grid()
-interp_y_vel_func = hydro_file.interpolate_y_vel_grid()
+#interp_temp_func = hydro_file.interpolate_temp_grid()
+#interp_x_vel_func = hydro_file.interpolate_x_vel_grid()
+#interp_y_vel_func = hydro_file.interpolate_y_vel_grid()
 
 # Create plasma object from current_event object
-current_event = plasma.plasma_event(temp_func=interp_temp_func, x_vel_func=interp_x_vel_func, y_vel_func=interp_y_vel_func)
+current_event = plasma.plasma_event(event=hydro_file)
 
 
 

@@ -191,17 +191,27 @@ class osu_hydro_file:
 
 # Plasma object as used for integration and muckery
 class plasma_event:
-    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, g=None, name=None):
+    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, event=None, g=None, name=None):
         # Initialize all the ordinary plasma parameters
-        self.temp = temp_func
-        self.x_vel = x_vel_func
-        self.y_vel = y_vel_func
+        if event is not None:
+            self.temp = event.interpolate_temp_grid()
+            self.x_vel = event.interpolate_x_vel_grid()
+            self.y_vel = event.interpolate_y_vel_grid()
+        elif temp_func is not None and x_vel_func is not None and y_vel_func is not None:
+            self.temp = temp_func
+            self.x_vel = x_vel_func
+            self.y_vel = y_vel_func
+        else:
+            print('Plasma instantiation failed.')
+            raise Exception
+
+
         self.t0 = np.amin(self.temp.grid[0])
         self.tf = np.amax(self.temp.grid[0])
-        self.xmin = np.amin(temp_func.grid[1])
-        self.xmax = np.amax(temp_func.grid[1])
-        self.ymin = np.amin(temp_func.grid[2])
-        self.ymax = np.amax(temp_func.grid[2])
+        self.xmin = np.amin(self.temp.grid[1])
+        self.xmax = np.amax(self.temp.grid[1])
+        self.ymin = np.amin(self.temp.grid[2])
+        self.ymax = np.amax(self.temp.grid[2])
 
     # Method to get array on space domain of event with given resolution
     def xspace(self, resolution=100):

@@ -27,7 +27,7 @@ for file_name in file_list:
     current_file_path = hydroResultsPath + str(file_name)
 
     # Open the hydro file and create file object for manipulation.
-    current_file = gr.osu_hydro_file(file_path=current_file_path, event_name=i)
+    current_file = gr.osu_hydro_file(file_path=current_file_path, event_name=file_name)
 
     # Create event object and append to event object array.
     # This asks the hydro file object to interpolate the relevant functions
@@ -51,6 +51,7 @@ emptyFrame = pd.DataFrame(
     {
         "JET_ID": [],
         "event_num": [],
+        "event_name": [],
         "X0": [],
         "Y0": [],
         "theta0": [],
@@ -65,11 +66,12 @@ results = emptyFrame
 
 
 #
-def WriteDataLine(ID, event_num, X0, Y0, theta0, moment, momentErr, defAngle, defAngleErr):
+def WriteDataLine(ID, event_num, event_name, X0, Y0, theta0, moment, momentErr, defAngle, defAngleErr):
     dataframe = pd.DataFrame(
         {
             "JET_ID": [ID],
             "event_num": [event_num],
+            "event_name": [event_name],
             "X0": [X0],
             "Y0": [Y0],
             "theta0": [theta0],
@@ -140,10 +142,11 @@ for ID in range(config.N):
 
     # Randomly select event
     event_num = np.random.randint(0, NUM_EVENTS)  # random integer on [0,numBackgrounds)
+    current_event = event_array[event_num]
 
     # Select jet production point
     if config.VARY_POINT:
-        newPoint = hs.generate_jet_point(event_array[event_num])
+        newPoint = hs.generate_jet_point(current_event)
         current_x0, current_y0 = newPoint[0], newPoint[1]
     elif not config.VARY_POINT:
         current_x0 = 0
@@ -164,17 +167,17 @@ for ID in range(config.N):
 
     # Generate jet object
     current_jet = jets.jet(x0=current_x0, y0=current_y0,
-                           theta0=current_theta0, event=event_array[event_num], energy=config.JET_ENERGY)
+                           theta0=current_theta0, event=current_event, energy=config.JET_ENERGY)
 
     # Calculate moment
-    moment = mi.moment_integral(event=event_array[event_num], jet=current_jet, k=0)
+    moment = mi.moment_integral(event=current_event, jet=current_jet, k=0)
 
     # Calculate deflection angle
     deflection_angle = np.arctan((moment[0]/current_jet.energy))*(180/np.pi)
     deflection_angle_error = np.arctan((moment[1]/current_jet.energy))*(180/np.pi)
 
     # Write data to a new dataframe
-    currentResults = WriteDataLine(ID, event_num, current_jet.x0, current_jet.y0, current_jet.theta0,
+    currentResults = WriteDataLine(ID, event_num, current_event.name, current_jet.x0, current_jet.y0, current_jet.theta0,
                                    moment[0], moment[1], deflection_angle, deflection_angle_error)
 
     # Append current result step to dataframe

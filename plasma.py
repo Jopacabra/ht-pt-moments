@@ -197,10 +197,12 @@ class plasma_event:
             self.temp = event.interpolate_temp_grid()
             self.x_vel = event.interpolate_x_vel_grid()
             self.y_vel = event.interpolate_y_vel_grid()
+            self.name = event.name
         elif temp_func is not None and x_vel_func is not None and y_vel_func is not None:
             self.temp = temp_func
             self.x_vel = x_vel_func
             self.y_vel = y_vel_func
+            self.name = name
         else:
             print('Plasma instantiation failed.')
             raise Exception

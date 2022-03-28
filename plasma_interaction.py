@@ -2,6 +2,9 @@ import scipy as sp
 from scipy.integrate import quad
 from config import TEMP_CUTOFF  # Cutoff temp for plasma integral
 
+# Check and interpret desired percent error.
+percent_error = 0.01
+relative_error = percent_error*0.01
 
 # Functions that set the bounds of interaction with a grid
 # Set time at which plasma integral will begin to return 0.
@@ -36,7 +39,7 @@ def moment_integral(event, jet, k=0):
 
     # We scale the integrand by this multiplier, then remove it after the integration to avoid round-off error
     # dealing with small numbers. Currently not in use.
-    fudge_scalar = 1
+    fudge_scalar = 1000
 
     # Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
     def integrand(event, jet, k=0):
@@ -50,7 +53,8 @@ def moment_integral(event, jet, k=0):
 
     # Calculate moment point
     print('Evaluating moment integral...')
-    raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k), event.t0, event.tf, limit=200)
+    raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k), event.t0, event.tf, limit=200
+                                 , epsrel=relative_error)
 
     # Tack constants on
     # The FERMItoGeV factor of ~5 converts unit factor of fm from line integration over fm to GeV

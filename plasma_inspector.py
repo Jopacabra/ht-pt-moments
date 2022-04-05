@@ -44,6 +44,9 @@ t_final = current_event.tf
 moment = 0
 angleDeflection = 0
 
+# Select k moment
+K = 0
+
 
 """
 Generate plot objects
@@ -94,8 +97,8 @@ axX0 = plt.axes([0.25, 0.04, 0.65, 0.03])
 X0_slider = Slider(
     ax=axX0,
     label='X0 [fm]',
-    valmin=-5,
-    valmax=5,
+    valmin=current_event.xmin,
+    valmax=current_event.xmax,
     valinit=init_X0,
 )
 
@@ -104,8 +107,8 @@ axY0 = plt.axes([0.05, 0.25, 0.0225, 0.63])
 Y0_slider = Slider(
     ax=axY0,
     label="Y0 [fm]",
-    valmin=-5,
-    valmax=5,
+    valmin=current_event.ymin,
+    valmax=current_event.ymax,
     valinit=init_Y0,
     orientation="vertical"
 )
@@ -259,6 +262,7 @@ def update(val):
     iIntArray = np.array([])
     XArray = np.array([])
     YArray = np.array([])
+    integrandArray = np.array([])
 
     # Calculate plot data
     for time in t:
@@ -270,6 +274,7 @@ def update(val):
         iInt = current_event.i_int_factor(jet=current_jet, time=time)
         xPOS = current_jet.xpos(time)
         yPOS = current_jet.ypos(time)
+        integrand = pi.integrand(event=current_event, jet=current_jet, k=K)(time)
 
         uPerpArray = np.append(uPerpArray, uPerp)
         uParArray = np.append(uParArray, uPar)
@@ -277,6 +282,8 @@ def update(val):
         velArray = np.append(velArray, vel)
 
         overLambdaArray = np.append(overLambdaArray, overLambda)
+
+        integrandArray = np.append(integrandArray, integrand)
 
         iIntArray = np.append(iIntArray, iInt)
 
@@ -305,13 +312,19 @@ def update(val):
     axs[0, 3].set_title("X Pos")
     axs[1, 3].plot(t, YArray)
     axs[1, 3].set_title("Y Pos")
+    axs[2, 3].plot(t, integrandArray)
+    axs[2, 3].set_title("Integrand")
+
+    # Plot vertical gridline at current time from slider
+    for axisList in axs:  # Iterate through medium property plots
+        for axis in axisList:
+            axis.axvline(x=time_slider.val, color='black', ls=':')
 
     # Plot jet trajectory
     jetInitialX = current_jet.xpos(t[0])
     jetInitialY = current_jet.ypos(t[0])
     jetFinalX = current_jet.xpos(t[-1])
     jetFinalY = current_jet.ypos(t[-1])
-
     ax.plot([jetInitialX, jetFinalX], [jetInitialY, jetFinalY], ls=':', color='w')
 
     # Plot new jet position

@@ -6,6 +6,11 @@ from config import TEMP_CUTOFF  # Cutoff temp for plasma integral
 percent_error = 0.01
 relative_error = percent_error*0.01
 
+# We scale the integrand by this multiplier, then remove it after the integration to avoid round-off error
+# dealing with small numbers.
+fudge_scalar = 1
+
+
 # Functions that set the bounds of interaction with a grid
 # Set time at which plasma integral will begin to return 0.
 def time_cut(event, time):
@@ -34,22 +39,19 @@ def temp_cut(event, jet, time):
         return True
 
 
+# Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
+def integrand(event, jet, k=0):
+    return lambda t: fudge_scalar * ((event.i_int_factor(jet=jet, time=t)[0])
+                      * (event.u_perp(jet=jet, time=t) / (1 - event.u_par(jet=jet, time=t)))
+                      * (event.mu(jet=jet, time=t) ** (k + 2))
+                      * event.rho(jet=jet, time=t)
+                      * event.sigma(jet=jet, time=t)) if pos_cut(event=event, jet=jet, time=t) \
+                                                         and time_cut(event=event, time=t) and \
+                                                         temp_cut(event=event, jet=jet, time=t) else 0
+
+
 # Function to calculate moment given initial conditions & interpolating functions
 def moment_integral(event, jet, k=0):
-
-    # We scale the integrand by this multiplier, then remove it after the integration to avoid round-off error
-    # dealing with small numbers. Currently not in use.
-    fudge_scalar = 1000
-
-    # Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
-    def integrand(event, jet, k=0):
-        return lambda t: fudge_scalar * ((event.i_int_factor(jet=jet, time=t)[0])
-                          * (event.u_perp(jet=jet, time=t) / (1 - event.u_par(jet=jet, time=t)))
-                          * (event.mu(jet=jet, time=t) ** (k + 2))
-                          * event.rho(jet=jet, time=t)
-                          * event.sigma(jet=jet, time=t)) if pos_cut(event=event, jet=jet, time=t) \
-                                                             and time_cut(event=event, time=t) and \
-                                                             temp_cut(event=event, jet=jet, time=t) else 0
 
     # Calculate moment point
     print('Evaluating moment integral...')

@@ -134,13 +134,24 @@ time_slider = Slider(
 )
 
 # Make a vertically oriented slider to control the jet energy
-axEn = plt.axes([0.95, 0.25, 0.0225, 0.63])
+axEn = plt.axes([0.9, 0.25, 0.0225, 0.63])
 En_slider = Slider(
     ax=axEn,
     label="Energy [GeV]",
     valmin=1,
     valmax=1000,
     valinit=100,
+    orientation="vertical"
+)
+
+# Make a vertically oriented slider to control the jet energy
+axTswitch = plt.axes([0.975, 0.25, 0.0225, 0.63])
+tswitch_slider = Slider(
+    ax=axTswitch,
+    label="Temp Cutoff [GeV]",
+    valmin=0,
+    valmax=1,
+    valinit=0,
     orientation="vertical"
 )
 
@@ -195,6 +206,7 @@ def reset(event):
     Y0_slider.reset()
     THETA0_slider.reset()
     time_slider.reset()
+    tswitch_slider.reset()
 
 
 # Function to sample the plasma T^6 and set sliders to point
@@ -274,7 +286,7 @@ def update(val):
         iInt = current_event.i_int_factor(jet=current_jet, time=time)
         xPOS = current_jet.xpos(time)
         yPOS = current_jet.ypos(time)
-        integrand = pi.integrand(event=current_event, jet=current_jet, k=K)(time)
+        integrand = pi.integrand(event=current_event, jet=current_jet, k=K, cutoffT=tswitch_slider.val)(time)
 
         uPerpArray = np.append(uPerpArray, uPerp)
         uParArray = np.append(uParArray, uPar)
@@ -339,7 +351,7 @@ def calc_moment(val):
     global moment
     global angleDeflection
 
-    moment = pi.moment_integral(current_event, current_jet)  # conversion factor fm from integration to GeV
+    moment = pi.moment_integral(current_event, current_jet, cutoffT=tswitch_slider.val)  # conversion factor fm from integration to GeV
 
     angleDeflection = np.arctan((moment[0] / current_jet.energy)) * (180 / np.pi)
 
@@ -356,7 +368,7 @@ Set up button and slider functions on change / click
 # Map Button Functions
 resetButton.on_clicked(reset)
 sampleButton.on_clicked(sample_jet)
-updateButton.on_clicked(redraw)
+updateButton.on_clicked(update)
 velTypeButton.on_clicked(swap_velType)
 momentButton.on_clicked(calc_moment)
 
@@ -366,6 +378,7 @@ X0_slider.on_changed(update)
 Y0_slider.on_changed(update)
 THETA0_slider.on_changed(update)
 En_slider.on_changed(update)
+tswitch_slider.on_changed(update)
 
 
 

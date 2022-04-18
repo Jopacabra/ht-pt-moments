@@ -437,12 +437,14 @@ class plasma_event:
 
         # Make temperature plot
         if temptype == 'density' and plot_temp:
+            tempLevels = np.linspace(0, tempMax, 15)
             temps = plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto',
-                                   norm=colors.Normalize(vmin=0, vmax=tempMax))
+                                   norm=colors.Normalize(vmin=0, vmax=tempMax), levels=tempLevels)
             tempcb = plt.colorbar(temps)
         elif temptype == 'contour' and plot_temp:
+            tempLevels = np.linspace(0, tempMax, 15)
             temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma',
-                                 norm=colors.Normalize(vmin=0, vmax=tempMax))
+                                 norm=colors.Normalize(vmin=0, vmax=tempMax), levels=tempLevels)
             tempcb = plt.colorbar(temps)
         else:
             temps = 0

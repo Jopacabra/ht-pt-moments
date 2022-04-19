@@ -440,11 +440,13 @@ class plasma_event:
             tempLevels = np.linspace(0, tempMax, 15)
             temps = plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto',
                                    norm=colors.Normalize(vmin=0, vmax=tempMax), levels=tempLevels)
+            plt.gca().set_aspect('equal')
             tempcb = plt.colorbar(temps)
         elif temptype == 'contour' and plot_temp:
             tempLevels = np.linspace(0, tempMax, 15)
             temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma',
                                  norm=colors.Normalize(vmin=0, vmax=tempMax), levels=tempLevels)
+            plt.gca().set_aspect('equal')
             tempcb = plt.colorbar(temps)
         else:
             temps = 0
@@ -455,11 +457,13 @@ class plasma_event:
             vels = plt.streamplot(x_space_vel, x_space_vel, x_vels, y_vels,
                                   color=np.sqrt(x_vels ** 2 + y_vels ** 2),
                                   linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
+            plt.gca().set_aspect('equal')
             velcb = plt.colorbar(vels.lines)
         elif veltype == 'quiver' and plot_vel:
             vels = plt.quiver(x_space_vel, x_space_vel, x_vels, y_vels, np.sqrt(x_vels ** 2 + y_vels ** 2),
                               linewidth=1,
                               cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
+            plt.gca().set_aspect('equal')
             velcb = plt.colorbar(vels)
         else:
             vels = 0

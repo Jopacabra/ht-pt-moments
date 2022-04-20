@@ -386,7 +386,7 @@ class plasma_event:
     # Other options can adjust the output.
     # Returns the plot object to make integration elsewhere nicer.
     def plot(self, time, temp_resolution=100, vel_resolution=30,
-             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True):
+             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True, numContours=15):
         tempMax = self.max_temp()
 
         # Domains of physical positions to plot at (in fm)
@@ -437,17 +437,20 @@ class plasma_event:
 
         # Make temperature plot
         if temptype == 'density' and plot_temp:
-            tempLevels = np.linspace(0, tempMax, 15)
             temps = plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto',
-                                   norm=colors.Normalize(vmin=0, vmax=tempMax), levels=tempLevels)
+                                   norm=colors.Normalize(vmin=0, vmax=tempMax))
             plt.gca().set_aspect('equal')
-            tempcb = plt.colorbar(temps)
+            plt.gca().set_xlabel('X Position [fm]')
+            plt.gca().set_ylabel('Y Position [fm]')
+            tempcb = plt.colorbar(temps, label='GeV')
         elif temptype == 'contour' and plot_temp:
-            tempLevels = np.linspace(0, tempMax, 15)
+            tempLevels = np.linspace(0, tempMax, numContours)
             temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma',
                                  norm=colors.Normalize(vmin=0, vmax=tempMax), levels=tempLevels)
             plt.gca().set_aspect('equal')
-            tempcb = plt.colorbar(temps)
+            plt.gca().set_xlabel('X Position [fm]')
+            plt.gca().set_ylabel('Y Position [fm]')
+            tempcb = plt.colorbar(temps, label='GeV')
         else:
             temps = 0
             tempcb = 0
@@ -458,13 +461,17 @@ class plasma_event:
                                   color=np.sqrt(x_vels ** 2 + y_vels ** 2),
                                   linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
             plt.gca().set_aspect('equal')
-            velcb = plt.colorbar(vels.lines)
+            plt.gca().set_xlabel('X Position [fm]')
+            plt.gca().set_ylabel('Y Position [fm]')
+            velcb = plt.colorbar(vels.lines, label='c')
         elif veltype == 'quiver' and plot_vel:
             vels = plt.quiver(x_space_vel, x_space_vel, x_vels, y_vels, np.sqrt(x_vels ** 2 + y_vels ** 2),
                               linewidth=1,
                               cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=1))
             plt.gca().set_aspect('equal')
-            velcb = plt.colorbar(vels)
+            plt.gca().set_xlabel('X Position [fm]')
+            plt.gca().set_ylabel('Y Position [fm]')
+            velcb = plt.colorbar(vels, label='c')
         else:
             vels = 0
             velcb = 0

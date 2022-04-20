@@ -453,8 +453,8 @@ class MainPage(tk.Frame):
 
             self.angleDeflection = np.arctan((momentRaw[0] / self.current_jet.energy)) * (180 / np.pi)
             self.moment = momentRaw[0]
-            self.momentDisplay.set('k = ' + str(self.K) + ' moment: ' + str(self.moment) + 'GeV\nAngular Deflection: '
-                                   + str(self.angleDeflection) + ' deg')
+            self.momentDisplay.set('k = ' + str(self.K) + ' Jet Drift Moment: ' + str(self.moment) + ' GeV\n'
+                                   + 'Angular Deflection: ' + str(self.angleDeflection) + ' deg')
             print("k=0 moment: " + str(self.moment) + " GeV")
             print('Angular Deflection: ' + str(self.angleDeflection) + " deg.")
         else:

@@ -211,7 +211,7 @@ def reset(event):
 
 # Function to sample the plasma T^6 and set sliders to point
 def sample_jet(event):
-    sampledPoint = hs.generate_jet_point(current_event.temp, 1)
+    sampledPoint = hs.generate_jet_point(current_event, 1)
     X0_slider.set_val(sampledPoint[0])
     Y0_slider.set_val(sampledPoint[1])
 

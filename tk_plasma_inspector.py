@@ -31,7 +31,7 @@ class PlasmaInspector(tk.Tk):
     # Initialization. Needs self. *args allows any number of parameters to be passed in,  **kwargs allows dictionaries.
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)  # Initializes tkinter business passed into the PlasmaInspector.
-        tk.Tk.iconbitmap(self, default='icon.ico')  # Sets the application icon
+        # tk.Tk.iconbitmap(self, default='icon.ico')  # Sets the application icon - not working on Mephisto
         tk.Tk.wm_title(self, 'Plasma Inspector')
         # Create menu bar
         self.menubar = tk.Menu(self)

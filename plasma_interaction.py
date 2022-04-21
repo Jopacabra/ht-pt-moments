@@ -32,15 +32,16 @@ def pos_cut(event, jet, time):
 
 
 # Set temperature at which plasma integral will begin to return 0.
-def temp_cut(event, jet, time, cutoff=0):
-    if event.temp(jet.coords3(time=time)) < cutoff:
+def temp_cut(event, jet, time, minTemp=0, maxTemp = 1000):
+    currentTemp = event.temp(jet.coords3(time=time))
+    if currentTemp < minTemp or currentTemp > maxTemp:
         return False
     else:
         return True
 
 
 # Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
-def integrand(event, jet, k=0, cutoffT=0):
+def integrand(event, jet, k=0, minTemp=0, maxTemp=1000):
     FERMItoGeV = (1 / 0.19732687)
     return lambda t: fudge_scalar * FERMItoGeV * (1 / jet.energy) *  ((event.i_int_factor(jet=jet, time=t)[0])
                       * (event.u_perp(jet=jet, time=t) / (1 - event.u_par(jet=jet, time=t)))
@@ -48,15 +49,16 @@ def integrand(event, jet, k=0, cutoffT=0):
                       * event.rho(jet=jet, time=t)
                       * event.sigma(jet=jet, time=t)) if pos_cut(event=event, jet=jet, time=t) \
                                                          and time_cut(event=event, time=t) and \
-                                                         temp_cut(event=event, jet=jet, time=t, cutoff=cutoffT) else 0
+                                                         temp_cut(event=event, jet=jet, time=t, minTemp=minTemp,
+                                                                  maxTemp=maxTemp) else 0
 
 
 # Function to calculate moment given initial conditions & interpolating functions
-def moment_integral(event, jet, k=0, cutoffT=0):
+def moment_integral(event, jet, k=0, minTemp=0, maxTemp=1000):
 
     # Calculate moment point
     print('Evaluating moment integral...')
-    raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k, cutoffT=cutoffT), event.t0, event.tf, limit=200
+    raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k, minTemp=minTemp, maxTemp=maxTemp), event.t0, event.tf, limit=200
                                  , epsrel=relative_error)
 
     # Tack constants on

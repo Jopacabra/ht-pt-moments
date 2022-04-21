@@ -159,6 +159,10 @@ class MainPage(tk.Frame):
         self.moment_button = ttk.Button(self, text='Moment',
                                         command=self.calc_moment)
 
+        # Create button to calculate and display moment
+        self.hadron_moment_button = ttk.Button(self, text='HG Moment',
+                                        command=self.calc_hadron_moment)
+
         # Create button to sample the event and set jet initial conditions.
         self.sample_button = ttk.Button(self, text='Sample',
                                         command=self.sample_event)
@@ -177,7 +181,7 @@ class MainPage(tk.Frame):
                                      from_=0, to=2*np.pi, length=200, resolution=0.1, label='theta0 (rad)')
         # Create jetE slider
         self.jetESlider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.jetE,
-                                   from_=1, to=10000, length=200, resolution=0.1, label='jetE (GeV)')
+                                   from_=10, to=100, length=200, resolution=0.1, label='jetE (GeV)')
         # Create tempCutoff slider
         self.tempCutoffSlider = tk.Scale(self, orient=tk.HORIZONTAL,
                                          variable=self.tempCutoff, from_=0, to=1, length=200, resolution=0.01,
@@ -278,6 +282,7 @@ class MainPage(tk.Frame):
         self.momentLabel.grid(row=4, column=0, columnspan=3)
         self.sample_button.grid(row=1, column=6)
         self.moment_button.grid(row=2, column=6)
+        self.hadron_moment_button.grid(row=3, column=6)
         # buttonPage1.grid()  # Unused second page
 
     def round_decimals_up(self, number: float, decimals: int = 2):
@@ -446,7 +451,7 @@ class MainPage(tk.Frame):
                 xPOS = self.current_jet.xpos(time)
                 yPOS = self.current_jet.ypos(time)
                 integrand = pi.integrand(event=self.current_event, jet=self.current_jet, k=self.K,
-                                         cutoffT=decidedCut)(time)
+                                         minTemp=decidedCut)(time)
 
                 uPerpArray = np.append(uPerpArray, uPerp)
                 uParArray = np.append(uParArray, uPar)
@@ -474,13 +479,13 @@ class MainPage(tk.Frame):
             for axisList in self.propertyAxes:  # Medium property plots
                 for axis in axisList:
                     axis.axhline(y=0, color='black', linestyle=':', lw=gridLineWidth)
-            # Plot horizontal gridline at temp cutoff for temp plot
+            # Plot horizontal gridline at temp minTemp for temp plot
             self.propertyAxes[1, 0].axhline(y=self.tempCutoff.get(), color='black', linestyle=':', lw=gridLineWidth)
             # Plot vertical gridline at current time from slider
             for axisList in self.propertyAxes:  # Iterate through medium property plots
                 for axis in axisList:
                     axis.axvline(x=self.time.get(), color='black', ls=':', lw=gridLineWidth)
-            # Plot tick at temp cutoff for temp plot
+            # Plot tick at temp minTemp for temp plot
             self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempCutoff.get()])
 
             if self.plotColors.get():
@@ -571,8 +576,20 @@ class MainPage(tk.Frame):
 
     def calc_moment(self):
         if self.file_selected:
-            momentRaw = pi.moment_integral(self.current_event, self.current_jet,
-                                        cutoffT=self.tempCutoff.get())
+            momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempCutoff.get())
+
+            self.angleDeflection = np.arctan((momentRaw[0] / self.current_jet.energy)) * (180 / np.pi)
+            self.moment = momentRaw[0]
+            self.momentDisplay.set('k = ' + str(self.K) + ' Jet Drift Moment: ' + str(self.moment) + ' GeV\n'
+                                   + 'Angular Deflection: ' + str(self.angleDeflection) + ' deg')
+            print("k=0 moment: " + str(self.moment) + " GeV")
+            print('Angular Deflection: ' + str(self.angleDeflection) + " deg.")
+        else:
+            print('Select a file!!!')
+
+    def calc_hadron_moment(self):
+        if self.file_selected:
+            momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=0, maxTemp=self.tempCutoff.get())
 
             self.angleDeflection = np.arctan((momentRaw[0] / self.current_jet.energy)) * (180 / np.pi)
             self.moment = momentRaw[0]

@@ -41,7 +41,8 @@ def temp_cut(event, jet, time, cutoff=0):
 
 # Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
 def integrand(event, jet, k=0, cutoffT=0):
-    return lambda t: fudge_scalar * ((event.i_int_factor(jet=jet, time=t)[0])
+    FERMItoGeV = (1 / 0.19732687)
+    return lambda t: fudge_scalar * FERMItoGeV * (1 / jet.energy) *  ((event.i_int_factor(jet=jet, time=t)[0])
                       * (event.u_perp(jet=jet, time=t) / (1 - event.u_par(jet=jet, time=t)))
                       * (event.mu(jet=jet, time=t) ** (k + 2))
                       * event.rho(jet=jet, time=t)
@@ -60,11 +61,11 @@ def moment_integral(event, jet, k=0, cutoffT=0):
 
     # Tack constants on
     # The FERMItoGeV factor of ~5 converts unit factor of fm from line integration over fm to GeV
-    FERMItoGeV = (1 / 0.19732687)
-    moment = FERMItoGeV * (1 / jet.energy) * (1/fudge_scalar) * raw_quad[0]
+
+    moment = (1/fudge_scalar) * raw_quad[0]
 
     # Error on moment
-    moment_error = FERMItoGeV * (1 / jet.energy) * (1/fudge_scalar) * raw_quad[1]  # Not including I(k) error
+    moment_error = (1/fudge_scalar) * raw_quad[1]  # Not including I(k) error
 
     #print('Quad: ' + str(moment) + ', +/- ' + str(moment_error))
 

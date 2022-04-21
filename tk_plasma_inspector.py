@@ -1,4 +1,5 @@
 import os
+import math
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
@@ -101,6 +102,8 @@ class MainPage(tk.Frame):
         self.tempType.set('contour')
         self.propPlotRes = tk.DoubleVar()
         self.propPlotRes.set(0.2)
+        self.plotColors = tk.BooleanVar()
+        self.plotColors.set(False)
 
         # Moment variables
         self.moment = 0
@@ -242,6 +245,8 @@ class MainPage(tk.Frame):
 
         # Property plot menu
         propMenu = tk.Menu(parent.menubar, tearoff=0)
+        propMenu.add_checkbutton(label='Color Plots for Temp Cutoff', variable=self.plotColors, onvalue=1,
+                                 offvalue=0, command=self.update_plots)
         propResMenu = tk.Menu(propMenu)
         propResMenu.add_radiobutton(label='0.1 fm', variable=self.propPlotRes, value=0.1,
                                     command=self.update_plots)
@@ -275,6 +280,34 @@ class MainPage(tk.Frame):
         self.moment_button.grid(row=2, column=6)
         # buttonPage1.grid()  # Unused second page
 
+    def round_decimals_up(self, number: float, decimals: int = 2):
+        """
+        Returns a value rounded up to a specific number of decimal places.
+        """
+        if not isinstance(decimals, int):
+            raise TypeError("decimal places must be an integer")
+        elif decimals < 0:
+            raise ValueError("decimal places has to be 0 or more")
+        elif decimals == 0:
+            return math.ceil(number)
+
+        factor = 10 ** decimals
+        return math.ceil(number * factor) / factor
+
+    def round_decimals_down(self, number: float, decimals: int = 1):
+        """
+        Returns a value rounded down to a specific number of decimal places.
+        """
+        if not isinstance(decimals, int):
+            raise TypeError("decimal places must be an integer")
+        elif decimals < 0:
+            raise ValueError("decimal places has to be 0 or more")
+        elif decimals == 0:
+            return math.floor(number)
+
+        factor = 10 ** decimals
+        return math.floor(number * factor) / factor
+
     # Define the update function
     def select_file(self, value=None):
         hydro_file_path = askopenfilename(
@@ -293,19 +326,39 @@ class MainPage(tk.Frame):
         self.tempMin = self.current_event.max_temp()
 
         # Set sliders limits to match bounds of the event
-        self.timeSlider.configure(from_=self.current_event.t0)
-        self.timeSlider.configure(to=self.current_event.tf)
-        self.time.set(self.current_event.t0)
+        dec = 1  # number of decimals rounding to... Should match resolution of slider.
+        self.timeSlider.configure(from_=self.round_decimals_up(self.current_event.t0, decimals=dec))
+        self.timeSlider.configure(to=self.round_decimals_down(self.current_event.tf, decimals=1))
+        self.time.set(self.round_decimals_up(self.current_event.t0, decimals=1))
 
-        self.x0Slider.configure(from_=self.current_event.xmin)
-        self.x0Slider.configure(to=self.current_event.xmax)
+        self.x0Slider.configure(from_=self.round_decimals_up(self.current_event.xmin, decimals=dec))
+        self.x0Slider.configure(to=self.round_decimals_down(self.current_event.xmax, decimals=dec))
         self.x0.set(0)
 
-        self.y0Slider.configure(from_=self.current_event.ymin)
-        self.y0Slider.configure(to=self.current_event.ymax)
+        self.y0Slider.configure(from_=self.round_decimals_up(self.current_event.ymin, decimals=dec))
+        self.y0Slider.configure(to=self.round_decimals_down(self.current_event.ymax, decimals=dec))
         self.y0.set(0)
 
         self.update_plots()
+
+    def tempColoringFunc(self, t):
+        colorArray = np.array([])
+        for time in t:
+            # Check temperature at the given time
+            checkTemp = self.current_event.temp(self.current_jet.coords3(time))
+            # Assign relevant color to plot
+            if checkTemp < self.tempCutoff.get():
+                color = 'r'
+            else:
+                color = 'b'
+            colorArray = np.append(colorArray, color)
+        cutoffTimeIndexes = np.where(colorArray == 'r')
+        cutoffTimes = np.array([])
+        for index in cutoffTimeIndexes:
+            time = t[index]
+            cutoffTimes = np.append(cutoffTimes, time)
+        return colorArray, cutoffTimes, cutoffTimeIndexes
+
 
     # Define the update function
     def update_plots(self, value=None):
@@ -375,6 +428,12 @@ class MainPage(tk.Frame):
             YArray = np.array([])
             integrandArray = np.array([])
 
+            # Decide if you want to feed tempCutoff to the integrand function to bring it to zero.
+            if self.plotColors.get():
+                decidedCut = 0
+            else:
+                decidedCut = self.tempCutoff.get()
+
             # Calculate plot data
             for time in t:
                 uPerp = self.current_event.u_perp(jet=self.current_jet, time=time)
@@ -387,7 +446,7 @@ class MainPage(tk.Frame):
                 xPOS = self.current_jet.xpos(time)
                 yPOS = self.current_jet.ypos(time)
                 integrand = pi.integrand(event=self.current_event, jet=self.current_jet, k=self.K,
-                                         cutoffT=self.tempCutoff.get())(time)
+                                         cutoffT=decidedCut)(time)
 
                 uPerpArray = np.append(uPerpArray, uPerp)
                 uParArray = np.append(uParArray, uPar)
@@ -403,37 +462,102 @@ class MainPage(tk.Frame):
                 XArray = np.append(XArray, xPOS)
                 YArray = np.append(YArray, yPOS)
 
+            # Set plot font hardcoded options
             plotFontSize = 8
+            markSize = 2
+            gridLineWidth = 1
+            connectorLineStyle = '-'
+            # connectorLineColor = 'black'  # Not set up
 
-            self.propertyAxes[0, 0].plot(t, uPerpArray)
-            self.propertyAxes[0, 0].set_title("u_perp", fontsize=plotFontSize)
-            self.propertyAxes[0, 1].plot(t, uParArray)
-            self.propertyAxes[0, 1].set_title("u_par", fontsize=plotFontSize)
-            self.propertyAxes[1, 0].plot(t, tempArray)
-            self.propertyAxes[1, 0].set_title("T (GeV)", fontsize=plotFontSize)
-            self.propertyAxes[1, 1].plot(t, velArray)
-            self.propertyAxes[1, 1].set_title("|u|", fontsize=plotFontSize)
-            self.propertyAxes[2, 0].plot(t, (uPerpArray / (1 - uParArray)))
-            self.propertyAxes[2, 0].set_title("prp / (1-par)", fontsize=plotFontSize)
-            self.propertyAxes[2, 1].plot(t, 1 / (5 * overLambdaArray))
-            self.propertyAxes[2, 1].set_title("1/Lmda (fm)", fontsize=plotFontSize)
-            self.propertyAxes[1, 2].plot(t, 1 / (overLambdaArray))
-            self.propertyAxes[1, 2].set_title("1/Lmda (GeV^-1)", fontsize=plotFontSize)
-            self.propertyAxes[2, 2].plot(t, 4 * tempArray ** 2)
-            self.propertyAxes[2, 2].set_title("mu^2 (GeV^2)", fontsize=plotFontSize)
-            self.propertyAxes[0, 2].plot(t, iIntArray)
-            self.propertyAxes[0, 2].set_title("I(k) Factor", fontsize=plotFontSize)
-            self.propertyAxes[0, 3].plot(t, XArray)
-            self.propertyAxes[0, 3].set_title("X Pos", fontsize=plotFontSize)
-            self.propertyAxes[1, 3].plot(t, YArray)
-            self.propertyAxes[1, 3].set_title("Y Pos", fontsize=plotFontSize)
-            self.propertyAxes[2, 3].plot(t, integrandArray)
-            self.propertyAxes[2, 3].set_title("Integrand", fontsize=plotFontSize)
-
+            # Gridlines and ticks
+            # Plot horizontal gridlines at y=0
+            for axisList in self.propertyAxes:  # Medium property plots
+                for axis in axisList:
+                    axis.axhline(y=0, color='black', linestyle=':', lw=gridLineWidth)
+            # Plot horizontal gridline at temp cutoff for temp plot
+            self.propertyAxes[1, 0].axhline(y=self.tempCutoff.get(), color='black', linestyle=':', lw=gridLineWidth)
             # Plot vertical gridline at current time from slider
             for axisList in self.propertyAxes:  # Iterate through medium property plots
                 for axis in axisList:
-                    axis.axvline(x=self.time.get(), color='black', ls=':')
+                    axis.axvline(x=self.time.get(), color='black', ls=':', lw=gridLineWidth)
+            # Plot tick at temp cutoff for temp plot
+            self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempCutoff.get()])
+
+            if self.plotColors.get():
+                # Determine colors from temp seen by jet at each time.
+                colorArray, cutoffTimes, cutoffTimeIndexes = self.tempColoringFunc(t)
+
+                # Plot connector line
+                self.propertyAxes[0, 0].plot(t, uPerpArray, ls=connectorLineStyle)
+                self.propertyAxes[0, 1].plot(t, uParArray, ls=connectorLineStyle)
+                self.propertyAxes[1, 0].plot(t, tempArray, ls=connectorLineStyle)
+                self.propertyAxes[1, 1].plot(t, velArray, ls=connectorLineStyle)
+                self.propertyAxes[2, 0].plot(t, (uPerpArray / (1 - uParArray)), ls=connectorLineStyle)
+                self.propertyAxes[2, 1].plot(t, 1 / (5 * overLambdaArray), ls=connectorLineStyle)
+                self.propertyAxes[1, 2].plot(t, 1 / (overLambdaArray), ls=connectorLineStyle)
+                self.propertyAxes[2, 2].plot(t, 4 * tempArray ** 2, ls=connectorLineStyle)
+                self.propertyAxes[0, 2].plot(t, iIntArray, ls=connectorLineStyle)
+                self.propertyAxes[0, 3].plot(t, XArray, ls=connectorLineStyle)
+                self.propertyAxes[1, 3].plot(t, YArray, ls=connectorLineStyle)
+                self.propertyAxes[2, 3].plot(t, integrandArray, ls=connectorLineStyle)
+
+                # Plot colored markers.
+                for i in range(0,len(t)):
+                    self.propertyAxes[0, 0].plot(t[i], uPerpArray[i], 'o', color=colorArray[i], markersize=markSize)
+                    self.propertyAxes[0, 1].plot(t[i], uParArray[i], 'o', color=colorArray[i], markersize=markSize)
+                    self.propertyAxes[1, 0].plot(t[i], tempArray[i], 'o', color=colorArray[i], markersize=markSize)
+                    self.propertyAxes[1, 1].plot(t[i], velArray[i], 'o', color=colorArray[i], markersize=markSize)
+                    self.propertyAxes[2, 0].plot(t[i], (uPerpArray[i] / (1 - uParArray[i])), 'o', color=colorArray[i]
+                                                 , markersize=markSize)
+                    self.propertyAxes[2, 1].plot(t[i], 1 / (5 * overLambdaArray[i]), 'o', color=colorArray[i]
+                                                 , markersize=markSize)
+                    self.propertyAxes[1, 2].plot(t[i], 1 / (overLambdaArray[i]), 'o', color=colorArray[i]
+                                                 , markersize=markSize)
+                    self.propertyAxes[2, 2].plot(t[i], 4 * tempArray[i] ** 2, 'o', color=colorArray[i]
+                                                 , markersize=markSize)
+                    self.propertyAxes[0, 2].plot(t[i], iIntArray[i], 'o', color=colorArray[i], markersize=markSize)
+                    self.propertyAxes[0, 3].plot(t[i], XArray[i], 'o', color=colorArray[i], markersize=markSize)
+                    self.propertyAxes[1, 3].plot(t[i], YArray[i], 'o', color=colorArray[i], markersize=markSize)
+                    self.propertyAxes[2, 3].plot(t[i], integrandArray[i], 'o', color=colorArray[i], markersize=markSize)
+
+                # Fill under the curve for hadron gas phase
+                self.propertyAxes[2, 3].fill_between(
+                    x=t,
+                    y1=integrandArray,
+                    where= t > cutoffTimes[0],
+                    color='r',
+                    alpha=0.2)
+
+
+            else:
+                # Plot usual plots based on style sheet
+                self.propertyAxes[0, 0].plot(t, uPerpArray)
+                self.propertyAxes[0, 1].plot(t, uParArray)
+                self.propertyAxes[1, 0].plot(t, tempArray)
+                self.propertyAxes[1, 1].plot(t, velArray)
+                self.propertyAxes[2, 0].plot(t, (uPerpArray / (1 - uParArray)))
+                self.propertyAxes[2, 1].plot(t, 1 / (5 * overLambdaArray))
+                self.propertyAxes[1, 2].plot(t, 1 / (overLambdaArray))
+                self.propertyAxes[2, 2].plot(t, 4 * tempArray ** 2)
+                self.propertyAxes[0, 2].plot(t, iIntArray)
+                self.propertyAxes[0, 3].plot(t, XArray)
+                self.propertyAxes[1, 3].plot(t, YArray)
+                self.propertyAxes[2, 3].plot(t, integrandArray)
+
+            self.propertyAxes[0, 0].set_title("u_perp", fontsize=plotFontSize)
+            self.propertyAxes[0, 1].set_title("u_par", fontsize=plotFontSize)
+            self.propertyAxes[1, 0].set_title("T (GeV)", fontsize=plotFontSize)
+            self.propertyAxes[1, 1].set_title("|u|", fontsize=plotFontSize)
+            self.propertyAxes[2, 0].set_title("prp / (1-par)", fontsize=plotFontSize)
+            self.propertyAxes[2, 1].set_title("1/Lmda (fm)", fontsize=plotFontSize)
+            self.propertyAxes[1, 2].set_title("1/Lmda (GeV^-1)", fontsize=plotFontSize)
+            self.propertyAxes[2, 2].set_title("mu^2 (GeV^2)", fontsize=plotFontSize)
+            self.propertyAxes[0, 2].set_title("I(k) Factor", fontsize=plotFontSize)
+            self.propertyAxes[0, 3].set_title("X Pos", fontsize=plotFontSize)
+            self.propertyAxes[1, 3].set_title("Y Pos", fontsize=plotFontSize)
+            self.propertyAxes[2, 3].set_title("Integrand", fontsize=plotFontSize)
+
+
 
         # If you've got no file loaded, just redraw the canvas.
         else:
@@ -444,7 +568,6 @@ class MainPage(tk.Frame):
     # Method to animate plasma evolution
     def animate_plasma(self):
         return None
-
 
     def calc_moment(self):
         if self.file_selected:
@@ -510,6 +633,8 @@ def on_closing():
         plt.close('all')
         # Close the application
         app.destroy()
+        # Be polite. :)
+        print('Have a lovely day!')
 
 app.protocol("WM_DELETE_WINDOW", on_closing)
 

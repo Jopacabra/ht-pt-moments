@@ -22,7 +22,49 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 
 
 # Define fonts
-LARGE_FONT = ('Verdana', 12)
+LARGE_FONT = ('Verdana', 10)
+
+#####################
+# Generic Functions #
+#####################
+
+def moment_label(moment, angleDeflection, K=0, label='Total'):
+    string = 'k = ' + str(K) + ' ' + str(label) + ' Jet Drift Moment: ' + str(moment) + ' GeV\n' \
+             + 'Angular Deflection: ' + str(angleDeflection) + ' deg'
+    return string
+
+
+# Function to round up to specified number of decimals
+def round_decimals_up(number: float, decimals: int = 2):
+    """
+    Returns a value rounded up to a specific number of decimal places.
+    """
+    if not isinstance(decimals, int):
+        raise TypeError("decimal places must be an integer")
+    elif decimals < 0:
+        raise ValueError("decimal places has to be 0 or more")
+    elif decimals == 0:
+        return math.ceil(number)
+
+    factor = 10 ** decimals
+    return math.ceil(number * factor) / factor
+
+
+# Function to round down to specified number of decimals
+def round_decimals_down(number: float, decimals: int = 1):
+    """
+    Returns a value rounded down to a specific number of decimal places.
+    """
+    if not isinstance(decimals, int):
+        raise TypeError("decimal places must be an integer")
+    elif decimals < 0:
+        raise ValueError("decimal places has to be 0 or more")
+    elif decimals == 0:
+        return math.floor(number)
+
+    factor = 10 ** decimals
+    return math.floor(number * factor) / factor
+
 
 ###########################
 # Main Application Object #
@@ -91,7 +133,10 @@ class MainPage(tk.Frame):
         self.jetE.set(100)
 
         # Integration options
-        self.tempCutoff = tk.DoubleVar()
+        self.tempHRG = tk.DoubleVar()
+        self.tempHRG.set(0.200)
+        self.tempUnhydro = tk.DoubleVar()
+        self.tempUnhydro.set(0.150)
 
         # Plotting options
         self.velocityType = tk.StringVar()
@@ -103,14 +148,28 @@ class MainPage(tk.Frame):
         self.propPlotRes = tk.DoubleVar()
         self.propPlotRes.set(0.2)
         self.plotColors = tk.BooleanVar()
-        self.plotColors.set(False)
+        self.plotColors.set(True)
 
         # Moment variables
         self.moment = 0
         self.angleDeflection = 0
+        self.momentPlasma = 0
+        self.angleDeflectionPlasma = 0
+        self.momentHRG = 0
+        self.angleDeflectionHRG = 0
         self.K = 0
         self.momentDisplay = tk.StringVar()
-        self.momentDisplay.set('k = ' + str(self.K) + ' moment: \nAngular Deflection: ')
+        self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                   K=self.K, label='Total'))
+        self.momentPlasmaDisplay = tk.StringVar()
+        self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                   K=self.K, label='Plasma'))
+        self.momentHRGDisplay = tk.StringVar()
+        self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                   K=self.K, label='HRG'))
+        self.momentUnhydroDisplay = tk.StringVar()
+        self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                               K=self.K, label='Unhydro'))
 
         ################
         # Plot Objects #
@@ -144,6 +203,9 @@ class MainPage(tk.Frame):
 
         # Set up the moment display
         self.momentLabel = tk.Label(self, textvariable=self.momentDisplay, font=LARGE_FONT)
+        self.momentPlasmaLabel = tk.Label(self, textvariable=self.momentPlasmaDisplay, font=LARGE_FONT)
+        self.momentHRGLabel = tk.Label(self, textvariable=self.momentHRGDisplay, font=LARGE_FONT)
+        self.momentUnhydroLabel = tk.Label(self, textvariable=self.momentUnhydroDisplay, font=LARGE_FONT)
 
         ############
         # Controls #
@@ -158,10 +220,6 @@ class MainPage(tk.Frame):
         # Create button to calculate and display moment
         self.moment_button = ttk.Button(self, text='Moment',
                                         command=self.calc_moment)
-
-        # Create button to calculate and display moment
-        self.hadron_moment_button = ttk.Button(self, text='HG Moment',
-                                        command=self.calc_hadron_moment)
 
         # Create button to sample the event and set jet initial conditions.
         self.sample_button = ttk.Button(self, text='Sample',
@@ -182,19 +240,25 @@ class MainPage(tk.Frame):
         # Create jetE slider
         self.jetESlider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.jetE,
                                    from_=10, to=100, length=200, resolution=0.1, label='jetE (GeV)')
-        # Create tempCutoff slider
+        # Create tempHRG slider
         self.tempCutoffSlider = tk.Scale(self, orient=tk.HORIZONTAL,
-                                         variable=self.tempCutoff, from_=0, to=1, length=200, resolution=0.01,
-                                         label='Tcut (GeV)')
+                                         variable=self.tempHRG, from_=0, to=1, length=200, resolution=0.01,
+                                         label='Had. Temp (GeV)')
+        # Create tempHRG slider
+        self.tempUnhydroSlider = tk.Scale(self, orient=tk.HORIZONTAL,
+                                          variable=self.tempUnhydro, from_=0, to=1, length=200, resolution=0.01,
+                                          label='Unhydro Temp (GeV)')
+
 
         # Register update ON RELEASE - use of command parameter applies action immediately
         #self.update_button.bind("<ButtonRelease-1>", self.update_plots)
         self.timeSlider.bind("<ButtonRelease-1>", self.update_plots)
-        self.x0Slider.bind("<ButtonRelease-1>", self.update_plots)
-        self.y0Slider.bind("<ButtonRelease-1>", self.update_plots)
-        self.theta0Slider.bind("<ButtonRelease-1>", self.update_plots)
-        self.jetESlider.bind("<ButtonRelease-1>", self.update_plots)
-        self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_plots)
+        #self.x0Slider.bind("<ButtonRelease-1>", self.update_plots)
+        #self.y0Slider.bind("<ButtonRelease-1>", self.update_plots)
+        #self.theta0Slider.bind("<ButtonRelease-1>", self.update_plots)
+        #self.jetESlider.bind("<ButtonRelease-1>", self.update_plots)
+        #self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_plots)
+        #self.tempUnhydroSlider.bind("<ButtonRelease-1>", self.update_plots)
 
         #########
         # Menus #
@@ -270,48 +334,23 @@ class MainPage(tk.Frame):
         # Organization and Layout #
         ###########################
         # Smash everything into the window
-        self.timeSlider.grid(row=0, column=0)
-        self.x0Slider.grid(row=0, column=1)
-        self.y0Slider.grid(row=0, column=2)
-        self.theta0Slider.grid(row=0, column=3)
-        self.jetESlider.grid(row=0, column=4)
-        self.tempCutoffSlider.grid(row=0, column=5)
-        self.update_button.grid(row=0, column=6)
-        self.canvas.get_tk_widget().grid(row=1, column=0, columnspan=3, rowspan=3)
-        self.canvas1.get_tk_widget().grid(row=1, column=3, columnspan=3, rowspan=3)
-        self.momentLabel.grid(row=4, column=0, columnspan=3)
-        self.sample_button.grid(row=1, column=6)
-        self.moment_button.grid(row=2, column=6)
-        self.hadron_moment_button.grid(row=3, column=6)
+        self.update_button.grid(row=0, column=0)
+        self.sample_button.grid(row=0, column=1)
+        self.moment_button.grid(row=0, column=2)
+        self.timeSlider.grid(row=1, column=0, columnspan=2)
+        self.x0Slider.grid(row=1, column=2, columnspan=2)
+        self.y0Slider.grid(row=1, column=4, columnspan=2)
+        self.theta0Slider.grid(row=1, column=6, columnspan=2)
+        self.jetESlider.grid(row=1, column=8, columnspan=2)
+        self.tempCutoffSlider.grid(row=5, column=8, columnspan=2)
+        self.tempUnhydroSlider.grid(row=6, column=8, columnspan=2)
+        self.canvas.get_tk_widget().grid(row=2, column=0, columnspan=6, rowspan=3)
+        self.canvas1.get_tk_widget().grid(row=2, column=6, columnspan=6, rowspan=3)
+        self.momentLabel.grid(row=5, column=0, columnspan=4)
+        self.momentPlasmaLabel.grid(row=6, column=0, columnspan=4)
+        self.momentHRGLabel.grid(row=5, column=4, columnspan=4)
+        self.momentUnhydroLabel.grid(row=6, column=4, columnspan=4)
         # buttonPage1.grid()  # Unused second page
-
-    def round_decimals_up(self, number: float, decimals: int = 2):
-        """
-        Returns a value rounded up to a specific number of decimal places.
-        """
-        if not isinstance(decimals, int):
-            raise TypeError("decimal places must be an integer")
-        elif decimals < 0:
-            raise ValueError("decimal places has to be 0 or more")
-        elif decimals == 0:
-            return math.ceil(number)
-
-        factor = 10 ** decimals
-        return math.ceil(number * factor) / factor
-
-    def round_decimals_down(self, number: float, decimals: int = 1):
-        """
-        Returns a value rounded down to a specific number of decimal places.
-        """
-        if not isinstance(decimals, int):
-            raise TypeError("decimal places must be an integer")
-        elif decimals < 0:
-            raise ValueError("decimal places has to be 0 or more")
-        elif decimals == 0:
-            return math.floor(number)
-
-        factor = 10 ** decimals
-        return math.floor(number * factor) / factor
 
     # Define the update function
     def select_file(self, value=None):
@@ -332,16 +371,16 @@ class MainPage(tk.Frame):
 
         # Set sliders limits to match bounds of the event
         dec = 1  # number of decimals rounding to... Should match resolution of slider.
-        self.timeSlider.configure(from_=self.round_decimals_up(self.current_event.t0, decimals=dec))
-        self.timeSlider.configure(to=self.round_decimals_down(self.current_event.tf, decimals=1))
-        self.time.set(self.round_decimals_up(self.current_event.t0, decimals=1))
+        self.timeSlider.configure(from_=round_decimals_up(self.current_event.t0, decimals=dec))
+        self.timeSlider.configure(to=round_decimals_down(self.current_event.tf, decimals=dec))
+        self.time.set(round_decimals_up(self.current_event.t0, decimals=dec))
 
-        self.x0Slider.configure(from_=self.round_decimals_up(self.current_event.xmin, decimals=dec))
-        self.x0Slider.configure(to=self.round_decimals_down(self.current_event.xmax, decimals=dec))
+        self.x0Slider.configure(from_=round_decimals_up(self.current_event.xmin, decimals=dec))
+        self.x0Slider.configure(to=round_decimals_down(self.current_event.xmax, decimals=dec))
         self.x0.set(0)
 
-        self.y0Slider.configure(from_=self.round_decimals_up(self.current_event.ymin, decimals=dec))
-        self.y0Slider.configure(to=self.round_decimals_down(self.current_event.ymax, decimals=dec))
+        self.y0Slider.configure(from_=round_decimals_up(self.current_event.ymin, decimals=dec))
+        self.y0Slider.configure(to=round_decimals_down(self.current_event.ymax, decimals=dec))
         self.y0.set(0)
 
         self.update_plots()
@@ -352,17 +391,26 @@ class MainPage(tk.Frame):
             # Check temperature at the given time
             checkTemp = self.current_event.temp(self.current_jet.coords3(time))
             # Assign relevant color to plot
-            if checkTemp < self.tempCutoff.get():
+            if self.tempHRG.get() > checkTemp > self.tempUnhydro.get():
+                # Hadron gas phase, hydrodynamic
+                color = 'g'
+            elif checkTemp < self.tempUnhydro.get():
+                # Hadron gas phase, unhydrodynamic
                 color = 'r'
             else:
                 color = 'b'
             colorArray = np.append(colorArray, color)
-        cutoffTimeIndexes = np.where(colorArray == 'r')
-        cutoffTimes = np.array([])
-        for index in cutoffTimeIndexes:
+        hydroHRGTimeIndexes = np.where(colorArray == 'g')
+        hydroHRGTimes = np.array([])
+        for index in hydroHRGTimeIndexes:
             time = t[index]
-            cutoffTimes = np.append(cutoffTimes, time)
-        return colorArray, cutoffTimes, cutoffTimeIndexes
+            hydroHRGTimes = np.append(hydroHRGTimes, time)
+        unhydroHRGTimeIndexes = np.where(colorArray == 'r')
+        unhydroHRGTimes = np.array([])
+        for index in unhydroHRGTimeIndexes:
+            time = t[index]
+            unhydroHRGTimes = np.append(unhydroHRGTimes, time)
+        return colorArray, hydroHRGTimes, unhydroHRGTimes
 
 
     # Define the update function
@@ -390,10 +438,15 @@ class MainPage(tk.Frame):
                                                                   temptype=self.tempType.get(),
                                                                   numContours=self.contourNumber.get())
 
-            # Set moment to None
-            self.moment = 0
-            self.angleDeflection = 0
-            self.momentDisplay.set('k = ' + str(self.K) + ' moment: \nAngular Deflection: ')
+            # Set moment display to None
+            self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                K=self.K, label='Total'))
+            self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                      K=self.K, label='Plasma'))
+            self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                   K=self.K, label='HRG'))
+            self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                   K=self.K, label='Unhydro'))
 
             # Set current_jet object to current slider parameters
             self.current_jet = jets.jet(x0=self.x0.get(), y0=self.y0.get(),
@@ -409,11 +462,17 @@ class MainPage(tk.Frame):
                     break
 
             # Plot jet trajectory
+            # Find final time within position bounds
+            jetTrajTime = np.array([])
+            for time in t:
+                if pi.pos_cut(self.current_event, self.current_jet, time):
+                    jetTrajTime = np.append(jetTrajTime, time)
 
-            jetInitialX = self.current_jet.xpos(t[0])
-            jetInitialY = self.current_jet.ypos(t[0])
-            jetFinalX = self.current_jet.xpos(t[-1])
-            jetFinalY = self.current_jet.ypos(t[-1])
+
+            jetInitialX = self.current_jet.xpos(jetTrajTime[0])
+            jetInitialY = self.current_jet.ypos(jetTrajTime[0])
+            jetFinalX = self.current_jet.xpos(jetTrajTime[-1])
+            jetFinalY = self.current_jet.ypos(jetTrajTime[-1])
             self.plasmaAxis.plot([jetInitialX, jetFinalX], [jetInitialY, jetFinalY], ls=':', color='w')
 
             # Plot new jet position
@@ -433,11 +492,11 @@ class MainPage(tk.Frame):
             YArray = np.array([])
             integrandArray = np.array([])
 
-            # Decide if you want to feed tempCutoff to the integrand function to bring it to zero.
+            # Decide if you want to feed tempHRG to the integrand function to bring it to zero.
             if self.plotColors.get():
                 decidedCut = 0
             else:
-                decidedCut = self.tempCutoff.get()
+                decidedCut = self.tempHRG.get()
 
             # Calculate plot data
             for time in t:
@@ -480,17 +539,17 @@ class MainPage(tk.Frame):
                 for axis in axisList:
                     axis.axhline(y=0, color='black', linestyle=':', lw=gridLineWidth)
             # Plot horizontal gridline at temp minTemp for temp plot
-            self.propertyAxes[1, 0].axhline(y=self.tempCutoff.get(), color='black', linestyle=':', lw=gridLineWidth)
+            self.propertyAxes[1, 0].axhline(y=self.tempHRG.get(), color='black', linestyle=':', lw=gridLineWidth)
             # Plot vertical gridline at current time from slider
             for axisList in self.propertyAxes:  # Iterate through medium property plots
                 for axis in axisList:
                     axis.axvline(x=self.time.get(), color='black', ls=':', lw=gridLineWidth)
             # Plot tick at temp minTemp for temp plot
-            self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempCutoff.get()])
+            self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempHRG.get()])
 
             if self.plotColors.get():
                 # Determine colors from temp seen by jet at each time.
-                colorArray, cutoffTimes, cutoffTimeIndexes = self.tempColoringFunc(t)
+                colorArray, hydroHRGTimes, unhydroHRGTimes = self.tempColoringFunc(t)
 
                 # Plot connector line
                 self.propertyAxes[0, 0].plot(t, uPerpArray, ls=connectorLineStyle)
@@ -525,13 +584,37 @@ class MainPage(tk.Frame):
                     self.propertyAxes[1, 3].plot(t[i], YArray[i], 'o', color=colorArray[i], markersize=markSize)
                     self.propertyAxes[2, 3].plot(t[i], integrandArray[i], 'o', color=colorArray[i], markersize=markSize)
 
-                # Fill under the curve for hadron gas phase
-                self.propertyAxes[2, 3].fill_between(
-                    x=t,
-                    y1=integrandArray,
-                    where= t > cutoffTimes[0],
-                    color='r',
-                    alpha=0.2)
+                if len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) > 0:
+                    # Fill under the curve for hydrodynamic hadron gas phase
+                    self.propertyAxes[2, 3].fill_between(
+                        x=t,
+                        y1=integrandArray,
+                        where=hydroHRGTimes[0] < t,
+                        color='g',
+                        alpha=0.2)
+                    # Fill under the curve for unhydrodynamic hadron gas phase
+                    self.propertyAxes[2, 3].fill_between(
+                        x=t,
+                        y1=integrandArray,
+                        where=unhydroHRGTimes[0] < t,
+                        color='r',
+                        alpha=0.2)
+                elif len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) == 0:
+                    # Fill under the curve for hydrodynamic hadron gas phase
+                    self.propertyAxes[2, 3].fill_between(
+                        x=t,
+                        y1=integrandArray,
+                        where= t > hydroHRGTimes[0],
+                        color='g',
+                        alpha=0.2)
+                elif len(hydroHRGTimes) == 0 and len(unhydroHRGTimes) > 0:
+                    # Fill under the curve for unhydrodynamic hadron gas phase
+                    self.propertyAxes[2, 3].fill_between(
+                        x=t,
+                        y1=integrandArray,
+                        where=unhydroHRGTimes[0] < t,
+                        color='r',
+                        alpha=0.2)
 
 
             else:
@@ -576,27 +659,41 @@ class MainPage(tk.Frame):
 
     def calc_moment(self):
         if self.file_selected:
-            momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempCutoff.get())
+            # Calculate plasma moment
+            momentPlasmaRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
 
-            self.angleDeflection = np.arctan((momentRaw[0] / self.current_jet.energy)) * (180 / np.pi)
-            self.moment = momentRaw[0]
-            self.momentDisplay.set('k = ' + str(self.K) + ' Jet Drift Moment: ' + str(self.moment) + ' GeV\n'
-                                   + 'Angular Deflection: ' + str(self.angleDeflection) + ' deg')
-            print("k=0 moment: " + str(self.moment) + " GeV")
-            print('Angular Deflection: ' + str(self.angleDeflection) + " deg.")
-        else:
-            print('Select a file!!!')
+            self.angleDeflectionPlasma = np.arctan((momentPlasmaRaw[0] / self.current_jet.energy)) * (180 / np.pi)
+            self.momentPlasma = momentPlasmaRaw[0]
+            self.momentPlasmaDisplay.set(moment_label(moment=self.momentPlasma,
+                                                      angleDeflection=self.angleDeflectionPlasma,
+                                                      K=self.K, label='plasma'))
 
-    def calc_hadron_moment(self):
-        if self.file_selected:
-            momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=0, maxTemp=self.tempCutoff.get())
+            # Calculate hadron gas (HRG) moment
+            momentHRGRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempUnhydro.get(),
+                                              maxTemp=self.tempHRG.get())
 
-            self.angleDeflection = np.arctan((momentRaw[0] / self.current_jet.energy)) * (180 / np.pi)
-            self.moment = momentRaw[0]
-            self.momentDisplay.set('k = ' + str(self.K) + ' Jet Drift Moment: ' + str(self.moment) + ' GeV\n'
-                                   + 'Angular Deflection: ' + str(self.angleDeflection) + ' deg')
-            print("k=0 moment: " + str(self.moment) + " GeV")
-            print('Angular Deflection: ' + str(self.angleDeflection) + " deg.")
+            self.angleDeflectionHRG = np.arctan((momentHRGRaw[0] / self.current_jet.energy)) * (180 / np.pi)
+            self.momentHRG = momentHRGRaw[0]
+            self.momentHRGDisplay.set(moment_label(moment=self.momentHRG, angleDeflection=self.angleDeflectionHRG,
+                                                   K=self.K, label='HRG'))
+
+            # Calculate unhydro hadron gas (HRG) moment
+            momentUnhydroRaw = pi.moment_integral(self.current_event, self.current_jet, maxTemp=self.tempUnhydro.get(),
+                                                  minTemp=0)
+
+            self.angleDeflectionUnhydro = np.arctan((momentUnhydroRaw[0] / self.current_jet.energy)) * (180 / np.pi)
+            self.momentUnhydro = momentUnhydroRaw[0]
+            self.momentUnhydroDisplay.set(moment_label(moment=self.momentUnhydro,
+                                                       angleDeflection=self.angleDeflectionUnhydro,
+                                                       K=self.K, label='Unhydro'))
+
+            # ???
+            momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
+
+            self.angleDeflection = self.angleDeflectionHRG + self.angleDeflectionPlasma + self.angleDeflectionUnhydro
+            self.moment = self.momentHRG + self.momentPlasma + self.momentUnhydro
+            self.momentDisplay.set(moment_label(moment=self.moment, angleDeflection=self.angleDeflection,
+                                                   K=self.K, label='Total'))
         else:
             print('Select a file!!!')
 

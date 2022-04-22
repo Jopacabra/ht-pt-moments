@@ -286,7 +286,7 @@ def update(val):
         iInt = current_event.i_int_factor(jet=current_jet, time=time)
         xPOS = current_jet.xpos(time)
         yPOS = current_jet.ypos(time)
-        integrand = pi.integrand(event=current_event, jet=current_jet, k=K, cutoffT=tswitch_slider.val)(time)
+        integrand = pi.integrand(event=current_event, jet=current_jet, k=K, minTemp=tswitch_slider.val)(time)
 
         uPerpArray = np.append(uPerpArray, uPerp)
         uParArray = np.append(uParArray, uPar)
@@ -351,7 +351,7 @@ def calc_moment(val):
     global moment
     global angleDeflection
 
-    moment = pi.moment_integral(current_event, current_jet, cutoffT=tswitch_slider.val)  # conversion factor fm from integration to GeV
+    moment = pi.moment_integral(current_event, current_jet, minTemp=tswitch_slider.val)  # conversion factor fm from integration to GeV
 
     angleDeflection = np.arctan((moment[0] / current_jet.energy)) * (180 / np.pi)
 

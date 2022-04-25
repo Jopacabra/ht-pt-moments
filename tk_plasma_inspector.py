@@ -706,7 +706,7 @@ class MainPage(tk.Frame):
             sampledPoint = hs.generate_jet_point(self.current_event, 1)
 
             # Uniform sample an angle
-            sampledAngle = np.uniform(0, 2*np.pi, 1)
+            sampledAngle = np.random.uniform(0, 2*np.pi, 1)
 
             # Set sliders to point
             self.x0.set(sampledPoint[0])

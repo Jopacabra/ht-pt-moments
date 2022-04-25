@@ -40,7 +40,7 @@ def temp_cut(event, jet, time, minTemp=0, maxTemp = 1000):
         return True
 
 
-# Define integrand - ONLY CORRECT FOR K=0 !!!!!!!!!!!
+# Define integrand - ONLY CORRECT FOR k=0 !!!!!!!!!!!
 def integrand(event, jet, k=0, minTemp=0, maxTemp=1000):
     FERMItoGeV = (1 / 0.19732687)
     return lambda t: fudge_scalar * FERMItoGeV * (1 / jet.energy) *  ((event.i_int_factor(jet=jet, time=t)[0])

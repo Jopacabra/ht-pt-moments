@@ -1,24 +1,21 @@
-import os
 import math
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter import messagebox
 import numpy as np
-import pandas as pd
 import plasma
 import plasma_interaction as pi
 import hard_scattering as hs
 import jets
 import matplotlib
-from matplotlib.figure import Figure
 from matplotlib import style
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import matplotlib.colors as colors
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg  # , NavigationToolbar2Tk
+# import matplotlib.animation as animation
+# import matplotlib.colors as colors
 matplotlib.use('TkAgg')  # Use proper matplotlib backend
 style.use('Solarize_Light2')
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 
 
 # Define fonts
@@ -28,8 +25,10 @@ LARGE_FONT = ('Verdana', 10)
 # Generic Functions #
 #####################
 
-def moment_label(moment, angleDeflection, K=0, label='Total'):
-    string = 'k = ' + str(K) + ' ' + str(label) + ' Jet Drift Moment: ' + str(moment) + ' GeV\n' \
+
+# Function to slap together a label string to display from calculated moment data.
+def moment_label(moment, angleDeflection, k=0, label='Total'):
+    string = 'k = ' + str(k) + ' ' + str(label) + ' Jet Drift Moment: ' + str(moment) + ' GeV\n' \
              + 'Angular Deflection: ' + str(angleDeflection) + ' deg'
     return string
 
@@ -160,16 +159,16 @@ class MainPage(tk.Frame):
         self.K = 0
         self.momentDisplay = tk.StringVar()
         self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                   K=self.K, label='Total'))
+                                            k=self.K, label='Total'))
         self.momentPlasmaDisplay = tk.StringVar()
         self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                   K=self.K, label='Plasma'))
+                                                  k=self.K, label='Plasma'))
         self.momentHRGDisplay = tk.StringVar()
         self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                   K=self.K, label='HRG'))
+                                               k=self.K, label='HRG'))
         self.momentUnhydroDisplay = tk.StringVar()
         self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                               K=self.K, label='Unhydro'))
+                                                   k=self.K, label='Unhydro'))
 
         ################
         # Plot Objects #
@@ -440,13 +439,13 @@ class MainPage(tk.Frame):
 
             # Set moment display to None
             self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                K=self.K, label='Total'))
+                                                k=self.K, label='Total'))
             self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                      K=self.K, label='Plasma'))
+                                                      k=self.K, label='Plasma'))
             self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                   K=self.K, label='HRG'))
+                                                   k=self.K, label='HRG'))
             self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                   K=self.K, label='Unhydro'))
+                                                       k=self.K, label='Unhydro'))
 
             # Set current_jet object to current slider parameters
             self.current_jet = jets.jet(x0=self.x0.get(), y0=self.y0.get(),
@@ -659,6 +658,9 @@ class MainPage(tk.Frame):
 
     def calc_moment(self):
         if self.file_selected:
+            # Update plots to set current jet and event business.
+            self.update_plots()
+
             # Calculate plasma moment
             momentPlasmaRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
 
@@ -666,7 +668,7 @@ class MainPage(tk.Frame):
             self.momentPlasma = momentPlasmaRaw[0]
             self.momentPlasmaDisplay.set(moment_label(moment=self.momentPlasma,
                                                       angleDeflection=self.angleDeflectionPlasma,
-                                                      K=self.K, label='plasma'))
+                                                      k=self.K, label='plasma'))
 
             # Calculate hadron gas (HRG) moment
             momentHRGRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempUnhydro.get(),
@@ -675,7 +677,7 @@ class MainPage(tk.Frame):
             self.angleDeflectionHRG = np.arctan((momentHRGRaw[0] / self.current_jet.energy)) * (180 / np.pi)
             self.momentHRG = momentHRGRaw[0]
             self.momentHRGDisplay.set(moment_label(moment=self.momentHRG, angleDeflection=self.angleDeflectionHRG,
-                                                   K=self.K, label='HRG'))
+                                                   k=self.K, label='HRG'))
 
             # Calculate unhydro hadron gas (HRG) moment
             momentUnhydroRaw = pi.moment_integral(self.current_event, self.current_jet, maxTemp=self.tempUnhydro.get(),
@@ -685,15 +687,15 @@ class MainPage(tk.Frame):
             self.momentUnhydro = momentUnhydroRaw[0]
             self.momentUnhydroDisplay.set(moment_label(moment=self.momentUnhydro,
                                                        angleDeflection=self.angleDeflectionUnhydro,
-                                                       K=self.K, label='Unhydro'))
+                                                       k=self.K, label='Unhydro'))
 
             # ???
-            momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
+            # momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
 
             self.angleDeflection = self.angleDeflectionHRG + self.angleDeflectionPlasma + self.angleDeflectionUnhydro
             self.moment = self.momentHRG + self.momentPlasma + self.momentUnhydro
             self.momentDisplay.set(moment_label(moment=self.moment, angleDeflection=self.angleDeflection,
-                                                   K=self.K, label='Total'))
+                                                k=self.K, label='Total'))
         else:
             print('Select a file!!!')
 
@@ -702,9 +704,14 @@ class MainPage(tk.Frame):
         if self.file_selected:
             # Sample T^6 dist. and get point
             sampledPoint = hs.generate_jet_point(self.current_event, 1)
+
+            # Uniform sample an angle
+            sampledAngle = np.uniform(0, 2*np.pi, 1)
+
             # Set sliders to point
             self.x0.set(sampledPoint[0])
             self.y0.set(sampledPoint[1])
+            self.theta0.set(sampledAngle)
 
             # Update plots
             self.update_plots()

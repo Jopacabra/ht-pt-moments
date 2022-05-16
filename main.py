@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import plasma as gr
-import hard_scattering as hs
+import hic as hs
 import plasma_interaction as mi
 import jets
 import config

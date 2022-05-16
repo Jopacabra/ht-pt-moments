@@ -1,4 +1,3 @@
-import math
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
@@ -6,7 +5,7 @@ from tkinter import messagebox
 import numpy as np
 import plasma
 import plasma_interaction as pi
-import hard_scattering as hs
+import hic as hs
 import jets
 import matplotlib
 from matplotlib import style
@@ -14,6 +13,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg  # , NavigationToolbar2Tk
 # import matplotlib.animation as animation
 # import matplotlib.colors as colors
+from utilities import round_decimals_up, round_decimals_down
+
 matplotlib.use('TkAgg')  # Use proper matplotlib backend
 style.use('Solarize_Light2')
 
@@ -31,38 +32,6 @@ def moment_label(moment, angleDeflection, k=0, label='Total'):
     string = 'k = ' + str(k) + ' ' + str(label) + ' Jet Drift Moment: ' + str(moment) + ' GeV\n' \
              + 'Angular Deflection: ' + str(angleDeflection) + ' deg'
     return string
-
-
-# Function to round up to specified number of decimals
-def round_decimals_up(number: float, decimals: int = 2):
-    """
-    Returns a value rounded up to a specific number of decimal places.
-    """
-    if not isinstance(decimals, int):
-        raise TypeError("decimal places must be an integer")
-    elif decimals < 0:
-        raise ValueError("decimal places has to be 0 or more")
-    elif decimals == 0:
-        return math.ceil(number)
-
-    factor = 10 ** decimals
-    return math.ceil(number * factor) / factor
-
-
-# Function to round down to specified number of decimals
-def round_decimals_down(number: float, decimals: int = 1):
-    """
-    Returns a value rounded down to a specific number of decimal places.
-    """
-    if not isinstance(decimals, int):
-        raise TypeError("decimal places must be an integer")
-    elif decimals < 0:
-        raise ValueError("decimal places has to be 0 or more")
-    elif decimals == 0:
-        return math.floor(number)
-
-    factor = 10 ** decimals
-    return math.floor(number * factor) / factor
 
 
 ###########################

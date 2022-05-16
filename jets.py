@@ -1,5 +1,5 @@
 import numpy as np
-import hard_scattering as hs
+import hic as hs
 
 
 # Jet object class. Useful for plotting and simplifying everything.

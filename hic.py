@@ -1,13 +1,96 @@
 import numpy as np
 import plasma as gr
 import matplotlib.pyplot as plt
+import utilities
 
 """
-This module is responsible for all processes related to jet production & hard scattering.
+This module is responsible for all processes related to jet production, event generation, & hard scattering.
 - Rejection samples initial temperature profile for jet production
 - Produces PDFs from temp backgrounds
 - Planned inclusions: Pythia handling, etc.
 """
+
+
+# Function that generates a new Trento collision event with given parameters.
+# Returns the Trento output file name.
+# I THINK file will be created in current directory
+def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au'):
+    # Create Trento command arguments
+    # bmin and bmax control min and max impact parameter. Set to same value for specific b.
+    # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
+    numEvents = 1  # Number of collision ICs to generate
+    nucleon_width = 0.5  # In fm
+    grid_step = .15*np.min([nucleon_width])  # In fm
+    grid_max_target = 15  # In fm
+    trentoIC = 'trentoIC'  # Output file name
+
+    if bmin is not None or bmax is not None:
+        # Run Trento command
+        subprocess = utilities.run_cmd(
+            'trento',
+            '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target),
+            '--output', trentoIC,
+            '--nucleon-width {}'.format(nucleon_width),
+            '--projectile {}'.format(projectile1),
+            '--projectile {}'.format(projectile2),
+            '--bmin {}'.format(bmin),
+            '--bmax {}'.format(bmax)
+        )
+    else:
+        # Run Trento command
+        subprocess = utilities.run_cmd(
+            'trento',
+            '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target),
+            '--output', trentoIC,
+            '--nucleon-width {}'.format(nucleon_width),
+            '--projectile {}'.format(projectile1),
+            '--projectile {}'.format(projectile2)
+        )
+
+    # Pass on result file name
+    return trentoIC, subprocess
+
+
+# Function that generates a new Trento collision event with given parameters.
+# Returns the Trento output file name.
+# I THINK file will be created in current directory
+def centralityBounds(numSamples, bmin=None, bmax=None, projectile1='Au', projectile2='Au', percBinWidth=5):
+    multiplicityArray = np.array([])
+    for i in range(0, numSamples):
+        # Run Trento with given parameters
+        subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1=projectile1, projectile2=projectile2)[1]
+
+        # Parse output to list
+        outputList = str(subprocess.stdout).split()
+
+        # Get and append multiplicity
+        multiplicity = outputList[4]
+        multiplicityArray = np.append(multiplicityArray, multiplicity)
+
+    # Sort multiplicity array into ascending order
+    multiplicityArray.sort()
+
+    # Find how many samples should be in each bin
+    binCap = int(utilities.round_decimals_down(multiplicityArray.size() * (percBinWidth/100)))
+
+    # Find bin edges
+    i = 0
+    binBounds = np.array([])
+    while i < multiplicityArray.size():
+        binBounds = np.append(binBounds, multiplicityArray[i])
+        i += binCap
+
+    # Tack on the max multiplicity, if it didn't get snagged.
+    if binBounds[-1] != multiplicityArray[-1]:
+        print('Last not snagged')
+        binBounds = np.append(binBounds, multiplicityArray[-1])
+    else:
+        print('Last snagged')
+
+    print('Bin bounds: ' + str(binBounds))
+
+    # Pass on bin bounds
+    return binBounds
 
 
 # Function that defines a normalized 2D PDF array for a given interpolated temperature

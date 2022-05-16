@@ -51,7 +51,7 @@ def run_cmd(quiet=False, *args):
             print('exit status:\n', proc.returncode)
             print('stdout:\n', proc.stdout)
             print('stderr:\n', proc.stderr)
-            print('---------- {}} Output End ---------------'.format(processName))
+            print('---------- {} Output End ---------------'.format(processName))
 
         return proc
 

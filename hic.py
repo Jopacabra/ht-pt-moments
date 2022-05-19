@@ -13,44 +13,80 @@ This module is responsible for all processes related to jet production, event ge
 
 # Function that generates a new Trento collision event with given parameters.
 # Returns the Trento output file name.
-# I THINK file will be created in current directory
-def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au'):
+# File will be created in directory "outputFile" and given name "0.dat".
+def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=None, randomSeed=None,
+                     normalization=None, crossSection=None, numEvents=1):
     # Create Trento command arguments
     # bmin and bmax control min and max impact parameter. Set to same value for specific b.
     # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
-    numEvents = 1  # Number of collision ICs to generate
+    # numEvents determines how many to run and spit out a file for. Will be labeled like "0.dat", "1.dat" ...
     nucleon_width = 0.5  # In fm
     grid_step = .15*np.min([nucleon_width])  # In fm
     grid_max_target = 15  # In fm
-    trentoIC = 'trentoIC'  # Output file name
 
-    if bmin is not None or bmax is not None:
-        # Run Trento command
-        subprocess = utilities.run_cmd(
-            'trento',
-            '--number-events {}'.format(numEvents),
-            '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target),
-            '--output', trentoIC,
-            '--nucleon-width {}'.format(nucleon_width),
-            '--projectile {}'.format(projectile1),
-            '--projectile {}'.format(projectile2),
-            '--bmin {}'.format(bmin),
-            '--bmax {}'.format(bmax)
-        )
-    else:
-        # Run Trento command
-        subprocess = utilities.run_cmd(
-            'trento',
-            '--number-events {}'.format(numEvents),
-            '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target),
-            '--output', trentoIC,
-            '--nucleon-width {}'.format(nucleon_width),
-            '--projectile {}'.format(projectile1),
-            '--projectile {}'.format(projectile2)
-        )
+    # Generate Trento command argument list
+    trentoCmd = ['trento', '--number-events {}'.format(numEvents),
+                 '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target)]
+
+    # Append any supplied commands in the proper order
+    if projectile1 is not None:
+        trentoCmd.append('--projectile {}'.format(projectile1))
+    if projectile2 is not None:
+        trentoCmd.append('--projectile {}'.format(projectile2))
+    if bmin is not None:
+        trentoCmd.append('--bmin {}'.format(bmin))  # Minimum impact parameter (in fm ???)
+    if bmax is not None:
+        trentoCmd.append('--bmax {}'.format(bmax))  # Maximum impact parameter (in fm ???)
+    if outputFile is not None:
+        trentoCmd.append('--output {}'.format(outputFile))  # Output file directory
+    if randomSeed is not None:
+        trentoCmd.append('--random-seed {}'.format(int(randomSeed)))  # Random seed for repeatability
+    if normalization is not None:
+        trentoCmd.append('--normalization {}'.format(normalization))  # Should be fixed by comp. to data multiplicity
+    if crossSection is not None:
+        trentoCmd.append('--cross-section {}'.format(crossSection))  # fm^2: http://qcd.phy.duke.edu/trento/usage.html
+
+    # Run Trento command
+    subprocess = utilities.run_cmd(*trentoCmd)  # Note star unpacks the list to pass the command list as arguments
 
     # Pass on result file name
-    return trentoIC, subprocess
+    return outputFile, subprocess
+
+
+# Function to generate a new trento IC for RHIC Kinematics:
+# Au Au collisions at root-s of 200 GeV
+# Normalization was fixed via multiplicity measures for 0-6% centrality guessed at via impact parameter
+# Used center of 0-10% bin mult.:
+# https://dspace.mit.edu/handle/1721.1/16933
+# Nuclear cross section:
+# https://inspirehep.net/literature/1394433
+def generateRHICTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None):
+    # Run Trento with known case parameters
+    outputFile, subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1='Au', projectile2='Au',
+                                              outputFile=outputFile, randomSeed=randomSeed, normalization=7.6,
+                                              crossSection=4.23)
+
+    # Spit out the output
+    return outputFile, subprocess
+
+
+# Function to generate a new trento IC for LHC Kinematics:
+# Pb Pb collisions at root-s of 5.02 TeV
+# Normalization was fixed via multiplicity measures for 5% centrality
+# (averaged 2.5-5% and 5-7.5%) guessed at via impact parameter
+# https://arxiv.org/abs/1512.06104
+# Nuclear cross section:
+# https://inspirehep.net/literature/1190545
+def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None):
+    # Run Trento with known case parameters
+    outputFile, subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1='Pb', projectile2='Pb',
+                                              outputFile=outputFile, randomSeed=randomSeed, normalization=19.5,
+                                              crossSection=7.0)
+
+    # Spit out the output
+    return outputFile, subprocess
+
+
 
 
 # Function that generates a new Trento collision event with given parameters.

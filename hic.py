@@ -128,7 +128,7 @@ def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=F
         # Calculate number of bins necessary using something like the Freedman-Diaconis rule
         # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
         binwidth = 2 * (stats.iqr(multiplicityArray)) / np.cbrt(multiplicityArray.size)
-        numbins = (np.amax(multiplicityArray) - np.amin(multiplicityArray)) / binwidth
+        numbins = int((np.amax(multiplicityArray) - np.amin(multiplicityArray)) / binwidth)
         # Create and show histogram
         plt.hist(multiplicityArray, bins=numbins)
         for bound in binBounds:

@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as stats
 import plasma as gr
 import matplotlib.pyplot as plt
 import utilities
@@ -124,8 +125,12 @@ def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=F
     print('Bin bounds: ' + str(binBounds))
 
     if hist:
+        # Calculate number of bins necessary using something like the Freedman-Diaconis rule
+        # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
+        binwidth = 2 * (stats.iqr(multiplicityArray)) / np.cbrt(multiplicityArray.size)
+        numbins = (np.amax(multiplicityArray) - np.amin(multiplicityArray)) / binwidth
         # Create and show histogram
-        plt.hist(multiplicityArray)
+        plt.hist(multiplicityArray, bins=numbins)
         for bound in binBounds:
             plt.axvline(x=bound, color='black', ls=':', lw=1)
         plt.show()

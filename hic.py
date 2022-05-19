@@ -87,22 +87,18 @@ def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None):
     return outputFile, subprocess
 
 
-
-
-# Function that generates a new Trento collision event with given parameters.
-# Returns the Trento output file name.
-# I THINK file will be created in current directory
-def centralityBounds(numSamples, bmin=None, bmax=None, projectile1='Au', projectile2='Au', percBinWidth=5):
+# Function that generates a load of samples for LHC conditions and finds centrality bins.
+def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=False):
     multiplicityArray = np.array([])
     for i in range(0, numSamples):
         # Run Trento with given parameters
-        subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1=projectile1, projectile2=projectile2)[1]
+        subprocess = generateLHCTrentoIC(bmin=bmin, bmax=bmax)[1]
 
         # Parse output to list
-        outputList = str(subprocess.stdout).split()
+        outputList = utilities.parseLine(subprocess.stdout)
 
-        # Get and append multiplicity
-        multiplicity = outputList[4]
+        # Get and append multiplicity - the integrated reduced thickness function
+        multiplicity = float(outputList[3])
         multiplicityArray = np.append(multiplicityArray, multiplicity)
 
     # Sort multiplicity array into ascending order
@@ -126,6 +122,13 @@ def centralityBounds(numSamples, bmin=None, bmax=None, projectile1='Au', project
         print('Last snagged')
 
     print('Bin bounds: ' + str(binBounds))
+
+    if hist:
+        # Create and show histogram
+        plt.hist(multiplicityArray)
+        for bound in binBounds:
+            plt.axvline(x=bound, color='black', ls=':', lw=1)
+        plt.show()
 
     # Pass on bin bounds
     return binBounds

@@ -57,6 +57,12 @@ def run_cmd(*args):
         return proc
 
 
+# Function to parse a line of output into a list
+# For now, this just splits the line.
+def parseLine(outputLine):
+    return outputLine.split()
+
+
 # Function to round up to specified number of decimals
 def round_decimals_up(number: float, decimals: int = 2):
     """

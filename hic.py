@@ -28,6 +28,7 @@ def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au'):
         # Run Trento command
         subprocess = utilities.run_cmd(
             'trento',
+            '--number-events {}'.format(numEvents),
             '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target),
             '--output', trentoIC,
             '--nucleon-width {}'.format(nucleon_width),
@@ -40,6 +41,7 @@ def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au'):
         # Run Trento command
         subprocess = utilities.run_cmd(
             'trento',
+            '--number-events {}'.format(numEvents),
             '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target),
             '--output', trentoIC,
             '--nucleon-width {}'.format(nucleon_width),

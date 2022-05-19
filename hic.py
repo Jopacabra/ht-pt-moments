@@ -89,7 +89,7 @@ def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, 
 
 
 # Function that generates a load of samples for LHC conditions and finds centrality bins.
-def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=False):
+def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=False, bins=None):
     multiplicityArray = np.array([])
     for i in range(0, numSamples):
         # Run Trento with given parameters
@@ -125,10 +125,13 @@ def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=F
     print('Bin bounds: ' + str(binBounds))
 
     if hist:
-        # Calculate number of bins necessary using something like the Freedman-Diaconis rule
-        # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
-        binwidth = 2 * (stats.iqr(multiplicityArray)) / np.cbrt(multiplicityArray.size)
-        numbins = int((np.amax(multiplicityArray) - np.amin(multiplicityArray)) / binwidth)
+        if bins is None:
+            # Calculate number of bins necessary using something like the Freedman-Diaconis rule, but forced finer
+            # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
+            binwidth = 2 * (stats.iqr(multiplicityArray)) / np.cbrt(multiplicityArray.size)
+            numbins = int(((np.amax(multiplicityArray) - np.amin(multiplicityArray)) / binwidth) * 10)
+        else:
+            numbins = bins
         # Create and show histogram
         plt.hist(multiplicityArray, bins=numbins)
         for bound in binBounds:

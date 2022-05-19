@@ -18,8 +18,7 @@ import h5py
 # Command to run process in the terminal
 # Stolen and modified from DukeQCD "run-events.py":
 # https://github.com/Duke-QCD/hic-eventgen
-def run_cmd(*args):
-    quiet = False
+def run_cmd(*args, quiet=False):
     """
     Run and log a subprocess.
     """

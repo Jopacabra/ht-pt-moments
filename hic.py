@@ -15,7 +15,7 @@ This module is responsible for all processes related to jet production, event ge
 # Returns the Trento output file name.
 # File will be created in directory "outputFile" and given name "0.dat".
 def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=None, randomSeed=None,
-                     normalization=None, crossSection=None, numEvents=1):
+                     normalization=None, crossSection=None, numEvents=1, quiet=False):
     # Create Trento command arguments
     # bmin and bmax control min and max impact parameter. Set to same value for specific b.
     # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
@@ -47,7 +47,7 @@ def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au', o
         trentoCmd.append('--cross-section {}'.format(crossSection))  # fm^2: http://qcd.phy.duke.edu/trento/usage.html
 
     # Run Trento command
-    subprocess = utilities.run_cmd(*trentoCmd)  # Note star unpacks the list to pass the command list as arguments
+    subprocess = utilities.run_cmd(*trentoCmd, quiet=quiet)  # Note star unpacks the list to pass the command list as arguments
 
     # Pass on result file name
     return outputFile, subprocess
@@ -60,11 +60,11 @@ def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au', o
 # https://dspace.mit.edu/handle/1721.1/16933
 # Nuclear cross section:
 # https://inspirehep.net/literature/1394433
-def generateRHICTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None):
+def generateRHICTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, quiet=False):
     # Run Trento with known case parameters
     outputFile, subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1='Au', projectile2='Au',
                                               outputFile=outputFile, randomSeed=randomSeed, normalization=7.6,
-                                              crossSection=4.23)
+                                              crossSection=4.23, quiet=quiet)
 
     # Spit out the output
     return outputFile, subprocess
@@ -77,11 +77,11 @@ def generateRHICTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None)
 # https://arxiv.org/abs/1512.06104
 # Nuclear cross section:
 # https://inspirehep.net/literature/1190545
-def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None):
+def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, quiet=False):
     # Run Trento with known case parameters
     outputFile, subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1='Pb', projectile2='Pb',
                                               outputFile=outputFile, randomSeed=randomSeed, normalization=19.5,
-                                              crossSection=7.0)
+                                              crossSection=7.0, quiet=quiet)
 
     # Spit out the output
     return outputFile, subprocess
@@ -92,7 +92,7 @@ def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=F
     multiplicityArray = np.array([])
     for i in range(0, numSamples):
         # Run Trento with given parameters
-        subprocess = generateLHCTrentoIC(bmin=bmin, bmax=bmax)[1]
+        subprocess = generateLHCTrentoIC(bmin=bmin, bmax=bmax, quiet=True)[1]
 
         # Parse output to list
         outputList = utilities.parseLine(subprocess.stdout)
@@ -105,12 +105,12 @@ def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=F
     multiplicityArray.sort()
 
     # Find how many samples should be in each bin
-    binCap = int(utilities.round_decimals_down(multiplicityArray.size() * (percBinWidth/100)))
+    binCap = int(utilities.round_decimals_down(multiplicityArray.size * (percBinWidth/100)))
 
     # Find bin edges
     i = 0
     binBounds = np.array([])
-    while i < multiplicityArray.size():
+    while i < multiplicityArray.size:
         binBounds = np.append(binBounds, multiplicityArray[i])
         i += binCap
 

@@ -26,23 +26,10 @@ class osu_hydro_file:
         self.grid_width = int(np.sqrt(self.grid_data[['time']].value_counts().to_numpy()[-1]))
 
         # n_grid_spaces is total number of grid spaces / bins. Assumes square grid.
-        self.n_grid_spaces = self.grid_width ** 2
+        self.n_grid_spaces = int(self.grid_width ** 2)
 
         # Number of time steps is grid_data's time column divided by number of grid spaces.
         self.NT = int(len(self.grid_data[['time']]) / self.n_grid_spaces)
-
-        # Set grid space & time domains & lists
-
-        # We get lists of time and space coordinates from the file
-        # These are literally just numpy arrays of the xpos and time columns
-        # Use this to match up to NT x grid_width x grid_width array of values for interpolation
-        self.xlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['xpos']]).to_numpy())
-        self.tlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['time']]).to_numpy())
-
-        # Difference in absolute time between steps in simulation
-        # Note that we find the timestep from the end of the list. In files from osu-hydro,
-        # the first two timesteps are labeled with the same absolute time.
-        self.timestep = self.tlist[-1] - self.tlist[-1 - int(self.n_grid_spaces)]
 
         # Domains of physical times and positions
         """
@@ -55,10 +42,28 @@ class osu_hydro_file:
         in the interpolated functions ever so slightly faster than it actually does in osu-hydro.
         This may be a small difference, but it is certainly non-physical.
     
-        For now, we choose to shift back the first timestep by default.
+        For now, we choose to drop the first timestep by default.
         """
-        # Domain of corrected time values
-        self.tspace = np.linspace(np.amin(self.tlist) - self.timestep, np.amax(self.tlist), self.NT)
+        # Set grid space & time domains & lists
+
+        # We get lists of time and space coordinates from the file
+        # These are literally just numpy arrays of the xpos and time columns
+        # Use this to match up to NT x grid_width x grid_width array of values for interpolation
+        self.xlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['xpos']]).to_numpy())
+        self.tlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['time']]).to_numpy())
+
+        # Drop first timestep: the first n_grid_spaces lines if the timesteps match.
+        if self.tlist[0] == self.tlist[1]:
+            self.grid_data = self.grid_data.iloc[self.n_grid_spaces:, :]
+            self.tlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['time']]).to_numpy())
+
+        # Difference in absolute time between steps in simulation
+        # Note that we find the timestep from the end of the list. In files from osu-hydro,
+        # the first two timesteps are labeled with the same absolute time.
+        self.timestep = self.tlist[-1] - self.tlist[-1 - int(self.n_grid_spaces)]
+
+        # Domain of time values
+        self.tspace = np.linspace(np.amin(self.tlist), np.amax(self.tlist), self.NT)
         # Domain of space values
         self.xspace = np.linspace(np.amin(self.xlist), np.amax(self.xlist), self.grid_width)
 

@@ -20,15 +20,15 @@ import h5py
 # https://github.com/Duke-QCD/hic-eventgen
 def run_cmd(*args, quiet=False):
     """
-    Run and log a trentoSubprocess.
+    Run and log a Subprocess.
     """
     cmd = ' '.join(args)
     logging.info('running command: %s', cmd)
     processName = str(args[0])
 
     try:
-        proc = subprocess.run(
-            cmd.split(), check=True,
+        proc = subprocess.Popen(
+            cmd.split(),
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             universal_newlines=True
         )

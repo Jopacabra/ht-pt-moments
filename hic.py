@@ -38,60 +38,54 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
         }
         )
 
-    for eventno in range(0, numEvents):
-        # Generate random event id no. & corresponding filenames
-        identifier = int(np.random.uniform(0, 10000000000000000))
+    # Create Trento command arguments
+    # bmin and bmax control min and max impact parameter. Set to same value for specific b.
+    # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
+    # numEvents determines how many to run and spit out a file for. Will be labeled like "0.dat", "1.dat" ...
+
+    # nucleon width default from DukeQCD was
+    # nucleon_width = 0.5  # in fm
+    # We have elected to keep this default.
+
+    # grid_step detfault for DukeQCD was
+    # grid_step = .15*np.min([nucleon_width])  # In fm
+    # for better run-time and effectiveness, we've selected a default of 0.1 fm
+
+    # Maximum grid size was by default 15 fm in DukeQCD. We have elected to keep this.
+    # grid_max_target = 15  # In fm
+
+    # Generate Trento command argument list
+    trentoCmd = ['trento', '--number-events {}'.format(numEvents),
+                 '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target)]
+
+    # Append any supplied commands in the proper order
+    if projectile1 is not None:
+        trentoCmd.append('--projectile {}'.format(projectile1))
+    if projectile2 is not None:
+        trentoCmd.append('--projectile {}'.format(projectile2))
+    if bmin is not None:
+        trentoCmd.append('--bmin {}'.format(bmin))  # Minimum impact parameter (in fm ???)
+    if bmax is not None:
+        trentoCmd.append('--bmax {}'.format(bmax))  # Maximum impact parameter (in fm ???)
+    if outputFile:
+        trentoCmd.append('--output {}'.format(filename))  # Output file name
+    if randomSeed is not None:
+        trentoCmd.append('--random-seed {}'.format(int(randomSeed)))  # Random seed for repeatability
+    if normalization is not None:
+        trentoCmd.append('--normalization {}'.format(normalization))  # Should be fixed by comp. to data multiplicity
+    if crossSection is not None:
+        trentoCmd.append('--cross-section {}'.format(crossSection))  # fm^2: http://qcd.phy.duke.edu/trento/usage.html
+
+    trentoCmd.append('--nucleon-width {}'.format(nucleon_width))
 
 
+    # Run Trento command
+    # Note star unpacks the list to pass the command list as arguments
+    subprocess = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
-        # Create Trento command arguments
-        # bmin and bmax control min and max impact parameter. Set to same value for specific b.
-        # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
-        # numEvents determines how many to run and spit out a file for. Will be labeled like "0.dat", "1.dat" ...
-
-        # nucleon width default from DukeQCD was
-        # nucleon_width = 0.5  # in fm
-        # We have elected to keep this default.
-
-        # grid_step detfault for DukeQCD was
-        # grid_step = .15*np.min([nucleon_width])  # In fm
-        # for better run-time and effectiveness, we've selected a default of 0.1 fm
-
-        # Maximum grid size was by default 15 fm in DukeQCD. We have elected to keep this.
-        # grid_max_target = 15  # In fm
-
-        # Generate Trento command argument list
-        trentoCmd = ['trento', '--number-events {}'.format(numEvents),
-                     '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target)]
-
-        # Append any supplied commands in the proper order
-        if projectile1 is not None:
-            trentoCmd.append('--projectile {}'.format(projectile1))
-        if projectile2 is not None:
-            trentoCmd.append('--projectile {}'.format(projectile2))
-        if bmin is not None:
-            trentoCmd.append('--bmin {}'.format(bmin))  # Minimum impact parameter (in fm ???)
-        if bmax is not None:
-            trentoCmd.append('--bmax {}'.format(bmax))  # Maximum impact parameter (in fm ???)
-        if outputFile:
-            trentoCmd.append('--output {}'.format(filename))  # Output file name
-        if randomSeed is not None:
-            trentoCmd.append('--random-seed {}'.format(int(randomSeed)))  # Random seed for repeatability
-        if normalization is not None:
-            trentoCmd.append('--normalization {}'.format(normalization))  # Should be fixed by comp. to data multiplicity
-        if crossSection is not None:
-            trentoCmd.append('--cross-section {}'.format(crossSection))  # fm^2: http://qcd.phy.duke.edu/trento/usage.html
-
-        trentoCmd.append('--nucleon-width {}'.format(nucleon_width))
-
-
-        # Run Trento command
-        # Note star unpacks the list to pass the command list as arguments
-        subprocess = utilities.run_cmd(*trentoCmd, quiet=quiet)
-
-        # Parse output and pass to dataframe.
-        # Parse output to list, then create dataframe
-        trentoOutput = utilities.parseLine(subprocess.stdout)
+    # Parse output and pass to dataframe.
+    for line in subprocess.stdout:
+        trentoOutput = line.split()
         trentoDataFrame = pd.DataFrame(
             {
                 "event": [int(trentoOutput[0])],
@@ -107,21 +101,10 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
             }
         )
 
-        if outputFile:
-            outputFileArray = np.append(outputFileArray, filename)
-        else:
-            outputFileArray = np.append(outputFileArray, identifier)
-        subprocessArray = np.append(subprocessArray, subprocess)
         resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
 
-    # If one event, don't output arrays for trentoSubprocess and filename.
-    if len(outputFileArray) == 1:
-        outputFileArray = outputFileArray[0]
-    if len(subprocessArray) == 1:
-        subprocessArray = subprocessArray[0]
-
     # Pass on result file name, trentoSubprocess data, and dataframe.
-    return resultsDataFrame.drop(labels='event', axis=1), outputFileArray, subprocessArray
+    return resultsDataFrame.drop(labels='event', axis=1), outputFile, subprocess
 
 
 # Function to generate a new trento IC for RHIC Kinematics:

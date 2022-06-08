@@ -28,8 +28,8 @@ logging.info(
 
 # Create and move to temp directory
 temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=os.getcwd())
+print('Created temp directory {}'.format(temp_dir.name))
 os.chdir(temp_dir.name)
-print(temp_dir.name)
 
 # Create results dataframe.
 resultsDataframe = resultsDataFrame = pd.DataFrame(

@@ -3,8 +3,8 @@ mode:  # Operation mode flags
     RANDOM_ANGLE: True  # Determines if we select a random angle or do a complete sweep
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
     WEIGHT_POINT: True  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
-    NUM_EVENTS: 1  # Number of events to generate
-    NUM_SAMPLES: 10  # Number of jets to run in each event
+    NUM_EVENTS: 2  # Number of events to generate
+    NUM_SAMPLES: 5  # Number of jets to run in each event
 transport_parameters:  # Parameters for the jets to be run
     TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
     GRID_STEP: 0.1  # Hydro grid step in fm. Default 0.1 fm from trial and error.

@@ -41,7 +41,7 @@ def run_cmd(*args, quiet=False):
     else:
         logging.debug(
             'command completed successfully:\n%s',
-            proc.stdout.strip('\n')
+            proc.stdout
         )
 
         if not quiet:

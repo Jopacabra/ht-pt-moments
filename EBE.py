@@ -160,7 +160,7 @@ for eventNo in range(0, config.NUM_EVENTS):
 
         # Calculate deflection angle
         # Basic trig with k=0.
-        if config.K is 0:
+        if config.K == 0:
             deflection_angle = np.arctan((moment / current_jet.energy)) * (180 / np.pi)
             deflection_angle_error = np.arctan((momentErr / current_jet.energy)) * (180 / np.pi)
         else:

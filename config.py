@@ -24,7 +24,6 @@ GRID_STEP = float(cfg['transport_parameters']['GRID_STEP'])  # Hydro grid step i
 T_SWITCH= float(cfg['transport_parameters']['T_SWITCH'])  # Minimum temperature in GeV to cut off hydro evolution.
 
 # Set jet parameters
-N = int(cfg['jet_parameters']['NUM_JETS'])  # Number of jets to produce
 JET_ENERGY = int(cfg['jet_parameters']['JET_ENERGY'])  # Jet energy
 
 # Set moment parameters

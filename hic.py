@@ -125,7 +125,7 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
         subprocessArray = subprocessArray[0]
 
     # Pass on result file name, subprocess data, and dataframe.
-    return resultsDataFrame.drop(labels=['event']), outputFileArray, subprocessArray
+    return resultsDataFrame.drop('event', 1), outputFileArray, subprocessArray
 
 
 # Function to generate a new trento IC for RHIC Kinematics:

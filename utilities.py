@@ -52,8 +52,10 @@ def run_cmd(*args, quiet=False):
             print('format: event_number impact_param npart mult e2 e3 e4 e5')
             print('exit status:\n', proc.returncode)
             print('stdout:\n')
+            outputArray = np.array([])
             for line in outputCopyStdout:
                 print(line)
+                outputArray = np.append(outputArray, line)
             print('stderr:\n')
             while True:
                 try:
@@ -65,7 +67,7 @@ def run_cmd(*args, quiet=False):
                     break
             print('---------- {} Output End ---------------'.format(processName))
 
-        return proc
+        return proc, outputArray
 
 
 # Function to round up to specified number of decimals

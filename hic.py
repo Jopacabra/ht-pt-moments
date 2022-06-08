@@ -86,10 +86,10 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
 
     # Run Trento command
     # Note star unpacks the list to pass the command list as arguments
-    subprocess = utilities.run_cmd(*trentoCmd, quiet=quiet)
+    subprocess, output = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
     # Parse output and pass to dataframe.
-    for line in subprocess.stdout:
+    for line in output:
         trentoOutput = line.split()
         trentoDataFrame = pd.DataFrame(
             {
@@ -218,7 +218,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, dt_ratio=
 
     hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls), *hydro_args]
 
-    hydroProc = utilities.run_cmd(hydroCmd, quiet=False)
+    hydroProc, hydroOutput = utilities.run_cmd(hydroCmd, quiet=False)
     # Attempt to print the output from the hydro trentoSubprocess.
     print('------------- Hydro Output ----------------')
     print('format: timestep_number  tau  max_energy_density  max_temperature')

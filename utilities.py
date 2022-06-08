@@ -54,7 +54,6 @@ def run_cmd(*args, quiet=False):
             print('stdout:\n')
             for line in outputCopyStdout:
                 print(line)
-                if not line:
             print('stderr:\n')
             while True:
                 try:

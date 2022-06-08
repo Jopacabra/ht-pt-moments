@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import utilities
 import h5py
 import math
+import os
 
 """
 This module is responsible for all processes related to jet production, event generation, & hard scattering.
@@ -21,8 +22,12 @@ class StopEvent(Exception):
 def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=False, randomSeed=None,
               normalization=None, crossSection=None, numEvents=1, quiet=False, grid_step=0.1, grid_max_target=15,
               nucleon_width=0.5, filename='initial.hdf'):
-    subprocessArray = np.array([])
-    outputFileArray = np.array([])
+    # Make sure there's no file where we want to stick it.
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass
+
     resultsDataFrame = pd.DataFrame(
         {
             "event": [],

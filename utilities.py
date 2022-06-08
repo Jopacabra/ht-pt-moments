@@ -20,7 +20,7 @@ import h5py
 # https://github.com/Duke-QCD/hic-eventgen
 def run_cmd(*args, quiet=False):
     """
-    Run and log a subprocess.
+    Run and log a trentoSubprocess.
     """
     cmd = ' '.join(args)
     logging.info('running command: %s', cmd)
@@ -45,7 +45,7 @@ def run_cmd(*args, quiet=False):
         )
 
         if not quiet:
-            # Attempt to print the output from the subprocess.
+            # Attempt to print the output from the trentoSubprocess.
             print('------------- {} Output ----------------'.format(processName))
             print('format: event_number impact_param npart mult e2 e3 e4 e5')
             print('exit status:\n', proc.returncode)

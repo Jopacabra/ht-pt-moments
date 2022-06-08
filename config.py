@@ -13,6 +13,15 @@ RANDOM_ANGLE = bool(cfg['mode']['RANDOM_ANGLE'])  # Determines if we select a ra
 VARY_POINT = bool(cfg['mode']['VARY_POINT'])  # Determines if we vary the prod point or set it to (0,0)
 WEIGHT_POINT = bool(cfg['mode'][
                         'WEIGHT_POINT'])  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
+NUM_EVENTS = int(cfg['mode'][
+                        'NUM_EVENTS'])  # Number of events to generate
+NUM_SAMPLES = int(cfg['mode'][
+                        'NUM_SAMPLES'])  # Number of jets to run in each event
+
+# Set physical options for hybrid transport
+TAU_FS = float(cfg['transport_parameters']['TAU_FS'])
+GRID_STEP = float(cfg['transport_parameters']['GRID_STEP'])  # Hydro grid step in fm. Default 0.1 fm from testing.
+T_SWITCH= float(cfg['transport_parameters']['T_SWITCH'])  # Minimum temperature in GeV to cut off hydro evolution.
 
 # Set jet parameters
 N = int(cfg['jet_parameters']['NUM_JETS'])  # Number of jets to produce

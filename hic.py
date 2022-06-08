@@ -1,11 +1,8 @@
 import numpy as np
-import scipy.stats as stats
 import pandas as pd
-import plasma
 import matplotlib.pyplot as plt
 import utilities
 import h5py
-import os
 import math
 
 """
@@ -20,7 +17,7 @@ class StopEvent(Exception):
 
 # Function that generates a new Trento collision event with given parameters.
 # Returns the Trento output file name.
-# File will be created in directory "outputFile" and given name "0.dat".
+# File will be created in directory "trentoOutputFile" and given name "0.dat".
 def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=False, randomSeed=None,
               normalization=None, crossSection=None, numEvents=1, quiet=False, grid_step=0.1, grid_max_target=15,
               nucleon_width=0.5):
@@ -118,14 +115,14 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
         subprocessArray = np.append(subprocessArray, subprocess)
         resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
 
-    # If one event, don't output arrays for subprocess and filename.
+    # If one event, don't output arrays for trentoSubprocess and filename.
     if len(outputFileArray) == 1:
         outputFileArray = outputFileArray[0]
     if len(subprocessArray) == 1:
         subprocessArray = subprocessArray[0]
 
-    # Pass on result file name, subprocess data, and dataframe.
-    return resultsDataFrame.drop('event', 1), outputFileArray, subprocessArray
+    # Pass on result file name, trentoSubprocess data, and dataframe.
+    return resultsDataFrame.drop(labels='event', axis=1), outputFileArray, subprocessArray
 
 
 # Function to generate a new trento IC for RHIC Kinematics:
@@ -235,7 +232,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, dt_ratio=
     hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls), *hydro_args]
 
     hydroProc = utilities.run_cmd(hydroCmd, quiet=False)
-    # Attempt to print the output from the hydro subprocess.
+    # Attempt to print the output from the hydro trentoSubprocess.
     print('------------- Hydro Output ----------------')
     print('format: timestep_number  tau  max_energy_density  max_temperature')
     print( 'exit status:\n', hydroProc.returncode )

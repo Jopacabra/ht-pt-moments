@@ -3,8 +3,13 @@ mode:  # Operation mode flags
     RANDOM_ANGLE: True  # Determines if we select a random angle or do a complete sweep
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
     WEIGHT_POINT: True  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
+    NUM_EVENTS: 1  # Number of events to generate
+    NUM_SAMPLES: 10  # Number of jets to run in each event
+transport_parameters:  # Parameters for the jets to be run
+    TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
+    GRID_STEP: 0.1  # Hydro grid step in fm. Default 0.1 fm from trial and error.
+    T_SWITCH: 0.110  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
 jet_parameters:  # Parameters for the jets to be run
-    NUM_JETS: 10  # Number of jets to produce
     JET_ENERGY: 100  # Jet energy in GeV
 moment_parameters:  # Parameters to select moment properties
     MOMENT_K: 0  # Which k-moment to calculate - NON-FUNCTIONAL - just uses k=0

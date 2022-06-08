@@ -54,10 +54,11 @@ def integrand(event, jet, k=0, minTemp=0, maxTemp=1000):
 
 
 # Function to calculate moment given initial conditions & interpolating functions
-def moment_integral(event, jet, k=0, minTemp=0, maxTemp=1000):
+def moment_integral(event, jet, k=0, minTemp=0, maxTemp=1000, quiet=False):
 
     # Calculate moment point
-    print('Evaluating moment integral...')
+    if not quiet:
+        print('Evaluating moment integral...')
     raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k, minTemp=minTemp, maxTemp=maxTemp), event.t0, event.tf, limit=200
                                  , epsrel=relative_error)
 

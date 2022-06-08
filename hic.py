@@ -1,8 +1,12 @@
 import numpy as np
 import scipy.stats as stats
-import plasma as gr
+import pandas as pd
+import plasma
 import matplotlib.pyplot as plt
 import utilities
+import h5py
+import os
+import math
 
 """
 This module is responsible for all processes related to jet production, event generation, & hard scattering.
@@ -11,47 +15,117 @@ This module is responsible for all processes related to jet production, event ge
 - Planned inclusions: Pythia handling, etc.
 """
 
+class StopEvent(Exception):
+    """ Raise to end an event early. """
 
 # Function that generates a new Trento collision event with given parameters.
 # Returns the Trento output file name.
 # File will be created in directory "outputFile" and given name "0.dat".
-def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=None, randomSeed=None,
-                     normalization=None, crossSection=None, numEvents=1, quiet=False):
-    # Create Trento command arguments
-    # bmin and bmax control min and max impact parameter. Set to same value for specific b.
-    # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
-    # numEvents determines how many to run and spit out a file for. Will be labeled like "0.dat", "1.dat" ...
-    nucleon_width = 0.5  # In fm
-    grid_step = .15*np.min([nucleon_width])  # In fm
-    grid_max_target = 15  # In fm
+def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=False, randomSeed=None,
+              normalization=None, crossSection=None, numEvents=1, quiet=False, grid_step=0.1, grid_max_target=15,
+              nucleon_width=0.5):
+    subprocessArray = np.array([])
+    outputFileArray = np.array([])
+    resultsDataFrame = pd.DataFrame(
+        {
+            "event": [],
+            "b": [],
+            "npart": [],
+            "mult": [],
+            "e2": [],
+            "e3": [],
+            "e4": [],
+            "e5": [],
+            "seed": [],
+            "cmd": [],
+        }
+        )
 
-    # Generate Trento command argument list
-    trentoCmd = ['trento', '--number-events {}'.format(numEvents),
-                 '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target)]
+    for eventno in range(0, numEvents):
+        # Generate random event id no. & corresponding filenames
+        identifier = int(np.random.uniform(0, 10000000000000000))
+        filename = str(identifier) + '.hdf'
 
-    # Append any supplied commands in the proper order
-    if projectile1 is not None:
-        trentoCmd.append('--projectile {}'.format(projectile1))
-    if projectile2 is not None:
-        trentoCmd.append('--projectile {}'.format(projectile2))
-    if bmin is not None:
-        trentoCmd.append('--bmin {}'.format(bmin))  # Minimum impact parameter (in fm ???)
-    if bmax is not None:
-        trentoCmd.append('--bmax {}'.format(bmax))  # Maximum impact parameter (in fm ???)
-    if outputFile is not None:
-        trentoCmd.append('--output {}'.format(outputFile))  # Output file directory
-    if randomSeed is not None:
-        trentoCmd.append('--random-seed {}'.format(int(randomSeed)))  # Random seed for repeatability
-    if normalization is not None:
-        trentoCmd.append('--normalization {}'.format(normalization))  # Should be fixed by comp. to data multiplicity
-    if crossSection is not None:
-        trentoCmd.append('--cross-section {}'.format(crossSection))  # fm^2: http://qcd.phy.duke.edu/trento/usage.html
 
-    # Run Trento command
-    subprocess = utilities.run_cmd(*trentoCmd, quiet=quiet)  # Note star unpacks the list to pass the command list as arguments
 
-    # Pass on result file name
-    return outputFile, subprocess
+        # Create Trento command arguments
+        # bmin and bmax control min and max impact parameter. Set to same value for specific b.
+        # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
+        # numEvents determines how many to run and spit out a file for. Will be labeled like "0.dat", "1.dat" ...
+
+        # nucleon width default from DukeQCD was
+        # nucleon_width = 0.5  # in fm
+        # We have elected to keep this default.
+
+        # grid_step detfault for DukeQCD was
+        # grid_step = .15*np.min([nucleon_width])  # In fm
+        # for better run-time and effectiveness, we've selected a default of 0.1 fm
+
+        # Maximum grid size was by default 15 fm in DukeQCD. We have elected to keep this.
+        # grid_max_target = 15  # In fm
+
+        # Generate Trento command argument list
+        trentoCmd = ['trento', '--number-events {}'.format(numEvents),
+                     '--grid-step {} --grid-max {}'.format(grid_step, grid_max_target)]
+
+        # Append any supplied commands in the proper order
+        if projectile1 is not None:
+            trentoCmd.append('--projectile {}'.format(projectile1))
+        if projectile2 is not None:
+            trentoCmd.append('--projectile {}'.format(projectile2))
+        if bmin is not None:
+            trentoCmd.append('--bmin {}'.format(bmin))  # Minimum impact parameter (in fm ???)
+        if bmax is not None:
+            trentoCmd.append('--bmax {}'.format(bmax))  # Maximum impact parameter (in fm ???)
+        if outputFile:
+            trentoCmd.append('--output {}'.format(filename))  # Output file name
+        if randomSeed is not None:
+            trentoCmd.append('--random-seed {}'.format(int(randomSeed)))  # Random seed for repeatability
+        if normalization is not None:
+            trentoCmd.append('--normalization {}'.format(normalization))  # Should be fixed by comp. to data multiplicity
+        if crossSection is not None:
+            trentoCmd.append('--cross-section {}'.format(crossSection))  # fm^2: http://qcd.phy.duke.edu/trento/usage.html
+
+        trentoCmd.append('--nucleon-width {}'.format(nucleon_width))
+
+
+        # Run Trento command
+        # Note star unpacks the list to pass the command list as arguments
+        subprocess = utilities.run_cmd(*trentoCmd, quiet=quiet)
+
+        # Parse output and pass to dataframe.
+        # Parse output to list, then create dataframe
+        trentoOutput = utilities.parseLine(subprocess.stdout)
+        trentoDataFrame = pd.DataFrame(
+            {
+                "event": [int(trentoOutput[0])],
+                "b": [float(trentoOutput[1])],
+                "npart": [float(trentoOutput[2])],
+                "mult": [float(trentoOutput[3])],
+                "e2": [float(trentoOutput[4])],
+                "e3": [float(trentoOutput[5])],
+                "e4": [float(trentoOutput[6])],
+                "e5": [float(trentoOutput[7])],
+                "seed": [randomSeed],
+                "cmd": [trentoCmd],
+            }
+        )
+
+        if outputFile:
+            outputFileArray = np.append(outputFileArray, filename)
+        else:
+            outputFileArray = np.append(outputFileArray, identifier)
+        subprocessArray = np.append(subprocessArray, subprocess)
+        resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
+
+    # If one event, don't output arrays for subprocess and filename.
+    if len(outputFileArray) == 1:
+        outputFileArray = outputFileArray[0]
+    if len(subprocessArray) == 1:
+        subprocessArray = subprocessArray[0]
+
+    # Pass on result file name, subprocess data, and dataframe.
+    return resultsDataFrame.drop(labels=['event']), outputFileArray, subprocessArray
 
 
 # Function to generate a new trento IC for RHIC Kinematics:
@@ -63,83 +137,132 @@ def generateTrentoIC(bmin=None, bmax=None, projectile1='Au', projectile2='Au', o
 # https://inspirehep.net/literature/1394433
 def generateRHICTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, quiet=False):
     # Run Trento with known case parameters
-    outputFile, subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1='Au', projectile2='Au',
-                                              outputFile=outputFile, randomSeed=randomSeed, normalization=7.6,
-                                              crossSection=4.23, quiet=quiet)
+    dataframe, outputFile, subprocess = runTrento(bmin=bmin, bmax=bmax, projectile1='Au', projectile2='Au',
+                                                  outputFile=outputFile, randomSeed=randomSeed, normalization=7.6,
+                                                  crossSection=4.23, quiet=quiet)
 
     # Spit out the output
-    return outputFile, subprocess
+    return dataframe, outputFile, subprocess
 
 
 # Function to generate a new trento IC for LHC Kinematics:
 # Pb Pb collisions at root-s of 5.02 TeV
-# Normalization was fixed via multiplicity measures for 5% centrality
-# (averaged 2.5-5% and 5-7.5%) guessed at via impact parameter
+# Normalization was fixed via multiplicity measures for 0-10% centrality from Trento sampling
 # https://arxiv.org/abs/1512.06104
 # Nuclear cross section:
 # https://inspirehep.net/literature/1190545
 def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, quiet=False):
     # Run Trento with known case parameters
-    outputFile, subprocess = generateTrentoIC(bmin=bmin, bmax=bmax, projectile1='Pb', projectile2='Pb',
-                                              outputFile=outputFile, randomSeed=randomSeed, normalization=19.5,
-                                              crossSection=7.0, quiet=quiet)
+    dataframe, outputFile, subprocess = runTrento(bmin=bmin, bmax=bmax, projectile1='Pb', projectile2='Pb',
+                                                  outputFile=outputFile, randomSeed=randomSeed, normalization=18.1175,
+                                                  crossSection=7.0, quiet=quiet)
 
     # Spit out the output
-    return outputFile, subprocess
+    return dataframe, outputFile, subprocess
 
 
-# Function that generates a load of samples for LHC conditions and finds centrality bins.
-def centralityBoundsLHC(numSamples, bmin=None, bmax=None, percBinWidth=5, hist=False, bins=None):
-    multiplicityArray = np.array([])
-    for i in range(0, numSamples):
-        # Run Trento with given parameters
-        subprocess = generateLHCTrentoIC(bmin=bmin, bmax=bmax, quiet=True)[1]
+# Define function to generate initial conditions object as for freestream input from trento file
+def fs_initial_conditions(initial_file='initial.hdf', quiet=False, randomSeed=None):
+    """
+    Load trento output file and yield initial condition arrays.
 
-        # Parse output to list
-        outputList = utilities.parseLine(subprocess.stdout)
+    """
+    with h5py.File(initial_file, 'r') as f:
+        for dset in f.values():
+            ic = np.array(dset)
 
-        # Get and append multiplicity - the integrated reduced thickness function
-        multiplicity = float(outputList[3])
-        multiplicityArray = np.append(multiplicityArray, multiplicity)
+            yield ic
 
-    # Sort multiplicity array into ascending order
-    multiplicityArray.sort()
 
-    # Find how many samples should be in each bin
-    binCap = int(utilities.round_decimals_down(multiplicityArray.size * (percBinWidth/100)))
+# Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream
+# Result files SHOULD be placed in the active folder.
+def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, dt_ratio=.25, hydro_args=None):
+    """
+    The handling of osu-hydro implemented here is adapted directly from DukeQCD's hic-eventgen package.
+    https://github.com/Duke-QCD/hic-eventgen
+    ---
 
-    # Find bin edges
-    i = 0
-    binBounds = np.array([])
-    while i < multiplicityArray.size:
-        binBounds = np.append(binBounds, multiplicityArray[i])
-        i += binCap
+    Run the initial condition contained in FreeStreamer object `fs` through
+    osu-hydro on a grid with approximate physical size `event_size` [fm].
+    Return a dict of freeze-out surface data suitable for passing directly
+    to frzout.Surface.
 
-    # Tack on the max multiplicity, if it didn't get snagged.
-    if binBounds[-1] != multiplicityArray[-1]:
-        print('Last not snagged')
-        binBounds = np.append(binBounds, multiplicityArray[-1])
-    else:
-        print('Last snagged')
+    Initial condition arrays are cropped or padded as necessary.
 
-    print('Bin bounds: ' + str(binBounds))
+    If `coarse` is an integer > 1, use only every `coarse`th cell from the
+    initial condition arrays (thus increasing the physical grid step size
+    by a factor of `coarse`).  Ignore the user input `hydro_args` and
+    instead run ideal hydro down to a low temperature.
 
-    if hist:
-        if bins is None:
-            # Calculate number of bins necessary using something like the Freedman-Diaconis rule, but forced finer
-            # https://en.wikipedia.org/wiki/Freedman–Diaconis_rule
-            binwidth = 2 * (stats.iqr(multiplicityArray)) / np.cbrt(multiplicityArray.size)
-            numbins = int(((np.amax(multiplicityArray) - np.amin(multiplicityArray)) / binwidth) * 10)
-        else:
-            numbins = bins
-        # Create and show histogram
-        plt.hist(multiplicityArray, bins=numbins)
-        for bound in binBounds:
-            plt.axvline(x=bound, color='black', ls=':', lw=1)
-        plt.show()
+    `dt_ratio` sets the timestep as a fraction of the spatial step
+    (dt = dt_ratio * dxy).  The SHASTA algorithm requires dt_ratio < 1/2.
 
-    # Pass on bin bounds
-    return binBounds
+    """
+    dxy = grid_step * (coarse or 1)
+    ls = math.ceil(event_size/dxy)  # the osu-hydro "ls" parameter
+    n = 2*ls + 1  # actual number of grid cells
+
+    for fmt, f, arglist in [
+            ('ed', fs.energy_density, [()]),
+            ('u{}', fs.flow_velocity, [(1,), (2,)]),
+            ('pi{}{}', fs.shear_tensor, [(1, 1), (1, 2), (2, 2)]),
+    ]:
+        for a in arglist:
+            X = f(*a)
+
+            if coarse:
+                X = X[::coarse, ::coarse]
+
+            diff = X.shape[0] - n
+            start = int(abs(diff)/2)
+
+            if diff > 0:
+                # original grid is larger -> cut out middle square
+                s = slice(start, start + n)
+                X = X[s, s]
+            elif diff < 0:
+                # original grid is smaller
+                #  -> create new array and place original grid in middle
+                Xn = np.zeros((n, n))
+                s = slice(start, start + X.shape[0])
+                Xn[s, s] = X
+                X = Xn
+
+            X.tofile(fmt.format(*a) + '.dat')
+
+    dt = dxy*dt_ratio
+
+    hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls), *hydro_args]
+
+    hydroProc = utilities.run_cmd(hydroCmd, quiet=False)
+    # Attempt to print the output from the hydro subprocess.
+    print('------------- Hydro Output ----------------')
+    print('format: timestep_number  tau  max_energy_density  max_temperature')
+    print( 'exit status:\n', hydroProc.returncode )
+    print( 'stdout:\n', hydroProc.stdout )
+    print( 'stderr:\n', hydroProc.stderr )
+    print('---------- Hydro Output End ---------------')
+
+    surface = np.fromfile('surface.dat', dtype='f8').reshape(-1, 16)
+
+    # end event if the surface is empty -- this occurs in ultra-peripheral
+    # events where the initial condition doesn't exceed Tswitch
+    if surface.size == 0:
+        raise StopEvent('empty surface')
+
+    # surface columns:
+    #   0    1  2  3         4         5         6    7
+    #   tau  x  y  dsigma_t  dsigma_x  dsigma_y  v_x  v_y
+    #   8     9     10    11    12    13    14    15
+    #   pitt  pitx  pity  pixx  pixy  piyy  pizz  Pi
+
+    # pack surface data into a dict suitable for passing to frzout.Surface
+    return dict(
+        zip(['x', 'sigma', 'v'], np.hsplit(surface, [3, 6, 8])),
+        pi=dict(zip(['xx', 'xy', 'yy'], surface.T[11:14])),
+        Pi=surface.T[15]
+    )
+
 
 
 # Function that defines a normalized 2D PDF array for a given interpolated temperature

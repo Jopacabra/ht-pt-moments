@@ -52,14 +52,9 @@ def run_cmd(*args, quiet=False):
             print('format: event_number impact_param npart mult e2 e3 e4 e5')
             print('exit status:\n', proc.returncode)
             print('stdout:\n')
-            while True:
-                try:
-                    line = outputCopyStdout.readline()
-                except AttributeError:
-                    break
+            for line in outputCopyStdout:
                 print(line)
                 if not line:
-                    break
             print('stderr:\n')
             while True:
                 try:

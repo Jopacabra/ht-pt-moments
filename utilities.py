@@ -51,13 +51,19 @@ def run_cmd(*args, quiet=False):
             print('exit status:\n', proc.returncode)
             print('stdout:\n')
             while True:
-                line = proc.stdout.readline()
+                try:
+                    line = proc.stdout.readline()
+                except AttributeError:
+                    break
                 print(line)
                 if not line:
                     break
             print('stderr:\n')
             while True:
-                line = proc.stderr.readline()
+                try:
+                    line = proc.stderr.readline()
+                except AttributeError:
+                    break
                 print(line)
                 if not line:
                     break

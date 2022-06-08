@@ -89,10 +89,7 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
     subprocess = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
     # Parse output and pass to dataframe.
-    while True:
-        line = subprocess.stdout.readline()
-        if not line:
-            break
+    for line in subprocess.stdout:
         trentoOutput = line.split()
         trentoDataFrame = pd.DataFrame(
             {

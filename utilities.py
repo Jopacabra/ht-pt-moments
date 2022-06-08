@@ -43,7 +43,7 @@ def run_cmd(*args, quiet=False):
             'command completed successfully:\n%s',
             proc.stdout
         )
-
+        outputArray = np.array([])
         if not quiet:
             outputCopyStdout = proc.stdout
             outputCopyStderr = proc.stderr
@@ -52,7 +52,6 @@ def run_cmd(*args, quiet=False):
             print('format: event_number impact_param npart mult e2 e3 e4 e5')
             print('exit status:\n', proc.returncode)
             print('stdout:\n')
-            outputArray = np.array([])
             for line in outputCopyStdout:
                 print(line)
                 outputArray = np.append(outputArray, line)

@@ -49,8 +49,18 @@ def run_cmd(*args, quiet=False):
             print('------------- {} Output ----------------'.format(processName))
             print('format: event_number impact_param npart mult e2 e3 e4 e5')
             print('exit status:\n', proc.returncode)
-            print('stdout:\n', proc.stdout)
-            print('stderr:\n', proc.stderr)
+            print('stdout:\n')
+            while True:
+                line = proc.stdout.readline()
+                print(line)
+                if not line:
+                    break
+            print('stderr:\n')
+            while True:
+                line = proc.stderr.readline()
+                print(line)
+                if not line:
+                    break
             print('---------- {} Output End ---------------'.format(processName))
 
         return proc

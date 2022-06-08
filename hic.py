@@ -20,7 +20,7 @@ class StopEvent(Exception):
 # File will be created in directory "trentoOutputFile" and given name "0.dat".
 def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=False, randomSeed=None,
               normalization=None, crossSection=None, numEvents=1, quiet=False, grid_step=0.1, grid_max_target=15,
-              nucleon_width=0.5):
+              nucleon_width=0.5, filename='initial.hdf'):
     subprocessArray = np.array([])
     outputFileArray = np.array([])
     resultsDataFrame = pd.DataFrame(
@@ -41,7 +41,6 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
     for eventno in range(0, numEvents):
         # Generate random event id no. & corresponding filenames
         identifier = int(np.random.uniform(0, 10000000000000000))
-        filename = str(identifier) + '.hdf'
 
 
 

@@ -45,6 +45,8 @@ def run_cmd(*args, quiet=False):
         )
 
         if not quiet:
+            outputCopyStdout = proc.stdout
+            outputCopyStderr = proc.stderr
             # Attempt to print the output from the trentoSubprocess.
             print('------------- {} Output ----------------'.format(processName))
             print('format: event_number impact_param npart mult e2 e3 e4 e5')
@@ -52,7 +54,7 @@ def run_cmd(*args, quiet=False):
             print('stdout:\n')
             while True:
                 try:
-                    line = proc.stdout.readline()
+                    line = outputCopyStdout.readline()
                 except AttributeError:
                     break
                 print(line)
@@ -61,7 +63,7 @@ def run_cmd(*args, quiet=False):
             print('stderr:\n')
             while True:
                 try:
-                    line = proc.stderr.readline()
+                    line = outputCopyStderr.readline()
                 except AttributeError:
                     break
                 print(line)

@@ -151,6 +151,7 @@ def fs_initial_conditions(initial_file='initial.hdf', quiet=False):
     Load trento output file and yield initial condition arrays.
 
     """
+    print('WASDGFLSDflK')
     if not quiet:
         print('Packaging initial conditions array for: {}'.format(initial_file))
     with h5py.File(initial_file, 'r') as f:

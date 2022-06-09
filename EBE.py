@@ -89,16 +89,15 @@ for eventNo in range(0, config.NUM_EVENTS):
     print('Packaging trento initial conditions into array...')
     ic = hic.toFsIc(initial_file='initial.hdf', quiet=False)
 
-    # Log randomseed and Trento event params
-
-    # Package into ic array for freestream.
-
     #################
     # Freestreaming #
     #################
     # Freestream initial conditions
     print('Freestreaming Trento conditions...')
     fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=config.TAU_FS)
+
+    # Important to close the hdf5 file.
+    del ic
 
     #########
     # Hydro #

@@ -156,7 +156,6 @@ def toFsIc(initial_file='initial.hdf', quiet=False):
         for dset in f.values():
             print(dset)
             ic = np.array(dset)
-        f.close()
     return ic
 
 # Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream

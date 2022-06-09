@@ -158,7 +158,7 @@ def toFsIc(initial_file='initial.hdf', quiet=False):
             yield ic
     """
     ic = 1
-    yield ic
+    return ic
 
 # Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream
 # Result files SHOULD be placed in the active folder.

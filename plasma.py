@@ -17,7 +17,7 @@ class osu_hydro_file:
 
         # Store grid data
         self.grid_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
-                              names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
+                                       names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
 
         # Initialize all the ordinary grid parameters
 
@@ -26,24 +26,11 @@ class osu_hydro_file:
         self.grid_width = int(np.sqrt(self.grid_data[['time']].value_counts().to_numpy()[-1]))
 
         # n_grid_spaces is total number of grid spaces / bins. Assumes square grid.
-        self.n_grid_spaces = int(self.grid_width ** 2)
+        self.n_grid_spaces = self.grid_width ** 2
 
         # Number of time steps is grid_data's time column divided by number of grid spaces.
         self.NT = int(len(self.grid_data[['time']]) / self.n_grid_spaces)
 
-        # Domains of physical times and positions
-        """
-        Absolute time for the first two steps from osu-hydro are the same.
-        If we shift the first time step's absolute time back by the difference in timesteps,
-        we can relabel the first step and keep the absolute times matching for every other step.
-    
-        If we do nothing, creating this linear time space will smoosh an extra timestep into the
-        same initial and final time bounds. This, in principle, causes the evolution to happen 
-        in the interpolated functions ever so slightly faster than it actually does in osu-hydro.
-        This may be a small difference, but it is certainly non-physical.
-    
-        For now, we choose to drop the first timestep by default.
-        """
         # Set grid space & time domains & lists
 
         # We get lists of time and space coordinates from the file
@@ -52,18 +39,26 @@ class osu_hydro_file:
         self.xlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['xpos']]).to_numpy())
         self.tlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['time']]).to_numpy())
 
-        # Drop first timestep: the first n_grid_spaces lines if the timesteps match.
-        if self.tlist[0] == self.tlist[1]:
-            self.grid_data = self.grid_data.iloc[self.n_grid_spaces:, :]
-            self.tlist = np.ndarray.flatten(pd.DataFrame(self.grid_data[['time']]).to_numpy())
-
         # Difference in absolute time between steps in simulation
         # Note that we find the timestep from the end of the list. In files from osu-hydro,
         # the first two timesteps are labeled with the same absolute time.
         self.timestep = self.tlist[-1] - self.tlist[-1 - int(self.n_grid_spaces)]
 
-        # Domain of time values
-        self.tspace = np.linspace(np.amin(self.tlist), np.amax(self.tlist), self.NT)
+        # Domains of physical times and positions
+        """
+        Absolute time for the first two steps from osu-hydro are the same.
+        If we shift the first time step's absolute time back by the difference in timesteps,
+        we can relabel the first step and keep the absolute times matching for every other step.
+
+        If we do nothing, creating this linear time space will smoosh an extra timestep into the
+        same initial and final time bounds. This, in principle, causes the evolution to happen 
+        in the interpolated functions ever so slightly faster than it actually does in osu-hydro.
+        This may be a small difference, but it is certainly non-physical.
+
+        For now, we choose to shift back the first timestep by default.
+        """
+        # Domain of corrected time values
+        self.tspace = np.linspace(np.amin(self.tlist) - self.timestep, np.amax(self.tlist), self.NT)
         # Domain of space values
         self.xspace = np.linspace(np.amin(self.xlist), np.amax(self.xlist), self.grid_width)
 
@@ -193,7 +188,6 @@ class osu_hydro_file:
         return minTemp
 
 
-
 # Plasma object as used for integration and muckery
 class plasma_event:
     def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, event=None, g=None, name=None):
@@ -212,7 +206,6 @@ class plasma_event:
             print('Plasma instantiation failed.')
             raise Exception
 
-
         self.t0 = np.amin(self.temp.grid[0])
         self.tf = np.amax(self.temp.grid[0])
         self.xmin = np.amin(self.temp.grid[1])
@@ -222,11 +215,11 @@ class plasma_event:
 
     # Method to get array on space domain of event with given resolution
     def xspace(self, resolution=100):
-        return np.arange(start=self.xmin, stop=self.xmax, step=((self.xmax-self.xmin)/resolution))
+        return np.arange(start=self.xmin, stop=self.xmax, step=((self.xmax - self.xmin) / resolution))
 
     # Method to get array on time domain of event with given resolution
     def tspace(self, resolution=100):
-        return np.arange(start=self.t0, stop=self.tf, step=((self.tf-self.t0)/resolution))
+        return np.arange(start=self.t0, stop=self.tf, step=((self.tf - self.t0) / resolution))
 
     # For multi-modal property calls. Determines what point to evaluate at.
     def decide(self, point, jet, time):
@@ -242,7 +235,7 @@ class plasma_event:
     # Method to return the total magnitude of the velocity at a given point
     def vel(self, point=None, jet=None, time=None):
         current_point = self.decide(point, jet, time)
-        return np.sqrt(self.x_vel(current_point)**2 + self.y_vel(current_point)**2)
+        return np.sqrt(self.x_vel(current_point) ** 2 + self.y_vel(current_point) ** 2)
 
     # Method to return angle of velocity vector at a given point
     def vel_angle(self, point=None, jet=None, time=None):
@@ -253,7 +246,7 @@ class plasma_event:
 
         # if the angle was negative, we need to correct it to return an angle on the domain [0, 2pi]
         if arctan2 < 0:
-            return 2*np.pi + arctan2  # Here we add the negative angle, reducing to corresponding value on [0, 2pi]
+            return 2 * np.pi + arctan2  # Here we add the negative angle, reducing to corresponding value on [0, 2pi]
         else:
             return arctan2
 

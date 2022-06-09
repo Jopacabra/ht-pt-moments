@@ -79,7 +79,6 @@ for eventNo in range(0, config.NUM_EVENTS):
     # Format trento data into initial conditions for freestream
     print('Packaging trento initial conditions into array...')
     hic.toFsIc(initial_file='initial.hdf', quiet=False)
-    hic.waaaa()
 
     # Log randomseed and Trento event params
 

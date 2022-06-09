@@ -147,10 +147,6 @@ def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, 
 
 # Define function to generate initial conditions object as for freestream input from trento file
 def fs_initial_conditions(initial_file='initial.hdf', quiet=False):
-    """
-    Load trento output file and yield initial condition arrays.
-
-    """
     print('WASDGFLSDflK')
     if not quiet:
         print('Packaging initial conditions array for: {}'.format(initial_file))
@@ -159,6 +155,11 @@ def fs_initial_conditions(initial_file='initial.hdf', quiet=False):
             print(dset)
             ic = np.array(dset)
             yield ic
+
+
+# Function to print 'WASSDfSDG!!!'
+def waaaa():
+    print('WASSDfSDG!!!')
 
 
 # Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream

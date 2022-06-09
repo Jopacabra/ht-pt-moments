@@ -88,7 +88,7 @@ for eventNo in range(0, config.NUM_EVENTS):
     #################
     # Freestream initial conditions
     print('Freestreaming Trento conditions...')
-    fs = freestream.FreeStreamer(ic, grid_max, config.TAU_FS)
+    fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=config.TAU_FS)
 
     #########
     # Hydro #

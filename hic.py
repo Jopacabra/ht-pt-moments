@@ -151,7 +151,7 @@ def fs_initial_conditions(initial_file='initial.hdf', quiet=False, randomSeed=No
     Load trento output file and yield initial condition arrays.
 
     """
-    with h5py.File('../' + initial_file, 'r') as f:
+    with h5py.File(initial_file, 'r') as f:
         for dset in f.values():
             ic = np.array(dset)
             yield ic

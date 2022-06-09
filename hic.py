@@ -146,12 +146,13 @@ def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, 
 
 
 # Define function to generate initial conditions object as for freestream input from trento file
-def fs_initial_conditions(initial_file='initial.hdf', quiet=False, randomSeed=None):
+def fs_initial_conditions(initial_file='initial.hdf', quiet=False):
     """
     Load trento output file and yield initial condition arrays.
 
     """
-    print('Packaging initial conditions array for: {}'.format(initial_file))
+    if not quiet:
+        print('Packaging initial conditions array for: {}'.format(initial_file))
     with h5py.File(initial_file, 'r') as f:
         for dset in f.values():
             print(dset)

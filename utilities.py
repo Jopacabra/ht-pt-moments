@@ -49,7 +49,6 @@ def run_cmd(*args, quiet=False):
             outputCopyStderr = proc.stderr
             # Attempt to print the output from the trentoSubprocess.
             print('------------- {} Output ----------------'.format(processName))
-            print('format: event_number impact_param npart mult e2 e3 e4 e5')
             print('exit status:\n', proc.returncode)
             print('stdout:\n')
             for line in outputCopyStdout:

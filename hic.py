@@ -146,7 +146,7 @@ def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, 
 
 
 # Define function to generate initial conditions object as for freestream input from trento file
-def fs_initial_conditions(initial_file='initial.hdf', quiet=False):
+def toFsIc(initial_file='initial.hdf', quiet=False):
     print('WASDGFLSDflK')
     if not quiet:
         print('Packaging initial conditions array for: {}'.format(initial_file))

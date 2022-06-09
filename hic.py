@@ -147,18 +147,15 @@ def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, 
 
 # Define function to generate initial conditions object as for freestream input from trento file
 def toFsIc(initial_file='initial.hdf', quiet=False):
-    print('WASDGFLSDflK')
-    """
     if not quiet:
         print('Packaging initial conditions array for: {}'.format(initial_file))
+    icArray = np.array([])
     with h5py.File(initial_file, 'r') as f:
         for dset in f.values():
             print(dset)
             ic = np.array(dset)
-            yield ic
-    """
-    ic = 1
-    return ic
+            icArray = np.append(icArray, ic)
+    return icArray
 
 # Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream
 # Result files SHOULD be placed in the active folder.

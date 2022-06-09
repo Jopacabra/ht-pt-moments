@@ -74,10 +74,10 @@ for eventNo in range(0, config.NUM_EVENTS):
     trentoDataframe, trentoOutputFile, trentoSubprocess = hic.runTrento(projectile1='Pb', projectile2='Pb',
                                                                         outputFile=True, randomSeed=seed,
                                                                         normalization=18.1175, crossSection=7.0,
-                                                                        quiet=False, filename='initial.hdf')
+                                                                        quiet=False, filename=temp_dir.name + '/initial.hdf')
 
     # Format trento data into initial conditions for freestream
-    ic = hic.fs_initial_conditions(initial_file=trentoOutputFile, quiet=False, randomSeed=seed)
+    ic = hic.fs_initial_conditions(initial_file='initial.hdf', quiet=False, randomSeed=seed)
 
     # Log randomseed and Trento event params
 

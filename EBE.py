@@ -104,7 +104,7 @@ for eventNo in range(0, config.NUM_EVENTS):
 
     # append switching energy density to hydro arguments
     eswitch = hrg.energy_density()
-    hydro_args = 'edec={}'.format(eswitch)
+    hydro_args = ['edec={}'.format(eswitch)]
 
     # Coarse run to determine maximum radius
     print('Running coarse hydro...')

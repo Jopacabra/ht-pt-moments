@@ -214,7 +214,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, dt_ratio=
 
     dt = dxy*dt_ratio
 
-    hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls)].append(hydro_args)
+    hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls)] + hydro_args
 
     hydroProc, hydroOutput = utilities.run_cmd(hydroCmd, quiet=False)
     # Attempt to print the output from the hydro trentoSubprocess.

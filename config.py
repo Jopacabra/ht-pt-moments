@@ -21,14 +21,16 @@ NUM_SAMPLES = int(cfg['mode'][
 # Set physical options for hybrid transport
 TAU_FS = float(cfg['transport_parameters']['TAU_FS'])
 GRID_STEP = float(cfg['transport_parameters']['GRID_STEP'])  # Hydro grid step in fm. Default 0.1 fm from testing.
-T_SWITCH= float(cfg['transport_parameters']['T_SWITCH'])  # Minimum temperature in GeV to cut off hydro evolution.
+T_END= float(cfg['transport_parameters']['T_END'])  # Minimum temperature in GeV to cut off hydro evolution.
+T_HRG = float(cfg['transport_parameters']['T_HRG'])  # Temperature in GeV at which to consider the medium hadronized
+T_UNHYDRO = float(cfg['transport_parameters']['T_UNHYDRO'])  # Temperature in GeV at which to consider the medium unhydrodynamic
 
 # Set jet parameters
 JET_ENERGY = int(cfg['jet_parameters']['JET_ENERGY'])  # Jet energy
 
 # Set moment parameters
 K = int(cfg['moment_parameters']['MOMENT_K'])  # Which k-moment to calculate
-TEMP_CUTOFF = float(cfg['moment_parameters']['TEMP_CUTOFF'])  # Temp at which to set plasma integrand to 0
+
 
 # Set all the global constants
 G = float(cfg['global_constants']['G'])  # Coupling constant for strong interaction

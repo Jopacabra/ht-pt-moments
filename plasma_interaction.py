@@ -1,6 +1,5 @@
 import scipy as sp
 from scipy.integrate import quad
-from config import TEMP_CUTOFF  # Cutoff temp for plasma integral
 
 # Check and interpret desired percent error.
 percent_error = 0.01

@@ -36,11 +36,20 @@ resultsDataframe = resultsDataFrame = pd.DataFrame(
         {
             "eventNo": [],
             "jetNo": [],
-            "pT_moment": [],
-            "pT_moment_error": [],
+            "pT_plasma": [],
+            "pT_plasma_error": [],
+            "pT_hrg": [],
+            "pT_hrg_error": [],
+            "pT_unhydro": [],
+            "pT_unhydro_error": [],
             "k_moment": [],
-            "deflection_angle": [],
-            "deflection_angle_error": [],
+            "deflection_angle_plasma": [],
+            "deflection_angle_plasma_error": [],
+            "deflection_angle_hrg": [],
+            "deflection_angle_hrg_error": [],
+            "deflection_angle_unhydro": [],
+            "deflection_angle_unhydro_error": [],
+            "shower_correction": [],
             "X0": [],
             "Y0": [],
             "theta0": [],
@@ -100,7 +109,7 @@ for eventNo in range(0, config.NUM_EVENTS):
     # specify a minimum temperature that will be enforced with the energy density popped out here.
     # create sampler HRG object (to be reused for all events)
     hrg_kwargs = dict(species='urqmd', res_width=True)
-    hrg = frzout.HRG(config.T_SWITCH, **hrg_kwargs)
+    hrg = frzout.HRG(config.T_END, **hrg_kwargs)
 
     # append switching energy density to hydro arguments
     eswitch = hrg.energy_density()
@@ -156,35 +165,60 @@ for eventNo in range(0, config.NUM_EVENTS):
         # Currently just zero
         shower_correction = 0
 
-        # Calculate moment
-        moment, momentErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.K)
+        # Calculate momentPlasma
+        print('Unhydrodynamic Moment:')
+        momentUnhydro, momentUnhydroErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.K,
+                                                             minTemp=0, maxTemp=config.T_UNHYDRO)
+        print('Hadron Gas Moment:')
+        momentHrg, momentHrgErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.K,
+                                                     minTemp=config.T_UNHYDRO, maxTemp=config.T_HRG)
+        print('Plasma Moment:')
+        momentPlasma, momentPlasmaErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.K,
+                                                           minTemp=config.T_HRG)
 
         # Calculate deflection angle
         # Basic trig with k=0.
         if config.K == 0:
-            deflection_angle = np.arctan((moment / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_error = np.arctan((momentErr / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_plasma = np.arctan((momentPlasma / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_plasma_error = np.arctan((momentPlasmaErr / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_hrg = np.arctan((momentHrg / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_hrg_error = np.arctan((momentHrgErr / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_unhydro = np.arctan((momentUnhydro / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_unhydro_error = np.arctan((momentUnhydroErr / current_jet.energy)) * (180 / np.pi)
         else:
-            deflection_angle = None
-            deflection_angle_error = None
+            deflection_angle_plasma = None
+            deflection_angle_plasma_error = None
+            deflection_angle_hrg = None
+            deflection_angle_hrg_error = None
+            deflection_angle_unhydro = None
+            deflection_angle_unhydro_error = None
 
-        # Create moment results dataframe
-        momentDataframe = momentResults = pd.DataFrame(
+        # Create momentPlasma results dataframe
+        momentDataframe = pd.DataFrame(
                 {
                     "eventNo": [eventNo],
                     "jetNo": [jetNo],
-                    "pT_moment": [moment],
-                    "pT_moment_error": [momentErr],
+                    "pT_plasma": [momentPlasma],
+                    "pT_plasma_error": [momentPlasmaErr],
+                    "pT_hrg": [momentHrg],
+                    "pT_hrg_error": [momentHrgErr],
+                    "pT_unhydro": [momentUnhydro],
+                    "pT_unhydro_error": [momentUnhydroErr],
                     "k_moment": [config.K],
-                    "deflection_angle": [deflection_angle],
-                    "deflection_angle_error": [deflection_angle_error],
+                    "deflection_angle_plasma": [deflection_angle_plasma],
+                    "deflection_angle_plasma_error": [deflection_angle_plasma_error],
+                    "deflection_angle_hrg": [deflection_angle_hrg],
+                    "deflection_angle_hrg_error": [deflection_angle_hrg_error],
+                    "deflection_angle_unhydro": [deflection_angle_unhydro],
+                    "deflection_angle_unhydro_error": [deflection_angle_unhydro_error],
+                    "shower_correction": [shower_correction],
                     "X0": [x0],
                     "Y0": [y0],
                     "theta0": [theta0],
                 }
             )
 
-        # Merge the trento and moment dataframes
+        # Merge the trento and momentPlasma dataframes
         currentResultDataframe = pd.concat([momentDataframe, trentoDataframe], axis=1)
         # Append current result step to dataframe
         resultsDataframe = resultsDataframe.append(currentResultDataframe)
@@ -203,7 +237,7 @@ for eventNo in range(0, config.NUM_EVENTS):
         os.mkdir('../results')
 
     print('Saving progress...')
-    resultsDataFrame.to_pickle('../results/' + str(resultsFile) + '.pkl')  # Save dataframe to pickel
+    resultsDataFrame.to_pickle('../results/' + str(resultsFile) + '.pkl')  # Save dataframe to pickle
 
     # Delete all event files
     # clear everything in the temporary directory and delete it.

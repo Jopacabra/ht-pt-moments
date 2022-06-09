@@ -109,7 +109,7 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
         resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
 
     # Pass on result file name, trentoSubprocess data, and dataframe.
-    return resultsDataFrame.drop(labels='event', axis=1), outputFile, subprocess
+    return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess
 
 
 # Function to generate a new trento IC for RHIC Kinematics:
@@ -151,10 +151,9 @@ def fs_initial_conditions(initial_file='initial.hdf', quiet=False, randomSeed=No
     Load trento output file and yield initial condition arrays.
 
     """
-    with h5py.File(initial_file, 'r') as f:
+    with h5py.File('../' + initial_file, 'r') as f:
         for dset in f.values():
             ic = np.array(dset)
-
             yield ic
 
 

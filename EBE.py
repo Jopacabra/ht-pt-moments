@@ -77,7 +77,7 @@ for eventNo in range(0, config.NUM_EVENTS):
                                                                         quiet=False, filename='initial.hdf')
 
     # Format trento data into initial conditions for freestream
-    ic = hic.fs_initial_conditions(initial_file='initial.hdf', quiet=False, randomSeed=seed)
+    ic = hic.fs_initial_conditions(initial_file=trentoOutputFile, quiet=False, randomSeed=seed)
 
     # Log randomseed and Trento event params
 

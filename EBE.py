@@ -293,33 +293,14 @@ except KeyboardInterrupt:
     print('Cleaning up...')
 
     # Clean up and get everything sorted
-    try:
-        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
-    except:
-        print('Safe exit failed.')
-        print('Data may not be recoverable.')
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
 
 except hic.StopEvent:
     print('HIC event error.')
     print('Cleaning up...')
 
     # Clean up and get everything sorted
-    try:
-        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
-    except:
-        print('Safe exit failed.')
-        print('Data may not be recoverable.')
-
-except:
-    print('Unknown Error!')
-    print('Attempting to clean up...')
-
-    # Clean up and get everything sorted
-    try:
-        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
-    except:
-        print('Safe exit failed.')
-        print('Data may not be recoverable.')
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
 
 print('Results identifier: {}'.format(identifierString))
 print('Please have an excellent day. :)')

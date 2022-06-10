@@ -98,7 +98,7 @@ def run_event(eventNo):
     # Create plasma object
     # Open the hydro file and create file object for manipulation.
     plasmaFilePath = 'viscous_14_moments_evo.dat'
-    current_file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(str(seed)))
+    current_file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(seed))
 
     # Create event object
     # This asks the hydro file object to interpolate the relevant functions and pass them on to the plasma object.

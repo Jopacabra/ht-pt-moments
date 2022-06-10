@@ -12,9 +12,6 @@ import config
 import freestream
 import frzout
 
-# Constants & config
-resultsFile = 'results' + str(int(np.random.uniform(0, 10000000)))
-
 # the "target" grid max: the grid shall be at least as large as the target
 grid_max_target = 15
 # next two lines set the number of grid cells and actual grid max,
@@ -26,50 +23,83 @@ logging.info(
     config.GRID_STEP, grid_n, grid_max
 )
 
-# Create results dataframe.
-resultsDataframe = resultsDataFrame = pd.DataFrame(
-        {
-            "eventNo": [],
-            "jetNo": [],
-            "pT_plasma": [],
-            "pT_plasma_error": [],
-            "pT_hrg": [],
-            "pT_hrg_error": [],
-            "pT_unhydro": [],
-            "pT_unhydro_error": [],
-            "k_moment": [],
-            "deflection_angle_plasma": [],
-            "deflection_angle_plasma_error": [],
-            "deflection_angle_hrg": [],
-            "deflection_angle_hrg_error": [],
-            "deflection_angle_unhydro": [],
-            "deflection_angle_unhydro_error": [],
-            "shower_correction": [],
-            "X0": [],
-            "Y0": [],
-            "theta0": [],
-            "b": [],
-            "npart": [],
-            "mult": [],
-            "e2": [],
-            "e3": [],
-            "e4": [],
-            "e5": [],
-            "seed": [],
-            "cmd": [],
-        }
-    )
+# Function to create empty results dataframe.
+def resultsFrame():
+    resultsDataframe = pd.DataFrame(
+            {
+                "eventNo": [],
+                "jetNo": [],
+                "pT_plasma": [],
+                "pT_plasma_error": [],
+                "pT_hrg": [],
+                "pT_hrg_error": [],
+                "pT_unhydro": [],
+                "pT_unhydro_error": [],
+                "k_moment": [],
+                "deflection_angle_plasma": [],
+                "deflection_angle_plasma_error": [],
+                "deflection_angle_hrg": [],
+                "deflection_angle_hrg_error": [],
+                "deflection_angle_unhydro": [],
+                "deflection_angle_unhydro_error": [],
+                "shower_correction": [],
+                "X0": [],
+                "Y0": [],
+                "theta0": [],
+                "b": [],
+                "npart": [],
+                "mult": [],
+                "e2": [],
+                "e3": [],
+                "e4": [],
+                "e5": [],
+                "seed": [],
+                "cmd": [],
+            }
+        )
+
+    return resultsDataframe
 
 
-# loop N backgrounds
-for eventNo in range(0, config.NUM_EVENTS):
-
-    print('Generating new event.')
-
+# Creates a temporary directory and moves to it.
+# Returns tempfile.TemporaryDirectory object.
+def tempDir():
     # Create and move to temp directory
     temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=os.getcwd())
     print('Created temp directory {}'.format(temp_dir.name))
     os.chdir(temp_dir.name)
+
+    return temp_dir
+
+
+# Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
+def safe_exit(resultsDataFrame, temp_dir, filename):
+    # Save dataframe
+    # Note that we exit the directory first in order to retain a valid current working directory when cleaned up.
+    # This prevents os.get_cwd() from throwing an error.
+    os.chdir('..')
+    if os.path.exists('/results'):
+        pass
+    else:
+        print('Making results directory...')
+        os.mkdir('/results')
+
+    print('Saving progress...')
+    resultsDataFrame.to_pickle('/results/' + str(filename) + '.pkl')  # Save dataframe to pickle
+
+    # Clear everything in the temporary directory and delete it, thereby deleting all event files.
+
+    print('Cleaning temporary directory (dumping event data)...')
+
+    try:
+        temp_dir.cleanup()
+    except TypeError:
+        pass
+
+
+# Function to generate a new HIC event and sample config.NUM_SAMPLES jets in it.
+def run_event():
+    print('Generating new event.')
 
     ##########
     # Trento #
@@ -83,7 +113,8 @@ for eventNo in range(0, config.NUM_EVENTS):
     trentoDataframe, trentoOutputFile, trentoSubprocess = hic.runTrento(projectile1='Pb', projectile2='Pb',
                                                                         outputFile=True, randomSeed=seed,
                                                                         normalization=18.1175, crossSection=7.0,
-                                                                        quiet=False, filename=temp_dir.name + '/initial.hdf')
+                                                                        quiet=False,
+                                                                        filename=temp_dir.name + '/initial.hdf')
 
     # Format trento data into initial conditions for freestream
     print('Packaging trento initial conditions into array...')
@@ -194,53 +225,93 @@ for eventNo in range(0, config.NUM_EVENTS):
 
         # Create momentPlasma results dataframe
         momentDataframe = pd.DataFrame(
-                {
-                    "eventNo": [eventNo],
-                    "jetNo": [jetNo],
-                    "pT_plasma": [momentPlasma],
-                    "pT_plasma_error": [momentPlasmaErr],
-                    "pT_hrg": [momentHrg],
-                    "pT_hrg_error": [momentHrgErr],
-                    "pT_unhydro": [momentUnhydro],
-                    "pT_unhydro_error": [momentUnhydroErr],
-                    "k_moment": [config.K],
-                    "deflection_angle_plasma": [deflection_angle_plasma],
-                    "deflection_angle_plasma_error": [deflection_angle_plasma_error],
-                    "deflection_angle_hrg": [deflection_angle_hrg],
-                    "deflection_angle_hrg_error": [deflection_angle_hrg_error],
-                    "deflection_angle_unhydro": [deflection_angle_unhydro],
-                    "deflection_angle_unhydro_error": [deflection_angle_unhydro_error],
-                    "shower_correction": [shower_correction],
-                    "X0": [x0],
-                    "Y0": [y0],
-                    "theta0": [theta0],
-                }
-            )
+            {
+                "eventNo": [eventNo],
+                "jetNo": [jetNo],
+                "pT_plasma": [momentPlasma],
+                "pT_plasma_error": [momentPlasmaErr],
+                "pT_hrg": [momentHrg],
+                "pT_hrg_error": [momentHrgErr],
+                "pT_unhydro": [momentUnhydro],
+                "pT_unhydro_error": [momentUnhydroErr],
+                "k_moment": [config.K],
+                "deflection_angle_plasma": [deflection_angle_plasma],
+                "deflection_angle_plasma_error": [deflection_angle_plasma_error],
+                "deflection_angle_hrg": [deflection_angle_hrg],
+                "deflection_angle_hrg_error": [deflection_angle_hrg_error],
+                "deflection_angle_unhydro": [deflection_angle_unhydro],
+                "deflection_angle_unhydro_error": [deflection_angle_unhydro_error],
+                "shower_correction": [shower_correction],
+                "X0": [x0],
+                "Y0": [y0],
+                "theta0": [theta0],
+            }
+        )
 
         # Merge the trento and momentPlasma dataframes
         currentResultDataframe = pd.concat([momentDataframe, trentoDataframe], axis=1)
-        # Append current result step to dataframe
-        resultsDataframe = resultsDataframe.append(currentResultDataframe)
 
         # Declare jet complete
         print('Jet ' + str(jetNo) + ' Complete')
 
-    ################
-    # Save Results & Clean-Up#
-    ################
-    # Save dataframe
-    if os.path.exists('../results'):
-        print('Making results directory...')
-        pass
-    else:
-        os.mkdir('../results')
+        return currentResultDataframe
 
-    print('Saving progress...')
-    resultsDataFrame.to_pickle('../results/' + str(resultsFile) + '.pkl')  # Save dataframe to pickle
 
-    # Delete all event files
-    # clear everything in the temporary directory and delete it.
-    print('Cleaning temporary directory (dumping event data)...')
-    temp_dir.cleanup()
+# Controls whether a certain number of events are generated or we just keep going until keyboard interrupt.
+if config.NUM_EVENTS == 0:
+    # Collect data until interrupted.
+    temp_dir = None  # Instantiates object for interrupt before temp_dir created.
+    results = resultsFrame()
+    identifierString = str(int(np.random.uniform(0, 10000000)))
+    i = 0
+    resultsFilename = 'results' + identifierString + 'p' + str(i)
+    try:
+        while True:
+            # Create and move to temporary directory
+            temp_dir = tempDir()
+
+            # Generate a new HIC event and samples config.NUM_SAMPLES jets in it
+            # Append returned dataframe to current dataframe
+            results = results.append(run_event())
+
+            # Exits directory, saves all current data, and dumps temporary files.
+            safe_exit(results, temp_dir, filename=resultsFilename)
+
+            if len(results) > 10000:
+                i += 1
+                resultsFilename = 'results' + identifierString + 'p' + str(i)
+                results = resultsFrame()
+
+    except KeyboardInterrupt:
+        print('Interrupted!')
+        print('Cleaning up...')
+
+        # Clean up and get everything sorted
+        safe_exit(results, temp_dir, filename=resultsFilename)
+        print('Please have an excellent day. :)')
+
+else:
+    # loop config.NUM_EVENTS backgrounds
+
+    temp_dir = None  # Instantiates object for interrupt before temp_dir created.
+    results = resultsFrame()
+    identifierString = str(int(np.random.uniform(0, 10000000)))
+    i = 0
+    resultsFilename = 'results' + identifierString + 'p' + str(i)
+
+    for eventNo in range(0, config.NUM_EVENTS):
+        # Create and move to temporary directory
+        temp_dir = tempDir()
+
+        # Generate a new HIC event and samples config.NUM_SAMPLES jets in it
+        # Append returned dataframe to current dataframe
+        results = results.append(run_event())
+
+        # Exits directory, saves all current data, and dumps temporary files.
+        safe_exit(results, temp_dir, filename=resultsFilename)
+
+
+
+
 
 # Setting to loop until stopped???

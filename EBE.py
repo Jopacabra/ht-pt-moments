@@ -256,50 +256,22 @@ def run_event():
 
         return currentResultDataframe
 
+################
+# Main Program #
+################
 
-# Controls whether a certain number of events are generated or we just keep going until keyboard interrupt.
-if config.NUM_EVENTS == 0:
-    # Collect data until interrupted.
-    temp_dir = None  # Instantiates object for interrupt before temp_dir created.
-    results = resultsFrame()
-    identifierString = str(int(np.random.uniform(0, 10000000)))
-    i = 0
-    resultsFilename = 'results' + identifierString + 'p' + str(i)
-    try:
-        while True:
-            # Create and move to temporary directory
-            temp_dir = tempDir()
+# Instantiate counters
+part = 0
+eventNo = 0
 
-            # Generate a new HIC event and samples config.NUM_SAMPLES jets in it
-            # Append returned dataframe to current dataframe
-            results = results.append(run_event())
+# Set up results frame and filename.
+temp_dir = None  # Instantiates object for interrupt before temp_dir created.
+results = resultsFrame()
+identifierString = str(int(np.random.uniform(0, 10000000)))
+resultsFilename = 'results' + identifierString + 'p' + str(part)
 
-            # Exits directory, saves all current data, and dumps temporary files.
-            safe_exit(results, temp_dir, filename=resultsFilename)
-
-            if len(results) > 10000:
-                i += 1
-                resultsFilename = 'results' + identifierString + 'p' + str(i)
-                results = resultsFrame()
-
-    except KeyboardInterrupt:
-        print('Interrupted!')
-        print('Cleaning up...')
-
-        # Clean up and get everything sorted
-        safe_exit(results, temp_dir, filename=resultsFilename)
-        print('Please have an excellent day. :)')
-
-else:
-    # loop config.NUM_EVENTS backgrounds
-
-    temp_dir = None  # Instantiates object for interrupt before temp_dir created.
-    results = resultsFrame()
-    identifierString = str(int(np.random.uniform(0, 10000000)))
-    i = 0
-    resultsFilename = 'results' + identifierString + 'p' + str(i)
-
-    for eventNo in range(0, config.NUM_EVENTS):
+try:
+    while config.NUM_EVENTS == 0 or eventNo < config.NUM_EVENTS:
         # Create and move to temporary directory
         temp_dir = tempDir()
 
@@ -310,8 +282,45 @@ else:
         # Exits directory, saves all current data, and dumps temporary files.
         safe_exit(results, temp_dir, filename=resultsFilename)
 
+        if len(results) > 10000:
+            part += 1
+            resultsFilename = 'results' + identifierString + 'p' + str(part)
+            results = resultsFrame()
 
+        eventNo += 1
 
+except KeyboardInterrupt:
+    print('Interrupted!')
+    print('Cleaning up...')
 
+    # Clean up and get everything sorted
+    try:
+        safe_exit(results, temp_dir, filename=resultsFilename)
+    except:
+        print('Safe exit failed.')
+        print('Data may not be recoverable.')
 
-# Setting to loop until stopped???
+except hic.StopEvent:
+    print('HIC event error.')
+    print('Cleaning up...')
+
+    # Clean up and get everything sorted
+    try:
+        safe_exit(results, temp_dir, filename=resultsFilename)
+    except:
+        print('Safe exit failed.')
+        print('Data may not be recoverable.')
+
+except:
+    print('Unknown Error!')
+    print('Attempting to clean up...')
+
+    # Clean up and get everything sorted
+    try:
+        safe_exit(results, temp_dir, filename=resultsFilename)
+    except:
+        print('Safe exit failed.')
+        print('Data may not be recoverable.')
+
+print('Results identifier: {}'.format(identifierString))
+print('Please have an excellent day. :)')

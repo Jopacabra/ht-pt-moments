@@ -58,12 +58,12 @@ class transport:
 
 # Jet configuration
 class jet:
-    JET_ENERGY = int(cfg['jet_parameters']['JET_ENERGY'])
+    JET_ENERGY = int(cfg['jet']['JET_ENERGY'])
 
 
 # Moment calculation configuration
 class moment:
-    K = int(cfg['moment_parameters']['MOMENT_K'])
+    K = int(cfg['moment']['MOMENT_K'])
 
 
 # Global constants

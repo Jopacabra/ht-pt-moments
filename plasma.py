@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
-from config import G  # Coupling constant for strong interaction
+import config
 
 
 class osu_hydro_file:
@@ -190,7 +190,7 @@ class osu_hydro_file:
 
 # Plasma object as used for integration and muckery
 class plasma_event:
-    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, event=None, g=None, name=None):
+    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, event=None, name=None):
         # Initialize all the ordinary plasma parameters
         if event is not None:
             self.temp = event.interpolate_temp_grid()
@@ -274,7 +274,7 @@ class plasma_event:
     def mu(self, point=None, jet=None, time=None):
         current_point = self.decide(point, jet, time)
 
-        debye_mass = G * self.temp(current_point)
+        debye_mass = config.constants.G * self.temp(current_point)
 
         return debye_mass
 
@@ -289,7 +289,7 @@ class plasma_event:
         """
         current_point = self.decide(point, jet, time)
 
-        cross_section = np.pi * G ** 4 / (self.mu(point=current_point) ** 2)
+        cross_section = np.pi * config.constants.G ** 4 / (self.mu(point=current_point) ** 2)
 
         return cross_section
 

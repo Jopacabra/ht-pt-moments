@@ -5,15 +5,24 @@ mode:  # Operation mode flags
     WEIGHT_POINT: True  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
     NUM_EVENTS: 2  # Number of events to generate -- 0 runs events until interrupt.
     NUM_SAMPLES: 5  # Number of jets to run in each event
-transport_parameters:  # Parameters for the jets to be run
+transport:  # Parameters for the jets to be run
     TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
-    GRID_STEP: 0.1  # Hydro grid step in fm. Default 0.1 fm from trial and error.
+    GRID_STEP: 0.1  # Hydro / Trento grid step in fm. Default 0.1 fm from trial and error.
+    GRID_MAX_TARGET: 15  # Maximum hydro grid width.
     T_END: 0.150  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
     T_HRG: 0.200  # Temperature in GeV at which to consider the medium hadronized
     T_UNHYDRO: 0.150  # Temperature in GeV at which to consider the medium unhydrodynamic
-jet_parameters:  # Parameters for the jets to be run
-    JET_ENERGY: 100  # Jet energy in GeV
-moment_parameters:  # Parameters to select moment properties
+trento:
+    NORM: 18.1175  # Overall normalization factor for reduced thickness function (and thereby multiplicity)
+    PROJ1: 'Pb'  # Collisions species 1
+    PROJ2: 'Pb'  # Collisions species 2
+    NUCLEON_WIDTH: 0.5  # Gaussian nucleon width in fm
+    CROSS_SECTION: 7.0  # Inelastic nucleon-nucleon cross section sigma_{NN} in fm^2
+    BMIN: None  # Minimum impact parameter.
+    BMAX: None  # Maximum impact parameter. For no limits, set 0.
+jet:  # Parameters for the jets to be run
+    JET_ENERGY: 22.5  # Jet energy in GeV - corresponds to TOTAL jet E, not just charged particle E
+moment:  # Parameters to select moment properties
     MOMENT_K: 0  # Which k-moment to calculate - NON-FUNCTIONAL - just uses k=0
 global_constants:  # Physical constants to be set by the user.
     G: 2  # Coupling constant for strong interaction

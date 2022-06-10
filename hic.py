@@ -1,10 +1,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import utilities
 import h5py
 import math
 import os
+import logging
+import utilities
+import config
+import freestream
+import frzout
 
 """
 This module is responsible for all processes related to jet production, event generation, & hard scattering.
@@ -16,10 +20,99 @@ This module is responsible for all processes related to jet production, event ge
 class StopEvent(Exception):
     """ Raise to end an event early. """
 
+# Function that generates a new Trento collision event with parameters from config file.
+# Returns the Trento output file name.
+def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filename='initial.hdf'):
+    # Make sure there's no file where we want to stick it.
+    try:
+        os.remove(filename)
+    except FileNotFoundError:
+        pass
+
+    resultsDataFrame = pd.DataFrame(
+        {
+            "event": [],
+            "b": [],
+            "npart": [],
+            "mult": [],
+            "e2": [],
+            "e3": [],
+            "e4": [],
+            "e5": [],
+            "seed": [],
+            "cmd": [],
+        }
+        )
+
+    # Create Trento command arguments
+    # bmin and bmax control min and max impact parameter. Set to same value for specific b.
+    # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
+    # numEvents determines how many to run and spit out a file for. Will be labeled like "0.dat", "1.dat" ...
+
+    # nucleon width default from DukeQCD was
+    # nucleon_width = 0.5  # in fm
+    # We have elected to keep this default.
+
+    # grid_step detfault for DukeQCD was
+    # grid_step = .15*np.min([nucleon_width])  # In fm
+    # for better run-time and effectiveness, we've selected a default of 0.1 fm
+
+    # Maximum grid size was by default 15 fm in DukeQCD. We have elected to keep this.
+    # grid_max_target = 15  # In fm
+
+    # Generate Trento command argument list
+    trentoCmd = ['trento', '--number-events {}'.format(numEvents),
+                 '--grid-step {} --grid-max {}'.format(config.transport.GRID_STEP, config.transport.GRID_MAX_TARGET)]
+
+    # Append any supplied commands in the proper order
+    trentoCmd.append('--projectile {}'.format(config.transport.trento.PROJ1))
+    trentoCmd.append('--projectile {}'.format(config.transport.trento.PROJ2))
+    if config.transport.trento.BMIN is not None:
+        trentoCmd.append('--bmin {}'.format(config.transport.trento.BMIN))  # Minimum impact parameter (in fm ???)
+    if config.transport.trento.BMAX is not None:
+        trentoCmd.append('--bmax {}'.format(config.transport.trento.BMIN))  # Maximum impact parameter (in fm ???)
+    if outputFile:
+        trentoCmd.append('--output {}'.format(filename))  # Output file name
+    if randomSeed is not None:
+        trentoCmd.append('--random-seed {}'.format(int(randomSeed)))  # Random seed for repeatability
+    trentoCmd.append('--normalization {}'.format(config.transport.trento.NORM))
+    trentoCmd.append('--cross-section {}'.format(config.transport.trento.CROSS_SECTION))
+    trentoCmd.append('--nucleon-width {}'.format(config.transport.trento.NUCLEON_WIDTH))
+
+
+    # Run Trento command
+    # Note star unpacks the list to pass the command list as arguments
+    if not quiet:
+        print('format: event_number impact_param npart mult e2 e3 e4 e5')
+    subprocess, output = utilities.run_cmd(*trentoCmd, quiet=quiet)
+
+    # Parse output and pass to dataframe.
+    for line in output:
+        trentoOutput = line.split()
+        trentoDataFrame = pd.DataFrame(
+            {
+                "event": [int(trentoOutput[0])],
+                "b": [float(trentoOutput[1])],
+                "npart": [float(trentoOutput[2])],
+                "mult": [float(trentoOutput[3])],
+                "e2": [float(trentoOutput[4])],
+                "e3": [float(trentoOutput[5])],
+                "e4": [float(trentoOutput[6])],
+                "e5": [float(trentoOutput[7])],
+                "seed": [randomSeed],
+                "cmd": [trentoCmd],
+            }
+        )
+
+        resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
+
+    # Pass on result file name, trentoSubprocess data, and dataframe.
+    return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess
+
+
 # Function that generates a new Trento collision event with given parameters.
 # Returns the Trento output file name.
-# File will be created in directory "trentoOutputFile" and given name "0.dat".
-def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=False, randomSeed=None,
+def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=False, randomSeed=None,
               normalization=None, crossSection=None, numEvents=1, quiet=False, grid_step=0.1, grid_max_target=15,
               nucleon_width=0.5, filename='initial.hdf'):
     # Make sure there's no file where we want to stick it.
@@ -113,38 +206,6 @@ def runTrento(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFi
     # Pass on result file name, trentoSubprocess data, and dataframe.
     return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess
 
-
-# Function to generate a new trento IC for RHIC Kinematics:
-# Au Au collisions at root-s of 200 GeV
-# Normalization was fixed via multiplicity measures for 0-6% centrality guessed at via impact parameter
-# Used center of 0-10% bin mult.:
-# https://dspace.mit.edu/handle/1721.1/16933
-# Nuclear cross section:
-# https://inspirehep.net/literature/1394433
-def generateRHICTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, quiet=False):
-    # Run Trento with known case parameters
-    dataframe, outputFile, subprocess = runTrento(bmin=bmin, bmax=bmax, projectile1='Au', projectile2='Au',
-                                                  outputFile=outputFile, randomSeed=randomSeed, normalization=7.6,
-                                                  crossSection=4.23, quiet=quiet)
-
-    # Spit out the output
-    return dataframe, outputFile, subprocess
-
-
-# Function to generate a new trento IC for LHC Kinematics:
-# Pb Pb collisions at root-s of 5.02 TeV
-# Normalization was fixed via multiplicity measures for 0-10% centrality from Trento sampling
-# https://arxiv.org/abs/1512.06104
-# Nuclear cross section:
-# https://inspirehep.net/literature/1190545
-def generateLHCTrentoIC(bmin=None, bmax=None, outputFile=None, randomSeed=None, quiet=False):
-    # Run Trento with known case parameters
-    dataframe, outputFile, subprocess = runTrento(bmin=bmin, bmax=bmax, projectile1='Pb', projectile2='Pb',
-                                                  outputFile=outputFile, randomSeed=randomSeed, normalization=18.1175,
-                                                  crossSection=7.0, quiet=quiet)
-
-    # Spit out the output
-    return dataframe, outputFile, subprocess
 
 
 # Define function to generate initial conditions object as for freestream input from trento file
@@ -250,6 +311,81 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, dt_ratio=
     )
 
 
+# Function to generate a new HIC event and dump the files in the current working directory.
+def generate_event():
+    print('Generating new event.')
+
+    # the "target" grid max: the grid shall be at least as large as the target
+    grid_max_target = config.transport.GRID_MAX_TARGET
+    # next two lines set the number of grid cells and actual grid max,
+    # which will be >= the target (same algorithm as trento)
+    grid_n = math.ceil(2 * grid_max_target / config.transport.GRID_STEP)
+    grid_max = .5 * grid_n * config.transport.GRID_STEP
+    logging.info(
+        'grid step = %.6f fm, n = %d, max = %.6f fm',
+        config.transport.GRID_STEP, grid_n, grid_max
+    )
+
+    ##########
+    # Trento #
+    ##########
+
+    # Choose random seed
+    seed = int(np.random.uniform(0, 10000000000000000))
+    print('Random seed selected: {}'.format(seed))
+
+    # Generate trento event
+    trentoDataframe, trentoOutputFile, trentoSubprocess = runTrento(outputFile=True, randomSeed=seed,
+                                                                    quiet=False,
+                                                                    filename='initial.hdf')
+
+    # Format trento data into initial conditions for freestream
+    print('Packaging trento initial conditions into array...')
+    ic = toFsIc(initial_file='initial.hdf', quiet=False)
+
+    #################
+    # Freestreaming #
+    #################
+    # Freestream initial conditions
+    print('Freestreaming Trento conditions...')
+    fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=config.transport.hydro.TAU_FS)
+
+    # Important to close the hdf5 file.
+    del ic
+
+    #########
+    # Hydro #
+    #########
+    # Run hydro on initial conditions
+    # This is where we control the end point of the hydro. The HRG object created here has an energy density param.
+    # that we use as the cut-off energy density for the hydro evolution. Doing things through frzout.HRG allows us to
+    # specify a minimum temperature that will be enforced with the energy density popped out here.
+    # create sampler HRG object (to be reused for all events)
+    hrg_kwargs = dict(species='urqmd', res_width=True)
+    hrg = frzout.HRG(config.transport.hydro.T_END, **hrg_kwargs)
+
+    # append switching energy density to hydro arguments
+    eswitch = hrg.energy_density()
+    hydro_args = ['edec={}'.format(eswitch)]
+
+    # Coarse run to determine maximum radius
+    print('Running coarse hydro...')
+    coarseHydroDict = run_hydro(fs, event_size=27, coarse=3, grid_step=config.transport.GRID_STEP,
+                                tau_fs=config.transport.hydro.TAU_FS, hydro_args=hydro_args)
+    rmax = math.sqrt((
+                             coarseHydroDict['x'][:, 1:3] ** 2
+                     ).sum(axis=1).max())
+    logging.info('rmax = %.3f fm', rmax)
+
+    # Fine run
+    print('Running fine hydro...')
+    run_hydro(fs, event_size=rmax, grid_step=config.transport.GRID_STEP, tau_fs=config.transport.hydro.TAU_FS,
+              hydro_args=hydro_args)
+
+    print('Event generation complete')
+
+    return trentoDataframe
+
 
 # Function that defines a normalized 2D PDF array for a given interpolated temperature
 # function's 0.5 fs (or given) timestep.
@@ -293,7 +429,7 @@ def jetprodPDF(temp_func, resolution=100, plot=False, initialTime=0.5):
     normOfRaisedGrid = np.linalg.norm(raisedGrid, ord='nuc')
     normedRaisedGrid = raisedGrid / normOfRaisedGrid
 
-    if plot == True:
+    if plot:
         # Plot the normalized grid
         temps = plt.contourf(x_space, x_space, normedRaisedGrid, cmap='plasma')
         plt.colorbar(temps)
@@ -349,7 +485,7 @@ def jetProdPDF_Function(temp_func, resolution=100, plot=False, initialTime=0.5):
 
     NormedRaised_Temp_Func = Raised_Temp_Func / normOfRaisedGrid
 
-    if plot == True:
+    if plot:
         pass
         # Plot the normalized grid
         # temps = plt.contourf(x_space, x_space, normedRaisedGrid, cmap='plasma')

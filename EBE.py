@@ -12,16 +12,7 @@ import config
 import freestream
 import frzout
 
-# the "target" grid max: the grid shall be at least as large as the target
-grid_max_target = 15
-# next two lines set the number of grid cells and actual grid max,
-# which will be >= the target (same algorithm as trento)
-grid_n = math.ceil(2*grid_max_target/config.GRID_STEP)
-grid_max = .5*grid_n*config.GRID_STEP
-logging.info(
-    'grid step = %.6f fm, n = %d, max = %.6f fm',
-    config.GRID_STEP, grid_n, grid_max
-)
+
 
 # Function to create empty results dataframe.
 def resultsFrame():
@@ -98,64 +89,10 @@ def safe_exit(resultsDataFrame, temp_dir, filename):
 
 # Function to generate a new HIC event and sample config.NUM_SAMPLES jets in it.
 def run_event(eventNo):
-    print('Generating new event.')
 
-    ##########
-    # Trento #
-    ##########
+    trentoDataframe = hic.generate_event()
 
-    # Choose random seed
-    seed = int(np.random.uniform(0, 10000000000000000))
-    print('Random seed selected: {}'.format(seed))
-
-    # Generate trento event
-    trentoDataframe, trentoOutputFile, trentoSubprocess = hic.runTrento(projectile1='Pb', projectile2='Pb',
-                                                                        outputFile=True, randomSeed=seed,
-                                                                        normalization=18.1175, crossSection=7.0,
-                                                                        quiet=False,
-                                                                        filename=temp_dir.name + '/initial.hdf')
-
-    # Format trento data into initial conditions for freestream
-    print('Packaging trento initial conditions into array...')
-    ic = hic.toFsIc(initial_file='initial.hdf', quiet=False)
-
-    #################
-    # Freestreaming #
-    #################
-    # Freestream initial conditions
-    print('Freestreaming Trento conditions...')
-    fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=config.TAU_FS)
-
-    # Important to close the hdf5 file.
-    del ic
-
-    #########
-    # Hydro #
-    #########
-    # Run hydro on initial conditions
-    # This is where we control the end point of the hydro. The HRG object created here has an energy density param.
-    # that we use as the cut-off energy density for the hydro evolution. Doing things through frzout.HRG allows us to
-    # specify a minimum temperature that will be enforced with the energy density popped out here.
-    # create sampler HRG object (to be reused for all events)
-    hrg_kwargs = dict(species='urqmd', res_width=True)
-    hrg = frzout.HRG(config.T_END, **hrg_kwargs)
-
-    # append switching energy density to hydro arguments
-    eswitch = hrg.energy_density()
-    hydro_args = ['edec={}'.format(eswitch)]
-
-    # Coarse run to determine maximum radius
-    print('Running coarse hydro...')
-    coarseHydroDict = hic.run_hydro(fs, event_size=27, coarse=3, grid_step=config.GRID_STEP, tau_fs=config.TAU_FS,
-                                    hydro_args=hydro_args)
-    rmax = math.sqrt((
-                             coarseHydroDict['x'][:, 1:3] ** 2
-                     ).sum(axis=1).max())
-    logging.info('rmax = %.3f fm', rmax)
-
-    # Fine run
-    print('Running fine hydro...')
-    hic.run_hydro(fs, event_size=rmax, grid_step=config.GRID_STEP, tau_fs=config.TAU_FS, hydro_args=hydro_args)
+    seed = trentoDataframe.iloc[0]['seed']
 
     ########################
     # Objectify Background #

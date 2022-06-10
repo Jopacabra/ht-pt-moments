@@ -85,12 +85,11 @@ def safe_exit(resultsDataFrame, temp_dir, filename):
         os.mkdir('/results')
 
     print('Saving progress...')
+    print(resultsDataFrame)
     resultsDataFrame.to_pickle('/results/' + str(filename) + '.pkl')  # Save dataframe to pickle
 
     # Clear everything in the temporary directory and delete it, thereby deleting all event files.
-
     print('Cleaning temporary directory (dumping event data)...')
-
     try:
         temp_dir.cleanup()
     except TypeError:

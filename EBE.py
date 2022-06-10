@@ -90,6 +90,8 @@ def run_event(eventNo):
 
     seed = trentoDataframe.iloc[0]['seed']
 
+    results = resultsFrame()
+
     ########################
     # Objectify Background #
     ########################
@@ -183,10 +185,12 @@ def run_event(eventNo):
         # Merge the trento and momentPlasma dataframes
         currentResultDataframe = pd.concat([momentDataframe, trentoDataframe], axis=1)
 
+        results = results.append(currentResultDataframe)
+
         # Declare jet complete
         print('Jet ' + str(jetNo) + ' Complete')
 
-    return currentResultDataframe
+    return results
 
 ################
 # Main Program #

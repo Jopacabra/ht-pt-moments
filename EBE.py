@@ -253,7 +253,7 @@ def run_event(eventNo):
         # Declare jet complete
         print('Jet ' + str(jetNo) + ' Complete')
 
-        return currentResultDataframe
+    return currentResultDataframe
 
 ################
 # Main Program #

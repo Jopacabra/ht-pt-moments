@@ -164,7 +164,7 @@ def run_event(eventNo):
     # Create plasma object
     # Open the hydro file and create file object for manipulation.
     plasmaFilePath = 'viscous_14_moments_evo.dat'
-    current_file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name=seed)
+    current_file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(str(seed)))
 
     # Create event object
     # This asks the hydro file object to interpolate the relevant functions and pass them on to the plasma object.
@@ -280,7 +280,7 @@ try:
         results = results.append(run_event(eventNo=eventNo))
 
         # Exits directory, saves all current data, and dumps temporary files.
-        safe_exit(results, temp_dir, filename=resultsFilename)
+        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
 
         if len(results) > 10000:
             part += 1
@@ -295,7 +295,7 @@ except KeyboardInterrupt:
 
     # Clean up and get everything sorted
     try:
-        safe_exit(results, temp_dir, filename=resultsFilename)
+        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
     except:
         print('Safe exit failed.')
         print('Data may not be recoverable.')
@@ -306,7 +306,7 @@ except hic.StopEvent:
 
     # Clean up and get everything sorted
     try:
-        safe_exit(results, temp_dir, filename=resultsFilename)
+        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
     except:
         print('Safe exit failed.')
         print('Data may not be recoverable.')
@@ -317,7 +317,7 @@ except:
 
     # Clean up and get everything sorted
     try:
-        safe_exit(results, temp_dir, filename=resultsFilename)
+        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
     except:
         print('Safe exit failed.')
         print('Data may not be recoverable.')

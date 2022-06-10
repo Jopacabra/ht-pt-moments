@@ -8,7 +8,7 @@ mode:  # Operation mode flags
 transport_parameters:  # Parameters for the jets to be run
     TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
     GRID_STEP: 0.1  # Hydro grid step in fm. Default 0.1 fm from trial and error.
-    T_END: 0.110  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
+    T_END: 0.150  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
     T_HRG: 0.200  # Temperature in GeV at which to consider the medium hadronized
     T_UNHYDRO: 0.150  # Temperature in GeV at which to consider the medium unhydrodynamic
 jet_parameters:  # Parameters for the jets to be run

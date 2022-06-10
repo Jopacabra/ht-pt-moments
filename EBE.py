@@ -1,7 +1,5 @@
 import os
-import math
 import tempfile
-import logging
 import numpy as np
 import pandas as pd
 import hic
@@ -9,8 +7,6 @@ import plasma
 import jets
 import plasma_interaction as pi
 import config
-import freestream
-import frzout
 
 
 
@@ -110,10 +106,10 @@ def run_event(eventNo):
     # Jet Analysis #
     ################
     # Oversample the background with jets
-    for jetNo in range(0, config.NUM_SAMPLES):
+    for jetNo in range(0, config.EBE.NUM_SAMPLES):
 
         # Select jet production point
-        if not config.VARY_POINT:
+        if not config.mode.VARY_POINT:
             x0 = 0
             y0 = 0
         else:
@@ -125,7 +121,7 @@ def run_event(eventNo):
 
         # Generate jet object
         current_jet = jets.jet(x0=x0, y0=y0,
-                               theta0=theta0, event=current_event, energy=config.JET_ENERGY)
+                               theta0=theta0, event=current_event, energy=config.jet.JET_ENERGY)
 
         # Sample for shower correction
         # Currently just zero
@@ -133,18 +129,18 @@ def run_event(eventNo):
 
         # Calculate momentPlasma
         print('Unhydrodynamic Moment:')
-        momentUnhydro, momentUnhydroErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.K,
-                                                             minTemp=0, maxTemp=config.T_UNHYDRO)
+        momentUnhydro, momentUnhydroErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
+                                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
         print('Hadron Gas Moment:')
-        momentHrg, momentHrgErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.K,
-                                                     minTemp=config.T_UNHYDRO, maxTemp=config.T_HRG)
+        momentHrg, momentHrgErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
+                                                     minTemp=config.transport.hydro.T_UNHYDRO, maxTemp=config.transport.hydro.T_HRG)
         print('Plasma Moment:')
-        momentPlasma, momentPlasmaErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.K,
-                                                           minTemp=config.T_HRG)
+        momentPlasma, momentPlasmaErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
+                                                           minTemp=config.transport.hydro.T_HRG)
 
         # Calculate deflection angle
         # Basic trig with k=0.
-        if config.K == 0:
+        if config.moment.K == 0:
             deflection_angle_plasma = np.arctan((momentPlasma / current_jet.energy)) * (180 / np.pi)
             deflection_angle_plasma_error = np.arctan((momentPlasmaErr / current_jet.energy)) * (180 / np.pi)
             deflection_angle_hrg = np.arctan((momentHrg / current_jet.energy)) * (180 / np.pi)
@@ -170,7 +166,7 @@ def run_event(eventNo):
                 "pT_hrg_error": [momentHrgErr],
                 "pT_unhydro": [momentUnhydro],
                 "pT_unhydro_error": [momentUnhydroErr],
-                "k_moment": [config.K],
+                "k_moment": [config.moment.K],
                 "deflection_angle_plasma": [deflection_angle_plasma],
                 "deflection_angle_plasma_error": [deflection_angle_plasma_error],
                 "deflection_angle_hrg": [deflection_angle_hrg],
@@ -207,7 +203,7 @@ identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
 try:
-    while config.NUM_EVENTS == 0 or eventNo < config.NUM_EVENTS:
+    while config.EBE.NUM_EVENTS == 0 or eventNo < config.EBE.NUM_EVENTS:
         # Create and move to temporary directory
         temp_dir = tempDir()
 

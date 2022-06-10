@@ -98,7 +98,7 @@ def safe_exit(resultsDataFrame, temp_dir, filename):
 
 
 # Function to generate a new HIC event and sample config.NUM_SAMPLES jets in it.
-def run_event():
+def run_event(eventNo):
     print('Generating new event.')
 
     ##########
@@ -277,7 +277,7 @@ try:
 
         # Generate a new HIC event and samples config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe
-        results = results.append(run_event())
+        results = results.append(run_event(eventNo=eventNo))
 
         # Exits directory, saves all current data, and dumps temporary files.
         safe_exit(results, temp_dir, filename=resultsFilename)

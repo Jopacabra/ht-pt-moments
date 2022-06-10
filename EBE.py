@@ -26,11 +26,6 @@ logging.info(
     config.GRID_STEP, grid_n, grid_max
 )
 
-# Create and move to temp directory
-temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=os.getcwd())
-print('Created temp directory {}'.format(temp_dir.name))
-os.chdir(temp_dir.name)
-
 # Create results dataframe.
 resultsDataframe = resultsDataFrame = pd.DataFrame(
         {
@@ -70,6 +65,11 @@ resultsDataframe = resultsDataFrame = pd.DataFrame(
 for eventNo in range(0, config.NUM_EVENTS):
 
     print('Generating new event.')
+
+    # Create and move to temp directory
+    temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=os.getcwd())
+    print('Created temp directory {}'.format(temp_dir.name))
+    os.chdir(temp_dir.name)
 
     ##########
     # Trento #

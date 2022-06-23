@@ -237,7 +237,8 @@ def toFsIc(initial_file='initial.hdf', quiet=False):
 
 # Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream
 # Result files SHOULD be placed in the active folder.
-def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, dt_ratio=.25, hydro_args=None, quiet=False):
+def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_args=None, quiet=False,
+              time_step=0.1):
     """
     The handling of osu-hydro implemented here is adapted directly from DukeQCD's hic-eventgen package.
     https://github.com/Duke-QCD/hic-eventgen
@@ -291,7 +292,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, dt_ratio=
 
             X.tofile(fmt.format(*a) + '.dat')
 
-    dt = dxy*dt_ratio
+    dt = time_step
 
     hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls)] + hydro_args
 
@@ -387,7 +388,8 @@ def generate_event():
     # Coarse run to determine maximum radius
     print('Running coarse hydro...')
     coarseHydroDict = run_hydro(fs, event_size=27, coarse=3, grid_step=config.transport.GRID_STEP,
-                                tau_fs=config.transport.hydro.TAU_FS, hydro_args=hydro_args)
+                                tau_fs=config.transport.hydro.TAU_FS, hydro_args=hydro_args,
+                                time_step=config.transport.TIME_STEP)
     rmax = math.sqrt((
                              coarseHydroDict['x'][:, 1:3] ** 2
                      ).sum(axis=1).max())
@@ -396,7 +398,7 @@ def generate_event():
     # Fine run
     print('Running fine hydro...')
     run_hydro(fs, event_size=rmax, grid_step=config.transport.GRID_STEP, tau_fs=config.transport.hydro.TAU_FS,
-              hydro_args=hydro_args)
+              hydro_args=hydro_args, time_step=config.transport.TIME_STEP)
 
     print('Event generation complete')
 

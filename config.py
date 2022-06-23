@@ -28,6 +28,7 @@ class mode:
 
 class transport:
     GRID_STEP = float(cfg['transport']['GRID_STEP'])
+    TIME_STEP = float(cfg['transport']['TIME_STEP'])
     GRID_MAX_TARGET = float(cfg['transport']['GRID_MAX_TARGET'])
 
     class trento:

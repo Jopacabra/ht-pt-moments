@@ -214,7 +214,7 @@ identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
 # Copy config file to results directory, tagged with identifier
-utilities.run_cmd(['cp', 'config.yml', os.getcwd() + '/results/' + 'config_' + str(identifierString) + '.yml'])
+utilities.run_cmd(*['cp', 'config.yml', os.getcwd() + '/results/' + 'config_' + str(identifierString) + '.yml'])
 
 # Run event loop
 try:

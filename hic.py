@@ -295,6 +295,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
     dt = time_step
 
     if maxTime is not None:
+        print('Limiting time...')
         hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} maxt={}'.format(tau_fs, dt, dxy, ls, maxTime)]\
                    + hydro_args
     else:

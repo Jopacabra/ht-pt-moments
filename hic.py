@@ -238,7 +238,7 @@ def toFsIc(initial_file='initial.hdf', quiet=False):
 # Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream
 # Result files SHOULD be placed in the active folder.
 def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_args=None, quiet=False,
-              time_step=0.1):
+              time_step=0.1, maxTime=None):
     """
     The handling of osu-hydro implemented here is adapted directly from DukeQCD's hic-eventgen package.
     https://github.com/Duke-QCD/hic-eventgen
@@ -294,7 +294,11 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 
     dt = time_step
 
-    hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls)] + hydro_args
+    if maxTime is not None:
+        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} maxT={}'.format(tau_fs, dt, dxy, ls, maxTime)]\
+                   + hydro_args
+    else:
+        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls)] + hydro_args
 
     if not quiet:
         print('format: ITime, Time, Max Energy Density, Max Temp, iRegulateCounter, iRegulateCounterBulkPi')
@@ -395,10 +399,15 @@ def generate_event():
                      ).sum(axis=1).max())
     logging.info('rmax = %.3f fm', rmax)
 
+    # Determine maximum number of timesteps needed
+    # This is the time it takes for a jet to travel across the grid corner to corner at the speed of light
+    maxTime = 2*rmax / np.sin(np.pi/2)  # Corner to corner in fm - equal to time taken to traverse in fm for c = 1
+    logging.info('maxTime = %.3f fm', maxTime)
+
     # Fine run
     print('Running fine hydro...')
     run_hydro(fs, event_size=rmax, grid_step=config.transport.GRID_STEP, tau_fs=config.transport.hydro.TAU_FS,
-              hydro_args=hydro_args, time_step=config.transport.TIME_STEP)
+              hydro_args=hydro_args, time_step=config.transport.TIME_STEP, maxTime=maxTime)
 
     print('Event generation complete')
 

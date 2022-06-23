@@ -35,10 +35,14 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
             "b": [],
             "npart": [],
             "mult": [],
-            "e2": [],
-            "e3": [],
-            "e4": [],
-            "e5": [],
+            "e2_re": [],
+            "e2_im": [],
+            "e3_re": [],
+            "e3_im": [],
+            "e4_re": [],
+            "e4_im": [],
+            "e5_re": [],
+            "e5_im": [],
             "seed": [],
             "cmd": [],
         }
@@ -83,7 +87,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     # Run Trento command
     # Note star unpacks the list to pass the command list as arguments
     if not quiet:
-        print('format: event_number impact_param npart mult e2 e3 e4 e5')
+        print('format: event_number impact_param npart mult e2_re e2_im e3_re e3_im e4_re e4_im e5_re e5_im')
     subprocess, output = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
     # Parse output and pass to dataframe.
@@ -95,10 +99,14 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
                 "b": [float(trentoOutput[1])],
                 "npart": [float(trentoOutput[2])],
                 "mult": [float(trentoOutput[3])],
-                "e2": [float(trentoOutput[4])],
-                "e3": [float(trentoOutput[5])],
-                "e4": [float(trentoOutput[6])],
-                "e5": [float(trentoOutput[7])],
+                "e2_re": [float(trentoOutput[4])],
+                "e2_im": [float(trentoOutput[5])],
+                "e3_re": [float(trentoOutput[6])],
+                "e3_im": [float(trentoOutput[7])],
+                "e4_re": [float(trentoOutput[8])],
+                "e4_im": [float(trentoOutput[9])],
+                "e5_re": [float(trentoOutput[10])],
+                "e5_im": [float(trentoOutput[11])],
                 "seed": [randomSeed],
                 "cmd": [trentoCmd],
             }
@@ -127,10 +135,14 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
             "b": [],
             "npart": [],
             "mult": [],
-            "e2": [],
-            "e3": [],
-            "e4": [],
-            "e5": [],
+            "e2_re": [],
+            "e2_im": [],
+            "e3_re": [],
+            "e3_im": [],
+            "e4_re": [],
+            "e4_im": [],
+            "e5_re": [],
+            "e5_im": [],
             "seed": [],
             "cmd": [],
         }
@@ -180,7 +192,7 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
     # Run Trento command
     # Note star unpacks the list to pass the command list as arguments
     if not quiet:
-        print('format: event_number impact_param npart mult e2 e3 e4 e5')
+        print('format: event_number impact_param npart mult e2_re e2_im e3_re e3_im e4_re e4_im e5_re e5_im')
     subprocess, output = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
     # Parse output and pass to dataframe.
@@ -192,10 +204,14 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
                 "b": [float(trentoOutput[1])],
                 "npart": [float(trentoOutput[2])],
                 "mult": [float(trentoOutput[3])],
-                "e2": [float(trentoOutput[4])],
-                "e3": [float(trentoOutput[5])],
-                "e4": [float(trentoOutput[6])],
-                "e5": [float(trentoOutput[7])],
+                "e2_re": [float(trentoOutput[4])],
+                "e2_im": [float(trentoOutput[5])],
+                "e3_re": [float(trentoOutput[6])],
+                "e3_im": [float(trentoOutput[7])],
+                "e4_re": [float(trentoOutput[8])],
+                "e4_im": [float(trentoOutput[9])],
+                "e5_re": [float(trentoOutput[10])],
+                "e5_im": [float(trentoOutput[11])],
                 "seed": [randomSeed],
                 "cmd": [trentoCmd],
             }

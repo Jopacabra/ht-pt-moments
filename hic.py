@@ -295,21 +295,15 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
     dt = time_step
 
     if maxTime is not None:
-        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} maxT={}'.format(tau_fs, dt, dxy, ls, maxTime)]\
+        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} maxt={}'.format(tau_fs, dt, dxy, ls, maxTime)]\
                    + hydro_args
     else:
         hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls)] + hydro_args
 
+    hydroProc, hydroOutput = utilities.run_cmd(*hydroCmd, quiet=False)
+
     if not quiet:
         print('format: ITime, Time, Max Energy Density, Max Temp, iRegulateCounter, iRegulateCounterBulkPi')
-    hydroProc, hydroOutput = utilities.run_cmd(*hydroCmd, quiet=False)
-    # Attempt to print the output from the hydro trentoSubprocess.
-    print('------------- Hydro Output ----------------')
-    print('format: timestep_number  tau  max_energy_density  max_temperature')
-    print( 'exit status:\n', hydroProc.returncode )
-    print( 'stdout:\n', hydroProc.stdout )
-    print( 'stderr:\n', hydroProc.stderr )
-    print('---------- Hydro Output End ---------------')
 
     surface = np.fromfile('surface.dat', dtype='f8').reshape(-1, 16)
 
@@ -398,11 +392,13 @@ def generate_event():
                              coarseHydroDict['x'][:, 1:3] ** 2
                      ).sum(axis=1).max())
     logging.info('rmax = %.3f fm', rmax)
+    print('rmax = {} fm'.format(rmax))
 
     # Determine maximum number of timesteps needed
     # This is the time it takes for a jet to travel across the grid corner to corner at the speed of light
-    maxTime = 2*rmax / np.sin(np.pi/2)  # Corner to corner in fm - equal to time taken to traverse in fm for c = 1
+    maxTime = 2*rmax / np.sin(np.pi/2)  # Corner to corner in fm - equal to length to traverse in fm for c = 1
     logging.info('maxTime = %.3f fm', maxTime)
+    print('maxTime = {} fm'.format(maxTime))
 
     # Fine run
     print('Running fine hydro...')

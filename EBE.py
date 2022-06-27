@@ -1,39 +1,35 @@
 import os
 import numpy as np
 import pandas as pd
+import logging
 import hic
 import plasma
 import jets
 import plasma_interaction as pi
 import config
-
-
-
 import utilities
 from utilities import resultsFrame, tempDir
 
 
-
-
-
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
-def safe_exit(resultsDataFrame, temp_dir, filename):
+def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
     # Save dataframe
     # Note that we exit the directory first in order to retain a valid current working directory when cleaned up.
     # This prevents os.get_cwd() from throwing an error.
     os.chdir('..')
-    if os.path.exists('/results'):
+    if os.path.exists('/results/{}'.format(identifier)):
         pass
     else:
-        print('Making results directory...')
-        os.mkdir('/results')
+        logging.info('Making results directory...')
+        os.mkdir('/results/{}'.format(identifier))
 
-    print('Saving progress...')
-    print(resultsDataFrame)
+    logging.info('Saving progress...')
+    logging.info(resultsDataFrame)
     resultsDataFrame.to_pickle(os.getcwd() + '/results/' + str(filename) + '.pkl')  # Save dataframe to pickle
 
     # Clear everything in the temporary directory and delete it, thereby deleting all event files.
-    print('Cleaning temporary directory (dumping event data)...')
+    logging.info('Cleaning temporary directory...')
+    logging.debug('This dumps all of the event data!')
     try:
         temp_dir.cleanup()
     except TypeError:
@@ -83,7 +79,7 @@ def run_event(eventNo):
                                theta0=theta0, event=current_event, energy=config.jet.JET_ENERGY)
 
         # Find phase change times along jet trajectory
-        print('Calculating phase change times...')
+        logging.info('Calculating phase change times...')
         t_hrg = False
         t_unhydro = False
         hrg_time_total = 0
@@ -103,18 +99,19 @@ def run_event(eventNo):
 
         # Sample for shower correction
         # Currently just zero
-        print('Sampling shower correction distribution...')
+        logging.info('Sampling shower correction distribution...')
+        logging.debug('No shower correction for now!')
         shower_correction = 0
 
         # Calculate momentPlasma
-        print('Unhydrodynamic Moment:')
+        logging.info('Calculating unhydrodynamic moment:')
         momentUnhydro, momentUnhydroErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
                                                              minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
-        print('Hadron Gas Moment:')
+        logging.info('Calculating hadron gas moment:')
         momentHrg, momentHrgErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
                                                      minTemp=config.transport.hydro.T_UNHYDRO,
                                                      maxTemp=config.transport.hydro.T_HRG)
-        print('Plasma Moment:')
+        logging.info('Calculating plasma moment:')
         momentPlasma, momentPlasmaErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
                                                            minTemp=config.transport.hydro.T_HRG)
 
@@ -173,7 +170,7 @@ def run_event(eventNo):
         results = results.append(currentResultDataframe)
 
         # Declare jet complete
-        print('Jet ' + str(jetNo) + ' Complete')
+        logging.info('Jet ' + str(jetNo) + ' Complete')
 
     return results
 
@@ -192,8 +189,13 @@ results = resultsFrame()
 identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
+# Create log file
+logging.basicConfig(filename=os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString),
+                    encoding='utf-8', level=logging.DEBUG)
+
 # Copy config file to results directory, tagged with identifier
-utilities.run_cmd(*['cp', 'config.yml', os.getcwd() + '/results/' + 'config_' + str(identifierString) + '.yml'])
+utilities.run_cmd(*['cp', 'config.yml', os.getcwd()
+                    + '/results/{}/config_{}.yml'.format(identifierString, identifierString)], quiet=True)
 
 # Run event loop
 try:
@@ -206,7 +208,7 @@ try:
         results = results.append(run_event(eventNo=eventNo))
 
         # Exits directory, saves all current data, and dumps temporary files.
-        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
+        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString)
 
         if len(results) > 10000:
             part += 1
@@ -216,18 +218,18 @@ try:
         eventNo += 1
 
 except KeyboardInterrupt:
-    print('Interrupted!')
-    print('Cleaning up...')
+    logging.warning('Interrupted!')
+    logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString)
 
 except hic.StopEvent:
-    print('HIC event error.')
-    print('Cleaning up...')
+    logging.warning('HIC event error.')
+    logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename)
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString)
 
-print('Results identifier: {}'.format(identifierString))
-print('Please have an excellent day. :)')
+logging.info('Results identifier: {}'.format(identifierString))
+logging.info('Please have an excellent day. :)')

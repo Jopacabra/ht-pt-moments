@@ -43,22 +43,22 @@ def run_cmd(*args, quiet=False):
             outputCopyStdout = proc.stdout
             outputCopyStderr = proc.stderr
             # Attempt to print the output from the trentoSubprocess.
-            print('------------- {} Output ----------------'.format(processName))
-            print('exit status:\n', proc.returncode)
-            print('stdout:\n')
+            logging.info('------------- {} Output ----------------'.format(processName))
+            logging.debug('exit status:\n', proc.returncode)
+            logging.info('stdout:\n')
             for line in outputCopyStdout:
-                print(line)
+                logging.info(line)
                 outputArray = np.append(outputArray, line)
-            print('stderr:\n')
+            logging.debug('stderr:\n')
             while True:
                 try:
                     line = outputCopyStderr.readline()
                 except AttributeError:
                     break
-                print(line)
+                logging.debug(line)
                 if not line:
                     break
-            print('---------- {} Output End ---------------'.format(processName))
+            logging.info('----------------------------------------')
 
         return proc, outputArray
 

@@ -88,7 +88,7 @@ def run_event(eventNo):
         t_unhydro = False
         hrg_time_total = 0
         unhydro_time_total = 0
-        for t in range(current_event.t0, current_event.tf, config.transport.TIME_STEP):
+        for t in np.arange(start=current_event.t0, stop=current_event.tf, step=config.transport.TIME_STEP):
             current_temp = current_jet.temp(current_event, time=t)
             if current_temp < config.transport.hydro.T_HRG:
                 if bool(t_hrg) is False:

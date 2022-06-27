@@ -1,5 +1,4 @@
 import os
-import tempfile
 import numpy as np
 import pandas as pd
 import hic
@@ -10,60 +9,11 @@ import config
 
 
 
-# Function to create empty results dataframe.
 import utilities
+from utilities import resultsFrame, tempDir
 
 
-def resultsFrame():
-    resultsDataframe = pd.DataFrame(
-            {
-                "eventNo": [],
-                "jetNo": [],
-                "pT_plasma": [],
-                "pT_plasma_error": [],
-                "pT_hrg": [],
-                "pT_hrg_error": [],
-                "pT_unhydro": [],
-                "pT_unhydro_error": [],
-                "k_moment": [],
-                "deflection_angle_plasma": [],
-                "deflection_angle_plasma_error": [],
-                "deflection_angle_hrg": [],
-                "deflection_angle_hrg_error": [],
-                "deflection_angle_unhydro": [],
-                "deflection_angle_unhydro_error": [],
-                "shower_correction": [],
-                "X0": [],
-                "Y0": [],
-                "theta0": [],
-                "b": [],
-                "npart": [],
-                "mult": [],
-                "e2_re": [],
-                "e2_im": [],
-                "e3_re": [],
-                "e3_im": [],
-                "e4_re": [],
-                "e4_im": [],
-                "e5_re": [],
-                "e5_im": [],
-                "seed": [],
-                "cmd": [],
-            }
-        )
 
-    return resultsDataframe
-
-
-# Creates a temporary directory and moves to it.
-# Returns tempfile.TemporaryDirectory object.
-def tempDir():
-    # Create and move to temp directory
-    temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=os.getcwd())
-    print('Created temp directory {}'.format(temp_dir.name))
-    os.chdir(temp_dir.name)
-
-    return temp_dir
 
 
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
@@ -132,8 +82,28 @@ def run_event(eventNo):
         current_jet = jets.jet(x0=x0, y0=y0,
                                theta0=theta0, event=current_event, energy=config.jet.JET_ENERGY)
 
+        # Find phase change times along jet trajectory
+        print('Calculating phase change times...')
+        t_hrg = False
+        t_unhydro = False
+        hrg_time_total = 0
+        unhydro_time_total = 0
+        for t in range(current_event.t0, current_event.tf, config.transport.TIME_STEP):
+            current_temp = current_jet.temp(current_event, time=t)
+            if current_temp < config.transport.hydro.T_HRG:
+                if bool(t_hrg) is False:
+                    t_hrg = t
+                if current_temp > config.transport.hydro.T_UNHYDRO:
+                    hrg_time_total += config.transport.TIME_STEP
+            if current_temp < config.transport.hydro.T_UNHYDRO:
+                if bool(t_unhydro) is False:
+                    t_unhydro = t
+                unhydro_time_total += config.transport.TIME_STEP
+        plasma_time_total = (current_event.tf - current_event.t0) - hrg_time_total - unhydro_time_total
+
         # Sample for shower correction
         # Currently just zero
+        print('Sampling shower correction distribution...')
         shower_correction = 0
 
         # Calculate momentPlasma
@@ -142,7 +112,8 @@ def run_event(eventNo):
                                                              minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
         print('Hadron Gas Moment:')
         momentHrg, momentHrgErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
-                                                     minTemp=config.transport.hydro.T_UNHYDRO, maxTemp=config.transport.hydro.T_HRG)
+                                                     minTemp=config.transport.hydro.T_UNHYDRO,
+                                                     maxTemp=config.transport.hydro.T_HRG)
         print('Plasma Moment:')
         momentPlasma, momentPlasmaErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
                                                            minTemp=config.transport.hydro.T_HRG)
@@ -186,6 +157,13 @@ def run_event(eventNo):
                 "X0": [x0],
                 "Y0": [y0],
                 "theta0": [theta0],
+                "t_unhydro": [t_unhydro],
+                "t_hrg": [t_hrg],
+                "time_total_plasma": [plasma_time_total],
+                "time_total_hrg": [hrg_time_total],
+                "time_total_unhydro": [unhydro_time_total],
+                "initial_time": [current_event.t0],
+                "final_time": [current_event.tf],
             }
         )
 
@@ -198,6 +176,7 @@ def run_event(eventNo):
         print('Jet ' + str(jetNo) + ' Complete')
 
     return results
+
 
 ################
 # Main Program #

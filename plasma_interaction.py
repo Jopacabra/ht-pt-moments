@@ -58,8 +58,8 @@ def moment_integral(event, jet, k=0, minTemp=0, maxTemp=1000, quiet=False):
     # Calculate moment point
     if not quiet:
         print('Evaluating moment integral...')
-    raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k, minTemp=minTemp, maxTemp=maxTemp), event.t0, event.tf, limit=200
-                                 , epsrel=relative_error)
+    raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k, minTemp=minTemp, maxTemp=maxTemp), event.t0,
+                                 event.tf, limit=200, epsrel=relative_error)
 
     # Tack constants on
     # The FERMItoGeV factor of ~5 converts unit factor of fm from line integration over fm to GeV

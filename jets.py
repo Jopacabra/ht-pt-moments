@@ -87,3 +87,13 @@ class jet:
     def vel(self):
         return self.v0
 
+    # Method to obtain the temperature in the given event at the jet's coordinates at given time.
+    # As of now, the velocity is always zero.
+    def temp(self, event, time=None):
+        if time is None:
+            time = event.t0
+
+        temp = event.temp_func(self.coords3(time=time))
+
+        return temp
+

@@ -1,12 +1,18 @@
 import logging
 import math
+import os
 import subprocess
+import tempfile
+
 import numpy as np
 
 
 # Command to run process in the terminal
 # Stolen and modified from DukeQCD "run-events.py":
 # https://github.com/Duke-QCD/hic-eventgen
+import pandas as pd
+
+
 def run_cmd(*args, quiet=False):
     """
     Run and log a Subprocess.
@@ -87,3 +93,63 @@ def round_decimals_down(number: float, decimals: int = 1):
 
     factor = 10 ** decimals
     return math.floor(number * factor) / factor
+
+
+# Function to create empty results dataframe.
+def resultsFrame():
+    resultsDataframe = pd.DataFrame(
+            {
+                "eventNo": [],
+                "jetNo": [],
+                "pT_plasma": [],
+                "pT_plasma_error": [],
+                "pT_hrg": [],
+                "pT_hrg_error": [],
+                "pT_unhydro": [],
+                "pT_unhydro_error": [],
+                "k_moment": [],
+                "deflection_angle_plasma": [],
+                "deflection_angle_plasma_error": [],
+                "deflection_angle_hrg": [],
+                "deflection_angle_hrg_error": [],
+                "deflection_angle_unhydro": [],
+                "deflection_angle_unhydro_error": [],
+                "shower_correction": [],
+                "X0": [],
+                "Y0": [],
+                "theta0": [],
+                "t_unhydro": [],
+                "t_hrg": [],
+                "time_total_plasma": [],
+                "time_total_hrg": [],
+                "time_total_unhydro": [],
+                "initial_time": [],
+                "final_time": [],
+                "b": [],
+                "npart": [],
+                "mult": [],
+                "e2_re": [],
+                "e2_im": [],
+                "e3_re": [],
+                "e3_im": [],
+                "e4_re": [],
+                "e4_im": [],
+                "e5_re": [],
+                "e5_im": [],
+                "seed": [],
+                "cmd": [],
+            }
+        )
+
+    return resultsDataframe
+
+
+# Creates a temporary directory and moves to it.
+# Returns tempfile.TemporaryDirectory object.
+def tempDir():
+    # Create and move to temp directory
+    temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=os.getcwd())
+    print('Created temp directory {}'.format(temp_dir.name))
+    os.chdir(temp_dir.name)
+
+    return temp_dir

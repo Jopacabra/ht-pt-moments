@@ -328,18 +328,20 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 
 
 # Function to generate a new HIC event and dump the files in the current working directory.
-def generate_event():
+def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=config.transport.GRID_STEP,
+                   time_step=config.transport.TIME_STEP, tau_fs=config.transport.hydro.TAU_FS,
+                   t_end=config.transport.hydro.T_END):
     print('Generating new event.')
 
     # the "target" grid max: the grid shall be at least as large as the target
-    grid_max_target = config.transport.GRID_MAX_TARGET
+    # By defualt grid_max_target = config.transport.GRID_MAX_TARGET
     # next two lines set the number of grid cells and actual grid max,
     # which will be >= the target (same algorithm as trento)
-    grid_n = math.ceil(2 * grid_max_target / config.transport.GRID_STEP)
-    grid_max = .5 * grid_n * config.transport.GRID_STEP
+    grid_n = math.ceil(2 * grid_max_target / grid_step)
+    grid_max = .5 * grid_n * grid_step
     logging.info(
         'grid step = %.6f fm, n = %d, max = %.6f fm',
-        config.transport.GRID_STEP, grid_n, grid_max
+        grid_step, grid_n, grid_max
     )
 
     ##########
@@ -364,7 +366,7 @@ def generate_event():
     #################
     # Freestream initial conditions
     print('Freestreaming Trento conditions...')
-    fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=config.transport.hydro.TAU_FS)
+    fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=tau_fs)
 
     # Important to close the hdf5 file.
     del ic
@@ -378,7 +380,7 @@ def generate_event():
     # specify a minimum temperature that will be enforced with the energy density popped out here.
     # create sampler HRG object (to be reused for all events)
     hrg_kwargs = dict(species='urqmd', res_width=True)
-    hrg = frzout.HRG(config.transport.hydro.T_END, **hrg_kwargs)
+    hrg = frzout.HRG(t_end, **hrg_kwargs)
 
     # append switching energy density to hydro arguments
     eswitch = hrg.energy_density()
@@ -386,9 +388,9 @@ def generate_event():
 
     # Coarse run to determine maximum radius
     print('Running coarse hydro...')
-    coarseHydroDict = run_hydro(fs, event_size=27, coarse=3, grid_step=config.transport.GRID_STEP,
-                                tau_fs=config.transport.hydro.TAU_FS, hydro_args=hydro_args,
-                                time_step=config.transport.TIME_STEP)
+    coarseHydroDict = run_hydro(fs, event_size=27, coarse=3, grid_step=grid_step,
+                                tau_fs=tau_fs, hydro_args=hydro_args,
+                                time_step=time_step)
     rmax = math.sqrt((
                              coarseHydroDict['x'][:, 1:3] ** 2
                      ).sum(axis=1).max())
@@ -396,15 +398,15 @@ def generate_event():
     print('rmax = {} fm'.format(rmax))
 
     # Determine maximum number of timesteps needed
-    # This is the time it takes for a jet to travel across the grid corner to corner at the speed of light
-    maxTime = 2*rmax / np.sin(np.pi/2)  # Corner to corner in fm - equal to length to traverse in fm for c = 1
+    # This is the time it takes for a jet to travel across the plasma on its longest path at the speed of light
+    maxTime = 2*rmax  # in fm --- equal to length to traverse in fm for c = 1 - 2x largest width of plasma
     logging.info('maxTime = %.3f fm', maxTime)
     print('maxTime = {} fm'.format(maxTime))
 
     # Fine run
     print('Running fine hydro...')
-    run_hydro(fs, event_size=rmax, grid_step=config.transport.GRID_STEP, tau_fs=config.transport.hydro.TAU_FS,
-              hydro_args=hydro_args, time_step=config.transport.TIME_STEP, maxTime=maxTime)
+    run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
+              hydro_args=hydro_args, time_step=time_step, maxTime=maxTime)
 
     print('Event generation complete')
 

@@ -17,11 +17,6 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
     # Note that we exit the directory first in order to retain a valid current working directory when cleaned up.
     # This prevents os.get_cwd() from throwing an error.
     os.chdir('..')
-    if os.path.exists('/results/{}'.format(identifier)):
-        pass
-    else:
-        logging.info('Making results directory...')
-        os.mkdir('/results/{}'.format(identifier))
 
     logging.info('Saving progress...')
     logging.info(resultsDataFrame)
@@ -188,6 +183,13 @@ temp_dir = None  # Instantiates object for interrupt before temp_dir created.
 results = resultsFrame()
 identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
+
+# Make results directory
+if os.path.exists('/results/{}'.format(identifierString)):
+    pass
+else:
+    logging.info('Making results directory...')
+    os.mkdir('/results/{}'.format(identifierString))
 
 # Create log file
 logging.basicConfig(filename=os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString),

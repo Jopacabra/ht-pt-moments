@@ -93,7 +93,7 @@ class jet:
         if time is None:
             time = event.t0
 
-        temp = event.temp_func(self.coords3(time=time))
+        temp = event.temp(self.coords3(time=time))
 
         return temp
 

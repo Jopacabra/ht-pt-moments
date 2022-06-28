@@ -91,7 +91,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     # Run Trento command
     # Note star unpacks the list to pass the command list as arguments
     if not quiet:
-        print('format: event_number impact_param npart mult e2_re e2_im e3_re e3_im e4_re e4_im e5_re e5_im')
+        logging.info('format: event_number impact_param npart mult e2_re e2_im e3_re e3_im e4_re e4_im e5_re e5_im')
     subprocess, output = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
     # Parse output and pass to dataframe.
@@ -204,7 +204,7 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
     # Run Trento command
     # Note star unpacks the list to pass the command list as arguments
     if not quiet:
-        print('format: event_number impact_param npart mult e2_re e2_im e3_re e3_im e4_re e4_im e5_re e5_im')
+        logging.info('format: event_number impact_param npart mult e2_re e2_im e3_re e3_im e4_re e4_im e5_re e5_im')
     subprocess, output = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
     # Parse output and pass to dataframe.

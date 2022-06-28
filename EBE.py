@@ -185,11 +185,11 @@ identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
 # Make results directory
-if os.path.exists('/results/{}'.format(identifierString)):
+if os.path.exists(os.getcwd() + '/results/{}'.format(identifierString)):
     pass
 else:
     logging.info('Making results directory...')
-    os.mkdir('/results/{}'.format(identifierString))
+    os.mkdir(os.getcwd() + '/results/{}'.format(identifierString))
 
 # Create log file
 logging.basicConfig(filename=os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString),

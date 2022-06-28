@@ -1,5 +1,6 @@
 import scipy as sp
 from scipy.integrate import quad
+import logging
 
 # Check and interpret desired percent error.
 percent_error = 0.01
@@ -57,7 +58,7 @@ def moment_integral(event, jet, k=0, minTemp=0, maxTemp=1000, quiet=False):
 
     # Calculate moment point
     if not quiet:
-        print('Evaluating moment integral...')
+        logging.info('Evaluating moment integral...')
     raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k, minTemp=minTemp, maxTemp=maxTemp), event.t0,
                                  event.tf, limit=200, epsrel=relative_error)
 

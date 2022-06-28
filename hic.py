@@ -331,7 +331,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=config.transport.GRID_STEP,
                    time_step=config.transport.TIME_STEP, tau_fs=config.transport.hydro.TAU_FS,
                    t_end=config.transport.hydro.T_END):
-    print('Generating new event.')
+    logging.info('Generating new event.')
 
     # the "target" grid max: the grid shall be at least as large as the target
     # By defualt grid_max_target = config.transport.GRID_MAX_TARGET
@@ -350,7 +350,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
 
     # Choose random seed
     seed = int(np.random.uniform(0, 10000000000000000))
-    print('Random seed selected: {}'.format(seed))
+    logging.info('Random seed selected: {}'.format(seed))
 
     # Generate trento event
     trentoDataframe, trentoOutputFile, trentoSubprocess = runTrento(outputFile=True, randomSeed=seed,
@@ -358,14 +358,14 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
                                                                     filename='initial.hdf')
 
     # Format trento data into initial conditions for freestream
-    print('Packaging trento initial conditions into array...')
+    logging.info('Packaging trento initial conditions into array...')
     ic = toFsIc(initial_file='initial.hdf', quiet=False)
 
     #################
     # Freestreaming #
     #################
     # Freestream initial conditions
-    print('Freestreaming Trento conditions...')
+    logging.info('Freestreaming Trento conditions...')
     fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=tau_fs)
 
     # Important to close the hdf5 file.
@@ -387,7 +387,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     hydro_args = ['edec={}'.format(eswitch)]
 
     # Coarse run to determine maximum radius
-    print('Running coarse hydro...')
+    logging.info('Running coarse hydro...')
     coarseHydroDict = run_hydro(fs, event_size=27, coarse=3, grid_step=grid_step,
                                 tau_fs=tau_fs, hydro_args=hydro_args,
                                 time_step=time_step)
@@ -395,20 +395,20 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
                              coarseHydroDict['x'][:, 1:3] ** 2
                      ).sum(axis=1).max())
     logging.info('rmax = %.3f fm', rmax)
-    print('rmax = {} fm'.format(rmax))
+    logging.info('rmax = {} fm'.format(rmax))
 
     # Determine maximum number of timesteps needed
     # This is the time it takes for a jet to travel across the plasma on its longest path at the speed of light
     maxTime = 2*rmax  # in fm --- equal to length to traverse in fm for c = 1 - 2x largest width of plasma
     logging.info('maxTime = %.3f fm', maxTime)
-    print('maxTime = {} fm'.format(maxTime))
+    logging.info('maxTime = {} fm'.format(maxTime))
 
     # Fine run
-    print('Running fine hydro...')
+    logging.info('Running fine hydro...')
     run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
               hydro_args=hydro_args, time_step=time_step, maxTime=maxTime)
 
-    print('Event generation complete')
+    logging.info('Event generation complete')
 
     return trentoDataframe
 

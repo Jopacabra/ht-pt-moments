@@ -150,7 +150,7 @@ def tempDir(location=None):
         location = os.getcwd()
     # Create and move to temp directory
     temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=str(location))
-    print('Created temp directory {}'.format(temp_dir.name))
+    logging.info('Created temp directory {}'.format(temp_dir.name))
     os.chdir(temp_dir.name)
 
     return temp_dir

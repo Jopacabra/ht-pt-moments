@@ -203,7 +203,7 @@ utilities.run_cmd(*['cp', 'config.yml', os.getcwd()
 try:
     while config.EBE.NUM_EVENTS == 0 or eventNo < config.EBE.NUM_EVENTS:
         # Create and move to temporary directory
-        temp_dir = tempDir()
+        temp_dir = tempDir(relativePath='/results')
 
         # Generate a new HIC event and samples config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe

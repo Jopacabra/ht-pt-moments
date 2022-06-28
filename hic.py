@@ -31,18 +31,22 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
 
     resultsDataFrame = pd.DataFrame(
         {
-            "event": [],
+            "t_event": [],
             "b": [],
             "npart": [],
             "mult": [],
             "e2_re": [],
             "e2_im": [],
+            "phi_2": [],
             "e3_re": [],
             "e3_im": [],
+            "phi_3": [],
             "e4_re": [],
             "e4_im": [],
+            "phi_4": [],
             "e5_re": [],
             "e5_im": [],
+            "phi_5": [],
             "seed": [],
             "cmd": [],
         }
@@ -95,18 +99,22 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
         trentoOutput = line.split()
         trentoDataFrame = pd.DataFrame(
             {
-                "event": [int(trentoOutput[0])],
+                "t_event": [int(trentoOutput[0])],
                 "b": [float(trentoOutput[1])],
                 "npart": [float(trentoOutput[2])],
                 "mult": [float(trentoOutput[3])],
                 "e2_re": [float(trentoOutput[4])],
                 "e2_im": [float(trentoOutput[5])],
+                "phi_2": [float(trentoOutput[5])*(1/2)],
                 "e3_re": [float(trentoOutput[6])],
                 "e3_im": [float(trentoOutput[7])],
+                "phi_3": [float(trentoOutput[7])*(1/3)],
                 "e4_re": [float(trentoOutput[8])],
                 "e4_im": [float(trentoOutput[9])],
+                "phi_4": [float(trentoOutput[9])*(1/4)],
                 "e5_re": [float(trentoOutput[10])],
                 "e5_im": [float(trentoOutput[11])],
+                "phi_5": [float(trentoOutput[11])*(1/5)],
                 "seed": [randomSeed],
                 "cmd": [trentoCmd],
             }
@@ -131,18 +139,22 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
 
     resultsDataFrame = pd.DataFrame(
         {
-            "event": [],
+            "t_event": [],
             "b": [],
             "npart": [],
             "mult": [],
             "e2_re": [],
             "e2_im": [],
+            "phi_2": [],
             "e3_re": [],
             "e3_im": [],
+            "phi_3": [],
             "e4_re": [],
             "e4_im": [],
+            "phi_4": [],
             "e5_re": [],
             "e5_im": [],
+            "phi_5": [],
             "seed": [],
             "cmd": [],
         }
@@ -200,18 +212,22 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
         trentoOutput = line.split()
         trentoDataFrame = pd.DataFrame(
             {
-                "event": [int(trentoOutput[0])],
+                "t_event": [int(trentoOutput[0])],
                 "b": [float(trentoOutput[1])],
                 "npart": [float(trentoOutput[2])],
                 "mult": [float(trentoOutput[3])],
                 "e2_re": [float(trentoOutput[4])],
                 "e2_im": [float(trentoOutput[5])],
+                "phi_2": [float(trentoOutput[5])*(1/2)],
                 "e3_re": [float(trentoOutput[6])],
                 "e3_im": [float(trentoOutput[7])],
+                "phi_3": [float(trentoOutput[7])*(1/3)],
                 "e4_re": [float(trentoOutput[8])],
                 "e4_im": [float(trentoOutput[9])],
+                "phi_4": [float(trentoOutput[9])*(1/4)],
                 "e5_re": [float(trentoOutput[10])],
                 "e5_im": [float(trentoOutput[11])],
+                "phi_5": [float(trentoOutput[11])*(1/5)],
                 "seed": [randomSeed],
                 "cmd": [trentoCmd],
             }

@@ -161,6 +161,8 @@ def run_event(eventNo):
                 "time_total_unhydro": [unhydro_time_total],
                 "initial_time": [current_event.t0],
                 "final_time": [current_event.tf],
+                "dx": [config.transport.GRID_STEP],
+                "dt": [config.transport.TIME_STEP],
             }
         )
 

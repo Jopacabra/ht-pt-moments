@@ -18,7 +18,7 @@ def run_cmd(*args, quiet=False):
     Run and log a Subprocess.
     """
     cmd = ' '.join(args)
-    logging.info('running command: %s', cmd)
+    logging.info('running command: {}'.format(cmd))
     processName = str(args[0])
 
     try:
@@ -29,14 +29,12 @@ def run_cmd(*args, quiet=False):
         )
     except subprocess.CalledProcessError as e:
         logging.error(
-            'command failed with status %d:\n%s',
-            e.returncode, e.output.strip('\n')
+            'command failed with status {}}:\n{}}'.format(e.returncode, e.output.strip('\n'))
         )
         raise
     else:
         logging.debug(
-            'command completed successfully:\n%s',
-            proc.stdout
+            'command completed successfully:\n{}'.format(proc.stdout)
         )
         outputArray = np.array([])
         if not quiet:
@@ -44,7 +42,7 @@ def run_cmd(*args, quiet=False):
             outputCopyStderr = proc.stderr
             # Attempt to print the output from the trentoSubprocess.
             logging.info('------------- {} Output ----------------'.format(processName))
-            logging.debug('exit status:\n', proc.returncode)
+            logging.debug('exit status:\n{}'.format(proc.returncode))
             logging.info('stdout:\n')
             for line in outputCopyStdout:
                 logging.info(line)

@@ -18,9 +18,14 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
     # This prevents os.get_cwd() from throwing an error.
     os.chdir('..')
 
+    # Save the dataframe into the identified results folder
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
     resultsDataFrame.to_pickle(os.getcwd() + '/{}.pkl'.format(filename))  # Save dataframe to pickle
+
+    # Return to the project root.
+    os.chdir('..')
+    os.chdir('..')
 
     # Clear everything in the temporary directory and delete it, thereby deleting all event files.
     logging.info('Cleaning temporary directory...')
@@ -188,10 +193,10 @@ resultsFilename = 'results' + identifierString + 'p' + str(part)
 if os.path.exists(os.getcwd() + '/results/{}'.format(identifierString)):
     pass
 else:
-    logging.info('Making results directory...')
+    print('Making results directory...')
     os.mkdir(os.getcwd() + '/results/{}'.format(identifierString))
 
-# Create log file
+# Create log file & configure logging
 logging.basicConfig(filename=os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString),
                     encoding='utf-8', level=logging.DEBUG)
 

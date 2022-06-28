@@ -213,28 +213,31 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
     # Parse output and pass to dataframe.
     for line in output:
         trentoOutput = line.split()
-        trentoDataFrame = pd.DataFrame(
-            {
-                "event": [int(trentoOutput[0])],
-                "b": [float(trentoOutput[1])],
-                "npart": [float(trentoOutput[2])],
-                "mult": [float(trentoOutput[3])],
-                "e2_re": [float(trentoOutput[4])],
-                "e2_im": [float(trentoOutput[5])],
-                "phi_2": [float(trentoOutput[5])*(1/2)],
-                "e3_re": [float(trentoOutput[6])],
-                "e3_im": [float(trentoOutput[7])],
-                "phi_3": [float(trentoOutput[7])*(1/3)],
-                "e4_re": [float(trentoOutput[8])],
-                "e4_im": [float(trentoOutput[9])],
-                "phi_4": [float(trentoOutput[9])*(1/4)],
-                "e5_re": [float(trentoOutput[10])],
-                "e5_im": [float(trentoOutput[11])],
-                "phi_5": [float(trentoOutput[11])*(1/5)],
-                "seed": [randomSeed],
-                "cmd": [trentoCmd],
-            }
-        )
+        try:
+            trentoDataFrame = pd.DataFrame(
+                {
+                    "event": [int(trentoOutput[0])],
+                    "b": [float(trentoOutput[1])],
+                    "npart": [float(trentoOutput[2])],
+                    "mult": [float(trentoOutput[3])],
+                    "e2_re": [float(trentoOutput[4])],
+                    "e2_im": [float(trentoOutput[5])],
+                    "phi_2": [float(trentoOutput[5]) * (1 / 2)],
+                    "e3_re": [float(trentoOutput[6])],
+                    "e3_im": [float(trentoOutput[7])],
+                    "phi_3": [float(trentoOutput[7]) * (1 / 3)],
+                    "e4_re": [float(trentoOutput[8])],
+                    "e4_im": [float(trentoOutput[9])],
+                    "phi_4": [float(trentoOutput[9]) * (1 / 4)],
+                    "e5_re": [float(trentoOutput[10])],
+                    "e5_im": [float(trentoOutput[11])],
+                    "phi_5": [float(trentoOutput[11]) * (1 / 5)],
+                    "seed": [randomSeed],
+                    "cmd": [trentoCmd],
+                }
+            )
+        except ValueError:
+            pass
 
         resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
 

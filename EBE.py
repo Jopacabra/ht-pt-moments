@@ -19,8 +19,8 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
     os.chdir('..')
 
     logging.info('Saving progress...')
-    logging.info(resultsDataFrame)
-    resultsDataFrame.to_pickle(os.getcwd() + '/results/' + str(filename) + '.pkl')  # Save dataframe to pickle
+    logging.debug(resultsDataFrame)
+    resultsDataFrame.to_pickle(os.getcwd() + '/{}.pkl'.format(filename))  # Save dataframe to pickle
 
     # Clear everything in the temporary directory and delete it, thereby deleting all event files.
     logging.info('Cleaning temporary directory...')

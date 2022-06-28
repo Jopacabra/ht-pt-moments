@@ -196,9 +196,14 @@ else:
     print('Making results directory...')
     os.mkdir(os.getcwd() + '/results/{}'.format(identifierString))
 
-# Create log file & configure logging
-logging.basicConfig(filename=os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString),
-                    encoding='utf-8', level=logging.DEBUG)
+# Create log file & configure logging to be handled into the file AND stdout
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler(os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString)),
+        logging.StreamHandler()
+    ]
+)
 
 # Copy config file to results directory, tagged with identifier
 utilities.run_cmd(*['cp', 'config.yml', os.getcwd()

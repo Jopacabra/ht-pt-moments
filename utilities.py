@@ -146,9 +146,12 @@ def resultsFrame():
 
 # Creates a temporary directory and moves to it.
 # Returns tempfile.TemporaryDirectory object.
-def tempDir(relativePath=''):
+def tempDir(location=None):
+    # Get current directory if no location supplied
+    if location is None:
+        location = os.getcwd()
     # Create and move to temp directory
-    temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=os.getcwd() + str(relativePath))
+    temp_dir = tempfile.TemporaryDirectory(prefix='JMA_', dir=str(location))
     print('Created temp directory {}'.format(temp_dir.name))
     os.chdir(temp_dir.name)
 

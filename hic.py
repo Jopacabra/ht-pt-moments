@@ -31,7 +31,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
 
     resultsDataFrame = pd.DataFrame(
         {
-            "t_event": [],
+            "event": [],
             "b": [],
             "npart": [],
             "mult": [],
@@ -99,7 +99,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
         trentoOutput = line.split()
         trentoDataFrame = pd.DataFrame(
             {
-                "t_event": [int(trentoOutput[0])],
+                "event": [int(trentoOutput[0])],
                 "b": [float(trentoOutput[1])],
                 "npart": [float(trentoOutput[2])],
                 "mult": [float(trentoOutput[3])],
@@ -139,7 +139,7 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
 
     resultsDataFrame = pd.DataFrame(
         {
-            "t_event": [],
+            "event": [],
             "b": [],
             "npart": [],
             "mult": [],
@@ -212,7 +212,7 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
         trentoOutput = line.split()
         trentoDataFrame = pd.DataFrame(
             {
-                "t_event": [int(trentoOutput[0])],
+                "event": [int(trentoOutput[0])],
                 "b": [float(trentoOutput[1])],
                 "npart": [float(trentoOutput[2])],
                 "mult": [float(trentoOutput[3])],

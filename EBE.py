@@ -81,12 +81,9 @@ def run_event(eventNo):
         theta0 = np.random.uniform(0, 2 * np.pi)
 
         # Generate jet object
+        # Includes shower sampling
         current_jet = jets.jet(x0=x0, y0=y0,
                                theta0=theta0, event=current_event, energy=config.jet.JET_ENERGY)
-
-        # Sample for shower correction
-        # Currently just zero
-        current_jet.shower_sample()
 
         ################################################
         # Find phase change times along jet trajectory #

@@ -78,24 +78,58 @@ def run_event(eventNo):
         current_jet = jets.jet(x0=x0, y0=y0,
                                theta0=theta0, event=current_event, energy=config.jet.JET_ENERGY)
 
-        # Find phase change times along jet trajectory
+        ################################################
+        # Find phase change times along jet trajectory #
+        ################################################
         logging.info('Calculating phase change times...')
+
+        # Initialize transition time flags
         t_hrg = False
         t_unhydro = False
+
+        # Initialize counters for total time spent in each phase
+        plasma_time_total = 0
         hrg_time_total = 0
         unhydro_time_total = 0
+
+        # Iterate over jet trajectory and find phase transition times and time spent in each phase
+        # Note that we work with the precision of the timestep. While this isn't strictly necessary,
+        # this is the maximum time precision that can be physically meaningful.
         for t in np.arange(start=current_event.t0, stop=current_event.tf, step=config.transport.TIME_STEP):
-            current_temp = current_jet.temp(current_event, time=t)
+
+            # If the jet is still in the event geometry, check the temperature at its position.
+            # If it isn't, this position would make an out-of-bounds call to the interpolation function
+            if pi.pos_cut(event=current_event, jet=current_jet, time=t):
+                current_temp = current_jet.temp(current_event, time=t)
+            else:
+                # Quit the loop - jet can't re-enter the geometry.
+                break
+
+            # Add to the total jet travel time
+            if current_temp > config.transport.hydro.T_HRG:
+                plasma_time_total += config.transport.TIME_STEP
+
+            # Check if temp is under hadronization temp
             if current_temp < config.transport.hydro.T_HRG:
+                # Check if this is the first transition below hadron gas temp
                 if bool(t_hrg) is False:
+                    # Record time as transition time for hadron gas
                     t_hrg = t
+
+                # Check if above the unhydrodynamic temperature
                 if current_temp > config.transport.hydro.T_UNHYDRO:
+                    # Record one additional timestep spent in the hadron gas
                     hrg_time_total += config.transport.TIME_STEP
+
+            # Check if temp is under unhydrodynamic temp
             if current_temp < config.transport.hydro.T_UNHYDRO:
+                # Check if this is the first transition below unhydrodynamic temp
                 if bool(t_unhydro) is False:
                     t_unhydro = t
+
+                # Record one additional timestep spent in unhydrodynamic data
                 unhydro_time_total += config.transport.TIME_STEP
-        plasma_time_total = (current_event.tf - current_event.t0) - hrg_time_total - unhydro_time_total
+
 
         # Sample for shower correction
         # Currently just zero

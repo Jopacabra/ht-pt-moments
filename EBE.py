@@ -39,16 +39,19 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
 # Function to generate a new HIC event and sample config.NUM_SAMPLES jets in it.
 def run_event(eventNo):
 
-    trentoDataframe = hic.generate_event()
-
-    seed = trentoDataframe.iloc[0]['seed']
-
+    # Generate empty results frame
     results = resultsFrame()
 
-    ########################
-    # Objectify Background #
-    ########################
-    # Create plasma object
+    ###############################
+    # Generate new event geometry #
+    ###############################
+
+    # Run event generation using config setttings
+    trentoDataframe = hic.generate_event()
+
+    # Record seed selected
+    seed = trentoDataframe.iloc[0]['seed']
+
     # Open the hydro file and create file object for manipulation.
     plasmaFilePath = 'viscous_14_moments_evo.dat'
     current_file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(seed))
@@ -63,6 +66,9 @@ def run_event(eventNo):
     # Oversample the background with jets
     for jetNo in range(0, config.EBE.NUM_SAMPLES):
 
+        ##################
+        # Create new jet #
+        ##################
         # Select jet production point
         if not config.mode.VARY_POINT:
             x0 = 0
@@ -77,6 +83,10 @@ def run_event(eventNo):
         # Generate jet object
         current_jet = jets.jet(x0=x0, y0=y0,
                                theta0=theta0, event=current_event, energy=config.jet.JET_ENERGY)
+
+        # Sample for shower correction
+        # Currently just zero
+        current_jet.shower_sample()
 
         ################################################
         # Find phase change times along jet trajectory #
@@ -130,13 +140,6 @@ def run_event(eventNo):
                 # Record one additional timestep spent in unhydrodynamic data
                 unhydro_time_total += config.transport.TIME_STEP
 
-
-        # Sample for shower correction
-        # Currently just zero
-        logging.info('Sampling shower correction distribution...')
-        logging.debug('No shower correction for now!')
-        shower_correction = 0
-
         # Calculate momentPlasma
         logging.info('Calculating unhydrodynamic moment:')
         momentUnhydro, momentUnhydroErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
@@ -184,7 +187,7 @@ def run_event(eventNo):
                 "def_ang_hrg_err": [deflection_angle_hrg_error],
                 "def_ang_unhydro": [deflection_angle_unhydro],
                 "def_ang_unhydro_err": [deflection_angle_unhydro_error],
-                "shower_correction": [shower_correction],
+                "shower_correction": [current_jet.shower_correction],
                 "X0": [x0],
                 "Y0": [y0],
                 "theta0": [theta0],

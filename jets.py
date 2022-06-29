@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 import hic as hs
 
 
@@ -17,6 +18,10 @@ class jet:
         self.theta0 = theta0
         self.v0 = v0
         self.energy = energy
+
+        # Initialize shower correction, then sample shower correction distribution to determine post-shower direction
+        self.shower_correction = 0
+        self.shower_sample()
 
         # If an event was provided for jet instantiation and either initial position was not defined,
         # try to sample the event for jet production. If this fails, set it to the default.
@@ -96,4 +101,12 @@ class jet:
         temp = event.temp(self.coords3(time=time))
 
         return temp
+
+    # Method to sample a shower distribution and return a shower correction angle
+    # As of now, this just returns zero
+    def shower_sample(self):
+        logging.info('Sampling shower correction distribution...')
+        logging.debug('No shower correction for now!')
+        self.shower_correction = 0
+
 

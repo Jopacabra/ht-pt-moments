@@ -7,8 +7,8 @@ mode:  # Operation mode flags
     NUM_SAMPLES: 10  # Number of jets to run in each event
 transport:  # Parameters for the jets to be run
     TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
-    GRID_STEP: 0.075  # Hydro / Trento grid step in fm. Default 0.15*NUCLEON_WIDTH from DukeQCD BA
-    TIME_STEP: 0.01875  # Hydro / Trento time step in fm. Default 0.25*GRID_STEP fm from DukeQCD BA
+    GRID_STEP: 0.1  # Hydro / Trento grid step in fm. Default 0.15*NUCLEON_WIDTH from DukeQCD BA
+    TIME_STEP: 0.025  # Hydro / Trento time step in fm. Default 0.25*GRID_STEP fm from DukeQCD BA
     GRID_MAX_TARGET: 15  # Maximum hydro grid width.
     T_END: 0.110  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
     T_HRG: 0.200  # Temperature in GeV at which to consider the medium hadronized

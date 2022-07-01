@@ -64,7 +64,7 @@ def run_event(eventNo, grid_step=config.transport.GRID_STEP, time_step=config.tr
     # Jet Analysis #
     ################
     # Oversample the background with jets
-    for jetNo in range(0, 100):
+    for jetNo in range(0, 500):
 
         ##################
         # Create new jet #
@@ -249,7 +249,7 @@ utilities.run_cmd(*['cp', 'config.yml', os.getcwd()
                     + '/results/{}/config_{}.yml'.format(identifierString, identifierString)], quiet=True)
 
 # Set timesteps to study:
-time_step_array = [0.01875, 0.025, 0.05, 0.075, 0.1]
+time_step_array = [0.01875, 0.025, 0.05]
 
 # Run event loop
 try:

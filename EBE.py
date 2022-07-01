@@ -69,6 +69,8 @@ def run_event(eventNo):
         ##################
         # Create new jet #
         ##################
+        logging.info('- Jet {} -'.format(jetNo))
+        logging.info('Creating new jet...')
         # Select jet production point
         if not config.mode.VARY_POINT:
             x0 = 0
@@ -206,7 +208,7 @@ def run_event(eventNo):
         results = results.append(currentResultDataframe)
 
         # Declare jet complete
-        logging.info('Jet ' + str(jetNo) + ' Complete')
+        logging.info('- Jet ' + str(jetNo) + ' Complete -')
 
     return results
 

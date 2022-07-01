@@ -249,7 +249,7 @@ utilities.run_cmd(*['cp', 'config.yml', os.getcwd()
                     + '/results/{}/config_{}.yml'.format(identifierString, identifierString)], quiet=True)
 
 # Set timesteps to study:
-time_step_array = [0.01875, 0.025, 0.05]
+time_step_array = [0.01875, 0.025, 0.0375, 0.05]
 
 # Run event loop
 try:

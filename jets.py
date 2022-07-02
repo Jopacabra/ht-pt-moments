@@ -10,6 +10,8 @@ import hic as hs
 class jet:
     # Instantiation statement. All parameters optional.
     def __init__(self, x0=None, y0=None, theta0=0, v0=1, t0=None, event=None, energy=100):
+        logging.info('Creating new jet...')
+
         # Set default values
         default_t0 = 0.48125  # Set default initial time for jet parametrization
         point = [0, 0]  # Set default jet production point
@@ -30,7 +32,7 @@ class jet:
             try:
                 point = hs.generate_jet_point(event.temp_func, num=1)
             except AttributeError:
-                print("Jet event object not sample-able. Using default jet production point: " + str(point))
+                logging.warning("Jet event object not sample-able. Using default jet production point: " + str(point))
         if x0 is None:
             self.x0 = point[0]
         else:
@@ -53,7 +55,7 @@ class jet:
                 self.tf = event.tf
             except (AttributeError, TypeError):
                 self.t0 = default_t0
-                print("Event object has no t0 and / or tf. Read failed. Jet t0 set to default, no tf.")
+                logging.warning("Event object has no t0 and / or tf. Read failed. Jet t0 set to default, no tf.")
 
     # Method to obtain the current coordinates of the jet
     def xpos(self, time=None):

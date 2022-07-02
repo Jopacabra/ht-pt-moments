@@ -70,7 +70,6 @@ def run_event(eventNo):
         # Create new jet #
         ##################
         logging.info('- Jet {} -'.format(jetNo))
-        logging.info('Creating new jet...')
         # Select jet production point
         if not config.mode.VARY_POINT:
             x0 = 0
@@ -108,7 +107,7 @@ def run_event(eventNo):
 
             # If the jet is still in the event geometry, check the temperature at its position.
             # If it isn't, this position would make an out-of-bounds call to the interpolation function
-            if pi.pos_cut(event=current_event, jet=current_jet, time=t):
+            if pi.pos_cut(event=current_event, jet=current_jet, time=t) and pi.time_cut(event=current_event, time=t):
                 current_temp = current_jet.temp(current_event, time=t)
             else:
                 # Quit the loop - jet can't re-enter the geometry.

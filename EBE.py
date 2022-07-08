@@ -198,6 +198,8 @@ def run_event(eventNo):
                 "final_time": [current_event.tf],
                 "dx": [config.transport.GRID_STEP],
                 "dt": [config.transport.TIME_STEP],
+                "rmax": [rmax],
+                "Tmax": [current_event.max_temp()],
             }
         )
 

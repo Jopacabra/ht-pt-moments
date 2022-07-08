@@ -142,6 +142,8 @@ def resultsFrame():
                 "cmd": [],
                 "dx": [],
                 "dt": [],
+                "rmax": [],
+                "Tmax": [],
             }
         )
 

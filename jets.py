@@ -112,7 +112,7 @@ class jet:
 
         for t in np.arange(event.t0, event.tf, event.timestep):
             temperature = self.temp(event=event, time=t)
-            tempArray = np.append(tempArray, temparature)
+            tempArray = np.append(tempArray, temperature)
 
         maxTemp = np.amax(tempArray)
         return maxTemp

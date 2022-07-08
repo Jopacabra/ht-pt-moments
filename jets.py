@@ -30,7 +30,8 @@ class jet:
         # If nothing was provided to "event", just set to whatever x0 and y0 are (probably default)
         if not event is None and (x0 is None or y0 is None):
             try:
-                point = hs.generate_jet_point(event.temp_func, num=1)
+                point = hic.generate_jet_point(event)
+                self.x0, self.y0 = newPoint[0], newPoint[1]
             except AttributeError:
                 logging.warning("Jet event object not sample-able. Using default jet production point: " + str(point))
         if x0 is None:
@@ -103,6 +104,18 @@ class jet:
         temp = event.temp(self.coords3(time=time))
 
         return temp
+
+    # Method to find the maximum time seen by the jet in the known background
+    def max_temp(self, event):
+
+        tempArray = np.array([])
+
+        for t in np.arange(event.t0, event.tf, event.timestep):
+            temperature = self.temp(event=event, time=t)
+            tempArray = np.append(tempArray, temparature)
+
+        maxTemp = np.amax(tempArray)
+        return maxTemp
 
     # Method to sample a shower distribution and return a shower correction angle
     # As of now, this just returns zero

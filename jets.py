@@ -38,14 +38,14 @@ class jet:
                 self.x0, self.y0 = samPoint[0], samPoint[1]
             except AttributeError:
                 logging.warning("Jet event object not sample-able. Using default jet production point: " + str(point))
-        if x0 is None:
+        elif event is None and (x0 is None or y0 is None):
             self.x0 = point[0]
-        else:
-            self.x0 = x0
-        if y0 is None:
             self.y0 = point[1]
         else:
+            logging.warning("Using default jet production point: " + str(point))
+            self.x0 = x0
             self.y0 = y0
+
 
         # If an event was provided for jet instantiation, try to set jet t0 to event t0.
         # If this fails, set it to the default.

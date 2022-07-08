@@ -1,12 +1,16 @@
 import numpy as np
 import logging
 import hic
+import plasma_interaction as pi
 
 
 # Jet object class. Useful for plotting and simplifying everything.
 # Note jet energy (energy) in GeV
 # Note jet velocity (v0) in fraction of speed of light
 # Note jet angle (theta0) in radians
+import plasma_interaction
+
+
 class jet:
     # Instantiation statement. All parameters optional.
     def __init__(self, x0=None, y0=None, theta0=0, v0=1, t0=None, event=None, energy=100):
@@ -98,12 +102,16 @@ class jet:
     # Method to obtain the temperature in the given event at the jet's coordinates at given time.
     # As of now, the velocity is always zero.
     def temp(self, event, time=None):
+        temperature = None
         if time is None:
             time = event.t0
+        else:
+            pass
 
-        temp = event.temp(self.coords3(time=time))
+        if pi.pos_cut(event=event, jet=self, time=time) and pi.pos_cut(event=event, jet=self, time=time):
+            temperature = event.temp(self.coords3(time=time))
 
-        return temp
+        return temperature
 
     # Method to find the maximum time seen by the jet in the known background
     def max_temp(self, event):

@@ -109,20 +109,23 @@ class jet:
             pass
 
         if pi.pos_cut(event=event, jet=self, time=time) and pi.pos_cut(event=event, jet=self, time=time):
-            temperature = event.temp(self.coords3(time=time))
+            temperature = float(event.temp(self.coords3(time=time)))
 
         return temperature
 
     # Method to find the maximum time seen by the jet in the known background
     def max_temp(self, event):
 
-        templist = np.array([])
+        tempArray = np.array([])
 
         for t in np.arange(event.t0, event.tf, event.timestep):
-            temperature = self.temp(event=event, time=t)
-            templist = np.append(templist, temperature)
+            try:
+                temperature = float(jet.temp(event=event, time=t))
+            except TypeError:
+                temperature = 0
+            tempArray = np.append(tempArray, temperature)
 
-        maxTemp = np.amax(templist)
+        maxTemp = np.amax(tempArray)
         return maxTemp
 
     # Method to sample a shower distribution and return a shower correction angle

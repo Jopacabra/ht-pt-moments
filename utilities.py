@@ -123,6 +123,10 @@ def resultsFrame():
                 "time_total_unhydro": [],
                 "initial_time": [],
                 "final_time": [],
+                "dx": [],
+                "dt": [],
+                "rmax": [],
+                "Tmax": [],
                 "b": [],
                 "npart": [],
                 "mult": [],
@@ -140,10 +144,6 @@ def resultsFrame():
                 "phi_5": [],
                 "seed": [],
                 "cmd": [],
-                "dx": [],
-                "dt": [],
-                "rmax": [],
-                "Tmax": [],
             }
         )
 

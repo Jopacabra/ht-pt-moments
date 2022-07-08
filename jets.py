@@ -120,7 +120,7 @@ class jet:
 
         for t in np.arange(event.t0, event.tf, event.timestep):
             try:
-                temperature = float(jet.temp(event=event, time=t))
+                temperature = float(self.temp(event=event, time=t))
             except TypeError:
                 temperature = 0
             tempArray = np.append(tempArray, temperature)

@@ -30,8 +30,8 @@ class jet:
         # If nothing was provided to "event", just set to whatever x0 and y0 are (probably default)
         if not event is None and (x0 is None or y0 is None):
             try:
-                point = hic.generate_jet_point(event)
-                self.x0, self.y0 = newPoint[0], newPoint[1]
+                samPoint = hic.generate_jet_point(event)
+                self.x0, self.y0 = samPoint[0], samPoint[1]
             except AttributeError:
                 logging.warning("Jet event object not sample-able. Using default jet production point: " + str(point))
         if x0 is None:

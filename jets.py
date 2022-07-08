@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-import hic as hs
+import hic
 
 
 # Jet object class. Useful for plotting and simplifying everything.

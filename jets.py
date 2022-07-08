@@ -116,13 +116,13 @@ class jet:
     # Method to find the maximum time seen by the jet in the known background
     def max_temp(self, event):
 
-        tempArray = np.array([])
+        templist = np.array([])
 
         for t in np.arange(event.t0, event.tf, event.timestep):
             temperature = self.temp(event=event, time=t)
-            tempArray = np.append(tempArray, temperature)
+            templist = np.append(templist, temperature)
 
-        maxTemp = np.amax(tempArray)
+        maxTemp = np.amax(templist)
         return maxTemp
 
     # Method to sample a shower distribution and return a shower correction angle

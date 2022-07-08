@@ -121,6 +121,7 @@ def resultsFrame():
                 "time_total_plasma": [],
                 "time_total_hrg": [],
                 "time_total_unhydro": [],
+                "jet_Tmax": [current_jet.max_temp()],
                 "initial_time": [],
                 "final_time": [],
                 "dx": [],

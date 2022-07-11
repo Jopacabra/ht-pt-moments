@@ -199,6 +199,12 @@ class plasma_event:
             self.y_vel = event.interpolate_y_vel_grid()
             self.name = event.name
             self.timestep = event.timestep
+            self.t0 = np.amin(self.temp.grid[0])
+            self.tf = np.amax(self.temp.grid[0])
+            self.xmin = np.amin(self.temp.grid[1])
+            self.xmax = np.amax(self.temp.grid[1])
+            self.ymin = np.amin(self.temp.grid[2])
+            self.ymax = np.amax(self.temp.grid[2])
         elif temp_func is not None and x_vel_func is not None and y_vel_func is not None:
             self.temp = temp_func
             self.x_vel = x_vel_func
@@ -207,20 +213,27 @@ class plasma_event:
             try:
                 # Attempt to get timestep as if the functions are regular interpolator objects.
                 self.timestep = self.temp.grid[0][-1] - self.temp.grid[0][-2]
+                self.t0 = np.amin(self.temp.grid[0])
+                self.tf = np.amax(self.temp.grid[0])
+                self.xmin = np.amin(self.temp.grid[1])
+                self.xmax = np.amax(self.temp.grid[1])
+                self.ymin = np.amin(self.temp.grid[2])
+                self.ymax = np.amax(self.temp.grid[2])
             except AttributeError:
-                # Set no timestep
-                logging.warning('No valid timestep for event. Setting to 0.1 fm.')
+                # Set default values for parameters
+                logging.warning('No valid parameters for event. Setting to defaults.')
                 self.timestep = 0.1
+                self.t0 = 0
+                self.tf = 15
+                self.xmin = -15
+                self.xmax = 15
+                self.ymin = -15
+                self.ymax = 15
         else:
             print('Plasma instantiation failed.')
             raise Exception
 
-        self.t0 = np.amin(self.temp.grid[0])
-        self.tf = np.amax(self.temp.grid[0])
-        self.xmin = np.amin(self.temp.grid[1])
-        self.xmax = np.amax(self.temp.grid[1])
-        self.ymin = np.amin(self.temp.grid[2])
-        self.ymax = np.amax(self.temp.grid[2])
+
 
     # Method to get array on space domain of event with given resolution
     def xspace(self, resolution=100):

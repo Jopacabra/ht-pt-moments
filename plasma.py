@@ -4,6 +4,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 from scipy.interpolate import RegularGridInterpolator
 import config
+import logging
 
 
 class osu_hydro_file:

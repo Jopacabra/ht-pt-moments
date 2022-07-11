@@ -203,7 +203,13 @@ class plasma_event:
             self.x_vel = x_vel_func
             self.y_vel = y_vel_func
             self.name = name
-            self.timestep = self.temp.grid[0][-1] - self.temp.grid[0][-2]
+            try:
+                # Attempt to get timestep as if the functions are regular interpolator objects.
+                self.timestep = self.temp.grid[0][-1] - self.temp.grid[0][-2]
+            except AttributeError:
+                # Set no timestep
+                logging.warning('No valid timestep for event. Setting to 0.1 fm.')
+                self.timestep = 0.1
         else:
             print('Plasma instantiation failed.')
             raise Exception

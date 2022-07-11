@@ -194,7 +194,7 @@ def run_event(eventNo):
                 "time_total_plasma": [plasma_time_total],
                 "time_total_hrg": [hrg_time_total],
                 "time_total_unhydro": [unhydro_time_total],
-                "jet_Tmax": [current_jet.max_temp()],
+                "jet_Tmax": [current_jet.max_temp(event=current_event)],
                 "initial_time": [current_event.t0],
                 "final_time": [current_event.tf],
                 "dx": [config.transport.GRID_STEP],

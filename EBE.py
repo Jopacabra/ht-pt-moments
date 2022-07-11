@@ -47,7 +47,7 @@ def run_event(eventNo):
     ###############################
 
     # Run event generation using config setttings
-    trentoDataframe = hic.generate_event()
+    trentoDataframe, rmax = hic.generate_event(get_rmax=True)
 
     # Record seed selected
     seed = trentoDataframe.iloc[0]['seed']

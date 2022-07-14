@@ -608,7 +608,7 @@ def temp_6th_sample(event, maxAttempts=5, time='i', batch=1000):
         attempt += 1
     print("Catastrophic error in jet production point sampling!")
     print("AHHHHHHHHHHHHHHH!!!!!!!!!!!")
-    return "AHHHHHHHHHHHHHHH!!!!!!!!!!!"
+    return np.array([0,0,0])
 
 
 # Function to generate a given number of jet production points

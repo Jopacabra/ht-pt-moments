@@ -151,6 +151,51 @@ def resultsFrame():
     return resultsDataframe
 
 
+# Function to create empty results dataframe.
+def resultsFrameOG():
+    resultsDataframe = pd.DataFrame(
+            {
+                "eventNo": [],
+                "jetNo": [],
+                "pT_plasma": [],
+                "pT_plasma_err": [],
+                "pT_hrg": [],
+                "pT_hrg_err": [],
+                "pT_unhydro": [],
+                "pT_unhydro_err": [],
+                "k_moment": [],
+                "def_ang_plasma": [],
+                "def_ang_plasma_err": [],
+                "def_ang_hrg": [],
+                "def_ang_hrg_error": [],
+                "def_ang_unhydro": [],
+                "def_ang_unhydro_err": [],
+                "shower_correction": [],
+                "X0": [],
+                "Y0": [],
+                "theta0": [],
+                "t_unhydro": [],
+                "t_hrg": [],
+                "time_total_plasma": [],
+                "time_total_hrg": [],
+                "time_total_unhydro": [],
+                "jet_Tmax": [],
+                "initial_time": [],
+                "final_time": [],
+                "dx": [],
+                "dt": [],
+                "rmax": [],
+                "Tmax": [],
+                "b": [],
+                "e2": [],
+                "mult": [],
+                "phi_2": [],
+            }
+        )
+
+    return resultsDataframe
+
+
 # Creates a temporary directory and moves to it.
 # Returns tempfile.TemporaryDirectory object.
 def tempDir(location=None):

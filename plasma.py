@@ -499,3 +499,29 @@ class plasma_event:
         return temps, vels, tempcb, velcb
 
 
+# Takes functions that take parameters (t, x, y) and makes plasma objects
+def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=None,
+                      resolution=10, xmin=-15, xmax=15, time=10):
+    # Define grid time and space domains
+    t_space = np.linspace(0, xmax, int((xmax - xmin) * resolution))
+    x_space = np.linspace(xmin, xmax, int((xmax - xmin) * resolution))
+
+    # Create meshgrid for function evaluation
+    t_coords, x_coords, y_coords = np.meshgrid(t_space, x_space, x_space, indexing='ij')
+
+    # Evaluate functions for grid points
+    temp_values = temp_func(t_coords, x_coords, y_coords)
+    x_vel_values = x_vel_func(t_coords, x_coords, y_coords)
+    y_vel_values = y_vel_func(t_coords, x_coords, y_coords)
+
+    # Interpolate functions
+    interped_temp_function = RegularGridInterpolator((t_space, x_space, x_space), temp_values)
+    interped_x_vel_function = RegularGridInterpolator((t_space, x_space, x_space), x_vel_values)
+    interped_y_vel_function = RegularGridInterpolator((t_space, x_space, x_space), y_vel_values)
+
+    # Create and return plasma object
+    plasma_object = plasma.plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
+                               y_vel_func=interped_y_vel_function, name=name)
+    return plasma_object
+
+

@@ -659,3 +659,41 @@ def optical_glauber(R=7.5, b=7.5, phi=0):
     #og_event = functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux, y_vel_func=analytic_uy)
 
     return analytic_t, analytic_ux, analytic_uy, mult, e2
+
+
+# Function to generate new optical glauber event callable functions
+def optical_glauber_logT(R=7.5, b=7.5, phi=0):
+    # Calculate ellipse height and width from ion radius (R) and impact parameter (b).
+    W = 2 * R - b
+    H = np.sqrt(4 * R ** 2 - b ** 2)
+
+    # Calculate event multiplicity and eccentricity
+    mult = 2*H*W*np.pi  # Integral of the 2D Gaussian for the temperature profile.
+    e2 = np.sqrt(1 - (W ** 2 / H ** 2))  # sqrt(1 - (semi-minor^2 / semi-major^2))
+
+    # Set temperature normalizations
+    T0 = np.log(mult)
+    U0 = 1
+
+    # Get cosine and sine of phi as fixed constants.
+    cos_fac = np.cos(phi)
+    sin_fac = np.sin(phi)
+
+    analytic_t = lambda t, x, y: T0 * np.exp(
+        - ((x * cos_fac + y * sin_fac) ** 2 / (2 * W ** 2)) - ((-x * sin_fac + y * cos_fac) ** 2 / (2 * H ** 2)))
+
+    analytic_ux = lambda t, x, y: U0 * np.sqrt(W * H) * np.exp(
+        - ((cos_fac * x + sin_fac * y) ** 2 / (2 * W ** 2)) - ((-sin_fac * x + cos_fac * y) ** 2 / (2 * H ** 2))) * (
+                                              ((cos_fac * x + sin_fac * y) * cos_fac / W ** 2) - (
+                                                  (-sin_fac * x + cos_fac * y) * sin_fac / H ** 2))
+
+    analytic_uy = lambda t, x, y: U0 * np.sqrt(W * H) * np.exp(
+        - ((cos_fac * x + sin_fac * y) ** 2 / (2 * W ** 2)) - ((-sin_fac * x + cos_fac * y) ** 2 / (2 * H ** 2))) * (
+                                              ((cos_fac * x + sin_fac * y) * sin_fac / W ** 2) + (
+                                                  (-sin_fac * x + cos_fac * y) * cos_fac / H ** 2))
+
+    # To generate an event object from these optical glauber functions:
+    #og_event = functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux, y_vel_func=analytic_uy)
+
+    return analytic_t, analytic_ux, analytic_uy, mult, e2
+

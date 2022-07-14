@@ -88,6 +88,7 @@ def run_event(eventNo):
         else:
             newPoint = hic.generate_jet_point(current_event)
             x0, y0 = newPoint[0], newPoint[1]
+            print('Jet prod point sampled: {}, {}'.format(x0, y0))
 
         # Select jet production angle
         theta0 = np.random.uniform(0, 2 * np.pi)

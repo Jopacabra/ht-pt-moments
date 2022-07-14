@@ -7,8 +7,14 @@ import os
 import logging
 import utilities
 import config
-import freestream
-import frzout
+try:
+    import freestream
+except:
+    logging.warning('freestream not found.')
+try:
+    import frzout
+except:
+    logging.warning('frzout not found.')
 
 """
 This module is responsible for all processes related to jet production, event generation, & hard scattering.

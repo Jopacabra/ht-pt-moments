@@ -501,10 +501,13 @@ class plasma_event:
 
 # Takes functions that take parameters (t, x, y) and makes plasma objects
 def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=None,
-                      resolution=10, xmin=-15, xmax=15, time=10):
+                      resolution=10, xmax=15, time=None):
     # Define grid time and space domains
-    t_space = np.linspace(0, xmax, int((xmax - xmin) * resolution))
-    x_space = np.linspace(xmin, xmax, int((xmax - xmin) * resolution))
+    if time is None:
+        t_space = np.linspace(0, 2*xmax, int((xmax + xmax) * resolution))
+    else:
+        t_space = np.linspace(0, time, int((xmax + xmax) * resolution))
+    x_space = np.linspace((0 - xmax), xmax, int((xmax + xmax) * resolution))
 
     # Create meshgrid for function evaluation
     t_coords, x_coords, y_coords = np.meshgrid(t_space, x_space, x_space, indexing='ij')

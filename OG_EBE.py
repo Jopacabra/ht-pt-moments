@@ -52,7 +52,7 @@ def run_event(eventNo):
     R = 7.5  # in fm - ion radius
     b = np.random.uniform(0, 2 * R)  # in fm - impact parameter
     phi = np.random.uniform(0, 2 * np.pi)  # in rad - reaction plane angle
-    rmax = 7.5  # in fm - determines event data size...
+    rmax = R  # in fm - determines event data size...
     event_lifetime = 10  # in fm - determines event data size...
 
     # Create optical glauber callable lambda functions
@@ -60,7 +60,7 @@ def run_event(eventNo):
 
     # Create event object
     current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux, y_vel_func=analytic_uy,
-                                             xmin=-rmax, xmax=rmax, time=event_lifetime)
+                                             xmax=rmax, time=event_lifetime)
 
     # Package up event data for export
     event_dataframe = pd.DataFrame(

@@ -46,6 +46,8 @@ def run_event(eventNo):
     # Generate new event geometry #
     ###############################
 
+    logging.info('Generating new event geometry...')
+
     # Select impact parameter, ion radius, and reaction plane angle (identical to event plane in this picture)
     R = 7.5  # in fm - ion radius
     b = np.random.uniform(0, 2 * R)  # in fm - impact parameter
@@ -70,6 +72,8 @@ def run_event(eventNo):
             "phi_2": [phi],
         }
         )
+
+    logging.info('R = {}, b = {}, phi = {}, mult = {}, e2 = {}'.format(R, b, phi, mult, e2))
 
     ################
     # Jet Analysis #

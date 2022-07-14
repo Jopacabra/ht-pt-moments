@@ -520,7 +520,7 @@ def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=Non
     interped_y_vel_function = RegularGridInterpolator((t_space, x_space, x_space), y_vel_values)
 
     # Create and return plasma object
-    plasma_object = plasma.plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
+    plasma_object = plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
                                y_vel_func=interped_y_vel_function, name=name)
     return plasma_object
 

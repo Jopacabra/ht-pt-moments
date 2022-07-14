@@ -42,7 +42,7 @@ class jet:
             self.x0 = point[0]
             self.y0 = point[1]
         else:
-            logging.logging("Jet production point: " + str(point))
+            logging.info("Jet production point: " + str(point))
             self.x0 = x0
             self.y0 = y0
 

@@ -470,7 +470,7 @@ def jetprodPDF(temp_func, resolution=100, plot=False, initialTime=0.5):
     t_coords = np.full_like(x_coords, initialTime)
 
     # Put coordinates together into ordered pairs.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
+    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (2, 1, 0))
 
     # Calculate temperatures
     initialGrid = temp_func(points)
@@ -524,7 +524,7 @@ def jetProdPDF_Function(temp_func, resolution=100, plot=False, initialTime=0.5):
     t_coords = np.full_like(x_coords, initialTime)
 
     # Put coordinates together into ordered pairs.
-    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (1, 2, 0))
+    points = np.transpose(np.array([t_coords, x_coords, y_coords]), (2, 1, 0))
 
     # Calculate temperatures
     initialGrid = temp_func(points)

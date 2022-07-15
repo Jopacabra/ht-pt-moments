@@ -187,7 +187,7 @@ def resultsFrameOG():
                 "rmax": [],
                 "Tmax": [],
                 "b": [],
-                "R": [R],
+                "R": [],
                 "e2": [],
                 "mult": [],
                 "phi_2": [],

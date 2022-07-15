@@ -49,8 +49,8 @@ def run_event(eventNo):
     logging.info('Generating new event geometry...')
 
     # Select impact parameter, ion radius, and reaction plane angle (identical to event plane in this picture)
-    R = 7.5  # in fm - ion radius
-    b = np.random.uniform(0, 2 * R)  # in fm - impact parameter
+    R = 5  # in fm - ion radius
+    b = np.random.uniform(0.2*R, 1.8 * R)  # in fm - impact parameter
     phi = np.random.uniform(0, 2 * np.pi)  # in rad - reaction plane angle
     rmax = R  # in fm - determines event data size...
     event_lifetime = 10  # in fm - determines event data size...
@@ -67,6 +67,7 @@ def run_event(eventNo):
         {
             "event": [eventNo],
             "b": [b],
+            "R": [R],
             "e2": [e2],
             "mult": [mult],
             "phi_2": [phi],

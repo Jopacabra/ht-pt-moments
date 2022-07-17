@@ -56,7 +56,7 @@ def run_event(eventNo):
     event_lifetime = 10  # in fm - determines event data size...
 
     # Create optical glauber callable lambda functions
-    analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi)
+    analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_new(R=R, b=b, phi=phi)
 
     # Create event object
     current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux, y_vel_func=analytic_uy,

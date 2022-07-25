@@ -188,6 +188,7 @@ def run_event(eventNo):
             {
                 "eventNo": [eventNo],
                 "jetNo": [jetNo],
+                "jet_e": [current_jet.energy],
                 "pT_plasma": [momentPlasma],
                 "pT_plasma_err": [momentPlasmaErr],
                 "pT_hrg": [momentHrg],

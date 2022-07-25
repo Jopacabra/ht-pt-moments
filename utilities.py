@@ -99,6 +99,7 @@ def resultsFrame():
             {
                 "eventNo": [],
                 "jetNo": [],
+                "jet_e": [],
                 "pT_plasma": [],
                 "pT_plasma_err": [],
                 "pT_hrg": [],
@@ -157,6 +158,7 @@ def resultsFrameOG():
             {
                 "eventNo": [],
                 "jetNo": [],
+                "jet_e": [],
                 "pT_plasma": [],
                 "pT_plasma_err": [],
                 "pT_hrg": [],

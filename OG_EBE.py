@@ -154,17 +154,21 @@ def run_event(eventNo):
                 # Record one additional timestep spent in unhydrodynamic data
                 unhydro_time_total += config.transport.TIME_STEP
 
+        # Calculate energy loss due to gluon exchange with the medium
+        energy_loss = pi.energy_loss_moment(event=current_event, jet=current_jet,
+                                            minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
+
         # Calculate momentPlasma
         logging.info('Calculating unhydrodynamic moment:')
-        momentUnhydro, momentUnhydroErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
-                                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
+        momentUnhydro, momentUnhydroErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+                                                              minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
         logging.info('Calculating hadron gas moment:')
-        momentHrg, momentHrgErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
-                                                     minTemp=config.transport.hydro.T_UNHYDRO,
-                                                     maxTemp=config.transport.hydro.T_HRG)
+        momentHrg, momentHrgErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+                                                      minTemp=config.transport.hydro.T_UNHYDRO,
+                                                      maxTemp=config.transport.hydro.T_HRG)
         logging.info('Calculating plasma moment:')
-        momentPlasma, momentPlasmaErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
-                                                           minTemp=config.transport.hydro.T_HRG)
+        momentPlasma, momentPlasmaErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+                                                            minTemp=config.transport.hydro.T_HRG)
 
         # Calculate deflection angle
         # Basic trig with k=0.
@@ -189,6 +193,7 @@ def run_event(eventNo):
                 "eventNo": [eventNo],
                 "jetNo": [jetNo],
                 "jet_e": [current_jet.energy],
+                "e_loss": [energy_loss],
                 "pT_plasma": [momentPlasma],
                 "pT_plasma_err": [momentPlasmaErr],
                 "pT_hrg": [momentHrg],

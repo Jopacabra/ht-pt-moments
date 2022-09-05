@@ -6,10 +6,6 @@ import logging
 percent_error = 0.01
 relative_error = percent_error*0.01
 
-# We scale the integrand by this multiplier, then remove it after the integration to avoid round-off error
-# dealing with small numbers.
-fudge_scalar = 1
-
 
 # Functions that set the bounds of interaction with a grid
 # Set time at which plasma integral will begin to return 0.
@@ -41,9 +37,9 @@ def temp_cut(event, jet, time, minTemp=0, maxTemp = 1000):
 
 
 # Define integrand - ONLY CORRECT FOR k=0 !!!!!!!!!!!
-def integrand(event, jet, k=0, minTemp=0, maxTemp=1000):
+def jet_drift_integrand(event, jet, k=0, minTemp=0, maxTemp=1000):
     FERMItoGeV = (1 / 0.19732687)
-    return lambda t: fudge_scalar * FERMItoGeV * (1 / jet.energy) *  ((event.i_int_factor(jet=jet, time=t)[0])
+    return lambda t: FERMItoGeV * (1 / jet.energy) *  ((event.i_int_factor(jet=jet, time=t)[0])
                       * (event.u_perp(jet=jet, time=t) / (1 - event.u_par(jet=jet, time=t)))
                       * (event.mu(jet=jet, time=t) ** (k + 2))
                       * event.rho(jet=jet, time=t)
@@ -54,25 +50,54 @@ def integrand(event, jet, k=0, minTemp=0, maxTemp=1000):
 
 
 # Function to calculate moment given initial conditions & interpolating functions
-def moment_integral(event, jet, k=0, minTemp=0, maxTemp=1000, quiet=False):
+def jet_drift_moment(event, jet, k=0, minTemp=0, maxTemp=1000, quiet=False):
 
     # Calculate moment point
     if not quiet:
-        logging.info('Evaluating moment integral...')
-    raw_quad = sp.integrate.quad(integrand(event=event, jet=jet, k=k, minTemp=minTemp, maxTemp=maxTemp), event.t0,
-                                 event.tf, limit=200, epsrel=relative_error)
+        logging.info('Evaluating jet drift integral...')
+    raw_quad = sp.integrate.quad(jet_drift_integrand(event=event, jet=jet, k=k, minTemp=minTemp, maxTemp=maxTemp),
+                                 event.t0, event.tf, limit=200, epsrel=relative_error)
 
     # Tack constants on
     # The FERMItoGeV factor of ~5 converts unit factor of fm from line integration over fm to GeV
 
-    moment = (1/fudge_scalar) * raw_quad[0]
+    moment = raw_quad[0]
 
     # Error on moment
-    moment_error = (1/fudge_scalar) * raw_quad[1]  # Not including I(k) error
+    moment_error = raw_quad[1]  # Not including I(k) error
 
     #print('Quad: ' + str(moment) + ', +/- ' + str(moment_error))
 
     return moment, moment_error  # Error on the integral I is something to consider.
+
+
+# Define integrand - ONLY CORRECT FOR k=0 !!!!!!!!!!!
+def energy_loss_integrand(event, jet, minTemp=0, maxTemp=1000):
+    FERMItoGeV = (1 / 0.19732687)
+    return lambda t: FERMItoGeV * 0 if pos_cut(event=event, jet=jet, time=t) \
+                                                and time_cut(event=event, time=t) and \
+                                                temp_cut(event=event, jet=jet, time=t, minTemp=minTemp,
+                                                         maxTemp=maxTemp) else 0
+
+
+# Function to calculate moment given initial conditions & interpolating functions
+def energy_loss_moment(event, jet, minTemp=0, maxTemp=1000, quiet=False):
+
+    # Calculate moment point
+    if not quiet:
+        logging.info('Evaluating jet energy loss integral...')
+    raw_quad = sp.integrate.quad(energy_loss_integrand(event=event, jet=jet, minTemp=minTemp, maxTemp=maxTemp),
+                                 event.t0, event.tf, limit=200, epsrel=relative_error)
+
+    # Tack constants on
+    # The FERMItoGeV factor of ~5 converts unit factor of fm from line integration over fm to GeV
+
+    e_loss = raw_quad[0]
+
+    # Error on moment
+    e_loss_error = raw_quad[1]
+
+    return e_loss, e_loss_error
 
 
 

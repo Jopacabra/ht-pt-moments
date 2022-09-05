@@ -100,6 +100,7 @@ def resultsFrame():
                 "eventNo": [],
                 "jetNo": [],
                 "jet_e": [],
+                "e_loss": [],
                 "pT_plasma": [],
                 "pT_plasma_err": [],
                 "pT_hrg": [],

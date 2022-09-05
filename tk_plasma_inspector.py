@@ -558,8 +558,8 @@ class MainPage(tk.Frame):
                 iInt = self.current_event.i_int_factor(jet=self.current_jet, time=time)
                 xPOS = self.current_jet.xpos(time)
                 yPOS = self.current_jet.ypos(time)
-                integrand = pi.integrand(event=self.current_event, jet=self.current_jet, k=self.K,
-                                         minTemp=decidedCut)(time)
+                integrand = pi.jet_drift_integrand(event=self.current_event, jet=self.current_jet, k=self.K,
+                                                   minTemp=decidedCut)(time)
 
                 uPerpArray = np.append(uPerpArray, uPerp)
                 uParArray = np.append(uParArray, uPar)
@@ -712,7 +712,7 @@ class MainPage(tk.Frame):
             self.update_plots()
 
             # Calculate plasma moment
-            momentPlasmaRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
+            momentPlasmaRaw = pi.jet_drift_moment(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
 
             self.angleDeflectionPlasma = np.arctan((momentPlasmaRaw[0] / self.current_jet.energy)) * (180 / np.pi)
             self.momentPlasma = momentPlasmaRaw[0]
@@ -721,8 +721,8 @@ class MainPage(tk.Frame):
                                                       k=self.K, label='plasma'))
 
             # Calculate hadron gas (HRG) moment
-            momentHRGRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempUnhydro.get(),
-                                              maxTemp=self.tempHRG.get())
+            momentHRGRaw = pi.jet_drift_moment(self.current_event, self.current_jet, minTemp=self.tempUnhydro.get(),
+                                               maxTemp=self.tempHRG.get())
 
             self.angleDeflectionHRG = np.arctan((momentHRGRaw[0] / self.current_jet.energy)) * (180 / np.pi)
             self.momentHRG = momentHRGRaw[0]
@@ -730,8 +730,8 @@ class MainPage(tk.Frame):
                                                    k=self.K, label='HRG'))
 
             # Calculate unhydro hadron gas (HRG) moment
-            momentUnhydroRaw = pi.moment_integral(self.current_event, self.current_jet, maxTemp=self.tempUnhydro.get(),
-                                                  minTemp=0)
+            momentUnhydroRaw = pi.jet_drift_moment(self.current_event, self.current_jet, maxTemp=self.tempUnhydro.get(),
+                                                   minTemp=0)
 
             self.angleDeflectionUnhydro = np.arctan((momentUnhydroRaw[0] / self.current_jet.energy)) * (180 / np.pi)
             self.momentUnhydro = momentUnhydroRaw[0]

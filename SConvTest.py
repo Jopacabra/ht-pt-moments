@@ -142,15 +142,15 @@ def run_event(eventNo, grid_step=config.transport.GRID_STEP, time_step=config.tr
 
         # Calculate momentPlasma
         logging.info('Calculating unhydrodynamic moment:')
-        momentUnhydro, momentUnhydroErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
-                                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
+        momentUnhydro, momentUnhydroErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+                                                              minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
         logging.info('Calculating hadron gas moment:')
-        momentHrg, momentHrgErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
-                                                     minTemp=config.transport.hydro.T_UNHYDRO,
-                                                     maxTemp=config.transport.hydro.T_HRG)
+        momentHrg, momentHrgErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+                                                      minTemp=config.transport.hydro.T_UNHYDRO,
+                                                      maxTemp=config.transport.hydro.T_HRG)
         logging.info('Calculating plasma moment:')
-        momentPlasma, momentPlasmaErr = pi.moment_integral(event=current_event, jet=current_jet, k=config.moment.K,
-                                                           minTemp=config.transport.hydro.T_HRG)
+        momentPlasma, momentPlasmaErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+                                                            minTemp=config.transport.hydro.T_HRG)
 
         # Calculate deflection angle
         # Basic trig with k=0.

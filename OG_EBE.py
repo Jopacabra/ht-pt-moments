@@ -155,7 +155,7 @@ def run_event(eventNo):
                 unhydro_time_total += config.transport.TIME_STEP
 
         # Calculate energy loss due to gluon exchange with the medium
-        energy_loss = pi.energy_loss_moment(event=current_event, jet=current_jet,
+        energy_loss, energy_loss_err = pi.energy_loss_moment(event=current_event, jet=current_jet,
                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
 
         # Calculate momentPlasma
@@ -194,6 +194,7 @@ def run_event(eventNo):
                 "jetNo": [jetNo],
                 "jet_e": [current_jet.energy],
                 "e_loss": [energy_loss],
+                "e_loss_err": [energy_loss_err],
                 "pT_plasma": [momentPlasma],
                 "pT_plasma_err": [momentPlasmaErr],
                 "pT_hrg": [momentHrg],

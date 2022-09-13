@@ -212,3 +212,37 @@ def tempDir(location=None):
     os.chdir(temp_dir.name)
 
     return temp_dir
+
+
+# Generate a random (x, y, z) coordinate in a 3D box of l = w = boxSize and h = maxProb
+# Origin at cent of bottom of box.
+def cube_random(num=1, boxSize=1, maxProb=1):
+    rng = np.random.default_rng()
+    pointArray = np.array([])
+    for i in np.arange(0, num):
+        x = (boxSize * rng.random()) - (boxSize / 2)
+        y = (boxSize * rng.random()) - (boxSize / 2)
+        z = maxProb * rng.random()
+        newPoint = np.array([x,y,z])
+        if i == 0:
+            pointArray = newPoint
+        else:
+            pointArray = np.vstack((pointArray, newPoint))
+    return pointArray
+
+
+# Generate a random (x, y) coordinate in a 2D box of w = boxSize and h = maxProb
+# Origin at bottom left of box.
+def random_2d(num=1, boxSize=1, maxProb=1):
+    rng = np.random.default_rng()
+    pointArray = np.array([])
+    for i in np.arange(0, num):
+        x = boxSize * rng.random()
+        y = maxProb * rng.random()
+        newPoint = np.array([x,y])
+        if i == 0:
+            pointArray = newPoint
+        else:
+            pointArray = np.vstack((pointArray, newPoint))
+    return pointArray
+

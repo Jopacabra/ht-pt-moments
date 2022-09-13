@@ -7,6 +7,8 @@ import os
 import logging
 import utilities
 import config
+from utilities import cube_random
+
 try:
     import freestream
 except:
@@ -554,21 +556,6 @@ def jetProdPDF_Function(temp_func, resolution=100, plot=False, initialTime=0.5):
 
     return NormedRaised_Temp_Func
 
-# Generate a random (x, y, z) coordinate in a 3D box of l = w = boxSize and h = maxProb
-# Origin at cent of bottom of box.
-def cube_random(num=1, boxSize=1, maxProb=1):
-    rng = np.random.default_rng()
-    pointArray = np.array([])
-    for i in np.arange(0, num):
-        x = (boxSize * rng.random()) - (boxSize / 2)
-        y = (boxSize * rng.random()) - (boxSize / 2)
-        z = maxProb * rng.random()
-        newPoint = np.array([x,y,z])
-        if i == 0:
-            pointArray = newPoint
-        else:
-            pointArray = np.vstack((pointArray, newPoint))
-    return pointArray
 
 # Function to rejection sample a given interpolated temperature function^6 for jet production.
 # Returns an accepted (x, y) sample point as a numpy array.
@@ -597,7 +584,7 @@ def temp_6th_sample(event, maxAttempts=5, time='i', batch=1000):
     while attempt < maxAttempts:
         # Generate random point in 3D box of l = w = gridWidth and height maximum temp.^6
         # Origin at center of bottom of box
-        pointArray = cube_random(num = batch, boxSize=gridWidth, maxProb=maxTemp**6)
+        pointArray = cube_random(num = batch, boxSize=gridWidth, maxProb=maxTemp ** 6)
 
         for point in pointArray:
             targetTemp = temp_func(np.array([time, point[0], point[1]]))**6

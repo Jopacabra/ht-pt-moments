@@ -101,6 +101,7 @@ def resultsFrame():
                 "jetNo": [],
                 "jet_e": [],
                 "e_loss": [],
+                "e_loss_err": [],
                 "pT_plasma": [],
                 "pT_plasma_err": [],
                 "pT_hrg": [],

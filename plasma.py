@@ -300,6 +300,14 @@ class plasma_event:
 
         return debye_mass
 
+    # Method to return temperature from jet object and time
+    def temp_jet(self, point=None, jet=None, time=None):
+        current_point = self.decide(point, jet, time)
+
+        debye_mass = self.temp(current_point)
+
+        return debye_mass
+
     # Method to return total cross section at a particular point
     # Total GW cross section, as per Sievert, Yoon, et. al.
     def sigma(self, point=None, jet=None, time=None):

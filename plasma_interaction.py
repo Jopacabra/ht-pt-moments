@@ -107,16 +107,21 @@ def zeta(q=0, maxAttempts=5, batch=1000):
     return 0
 
 
-# Integrand for parameterized energy loss
+# Integrand for parameterized energy loss over coupling
 def energy_loss_integrand(event, jet, minTemp=0, maxTemp=1000):
-    FERMItoGeV = (1 / 0.19732687)
-    return lambda t: FERMItoGeV * 0 if pos_cut(event=event, jet=jet, time=t) \
+    FERMItoGeV = (1 / 0.19732687)  # Note that we apply this twice... Once for the t factor, once for the (int dt).
+    return lambda t: (FERMItoGeV**2 * t * event.temp_jet(jet=jet, time=t)**3
+                      * zeta(q=0) * (1 / np.sqrt(1 - event.vel(jet=jet, time=t)**2))
+                      * (1 - event.vel(jet=jet, time=t) * np.cos(jet.theta0 - event.vel_angle(jet=jet, time=t)))
+                      ) if pos_cut(event=event, jet=jet, time=t) \
                                                 and time_cut(event=event, time=t) and \
                                                 temp_cut(event=event, jet=jet, time=t, minTemp=minTemp,
                                                          maxTemp=maxTemp) else 0
 
 
 # Function to calculate moment given initial conditions & interpolating functions
+# Note that this returns the energy loss over the jet-medium coupling. Essentially this means we need to
+# fix an overall normalization to fit a data point somewhere in the most precise regime of BBMG model accuracy.
 def energy_loss_moment(event, jet, minTemp=0, maxTemp=1000, quiet=False):
 
     # Calculate moment point

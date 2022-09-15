@@ -151,6 +151,11 @@ def run_event(eventNo):
         energy_loss, energy_loss_err = pi.energy_loss_moment(event=current_event, jet=current_jet,
                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
 
+        # Change jet energy to reflect lost energy
+        chosen_e = chosen_e + energy_loss
+        current_jet = jets.jet(x0=x0, y0=y0,
+                               theta0=theta0, event=current_event, energy=chosen_e)
+
         # Calculate momentPlasma
         logging.info('Calculating unhydrodynamic moment:')
         momentUnhydro, momentUnhydroErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,

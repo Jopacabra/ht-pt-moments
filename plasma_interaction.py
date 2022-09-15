@@ -110,7 +110,7 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 # Integrand for parameterized energy loss over coupling
 def energy_loss_integrand(event, jet, minTemp=0, maxTemp=1000):
     FERMItoGeV = (1 / 0.19732687)  # Note that we apply this twice... Once for the t factor, once for the (int dt).
-    return lambda t: (FERMItoGeV**2 * t * event.temp_jet(jet=jet, time=t)**3
+    return lambda t: ( (-1) * FERMItoGeV**2 * t * event.temp_jet(jet=jet, time=t)**3
                       * zeta(q=0) * (1 / np.sqrt(1 - event.vel(jet=jet, time=t)**2))
                       * (1 - event.vel(jet=jet, time=t) * np.cos(jet.theta0 - event.vel_angle(jet=jet, time=t)))
                       ) if pos_cut(event=event, jet=jet, time=t) \

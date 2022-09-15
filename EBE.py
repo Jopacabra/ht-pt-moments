@@ -83,8 +83,17 @@ def run_event(eventNo):
 
         # Generate jet object
         # Includes shower sampling
+        if config.jet.E_FLUCT:
+            rng = np.random.default_rng()
+            while True:
+                chosen_e = rng.exponential(10)
+                if chosen_e > config.jet.MIN_JET_ENERGY:
+                    break
+        else:
+            chosen_e = config.jet.JET_ENERGY
+
         current_jet = jets.jet(x0=x0, y0=y0,
-                               theta0=theta0, event=current_event, energy=config.jet.JET_ENERGY)
+                               theta0=theta0, event=current_event, energy=chosen_e)
 
         ################################################
         # Find phase change times along jet trajectory #

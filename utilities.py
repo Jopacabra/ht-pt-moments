@@ -236,7 +236,7 @@ def cube_random(num=1, boxSize=1, maxProb=1):
 
 # Generate a random (x, y) coordinate in a 2D box of w = boxSize and h = maxProb
 # Origin at bottom left of box.
-def random_2d(num=1, boxSize=1, maxProb=1):
+def random_2d(num=1, boxSize=1.0, maxProb=1.0):
     rng = np.random.default_rng()
     pointArray = np.array([])
     for i in np.arange(0, num):
@@ -249,3 +249,30 @@ def random_2d(num=1, boxSize=1, maxProb=1):
             pointArray = np.vstack((pointArray, newPoint))
     return pointArray
 
+
+
+# Function to rejection sample E^{-4} dist. for jet energy selection.
+def jet_e_sample(maxAttempts=5, batch=1000, min_e=0):
+
+    attempt = 0
+    while attempt < maxAttempts:
+        # Generate random point
+        pointArray = random_2d(num=batch, boxSize=1, maxProb=1)
+
+        for point in pointArray:
+            if point[0] > min_e:
+                targetE = point[0] ** (-4)
+
+                # Check if point under E PDF curve
+                if float(point[1]) < float(targetE):
+                    # If under curve, accept point and return
+                    # print("Attempt " + str(attempt) + " successful with point " + str(i) + "!!!")
+                    # print(point)
+                    # print("Random height: " + str(zPoints[i]))
+                    # print("Target <= height: " + str(float(targetTemp)))
+                    return point[0]
+        print("Jet Energy Sampling Attempt: " + str(attempt) + " failed.")
+        attempt += 1
+    print("Catastrophic error in jet energy sampling!")
+    print("AHHHHHHHHHHHHHHH!!!!!!!!!!!")
+    return 0

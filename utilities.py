@@ -270,7 +270,7 @@ def jet_e_sample(maxAttempts=5, batch=1000, min_e=0, max_e=100):
                     # print("Random height: " + str(zPoints[i]))
                     # print("Target <= height: " + str(float(targetTemp)))
                     return point[0]
-        print("Jet Energy Sampling Attempt: " + str(attempt) + " failed.")
+        #print("Jet Energy Sampling Attempt: " + str(attempt) + " failed.")
         attempt += 1
     print("Catastrophic error in jet energy sampling!")
     print("AHHHHHHHHHHHHHHH!!!!!!!!!!!")

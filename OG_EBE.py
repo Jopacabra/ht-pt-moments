@@ -100,11 +100,7 @@ def run_event(eventNo):
         # Generate jet object
         # Includes shower sampling
         if config.jet.E_FLUCT:
-            rng = np.random.default_rng()
-            while True:
-                chosen_e = rng.exponential(10)
-                if chosen_e > config.jet.MIN_JET_ENERGY:
-                    break
+            chosen_e = utilities.jet_e_sample(maxAttempts=5, batch=1000, min_e=config.jet.MIN_JET_ENERGY, max_e=100)
         else:
             chosen_e = config.jet.JET_ENERGY
 

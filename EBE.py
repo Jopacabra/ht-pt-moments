@@ -90,7 +90,7 @@ def run_event(eventNo):
         if config.jet.E_FLUCT:
             rng = np.random.default_rng()
             while True:
-                chosen_e = rng.exponential(10)
+                chosen_e = rng.exponential(5)
                 if chosen_e > config.jet.MIN_JET_ENERGY:
                     break
         else:

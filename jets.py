@@ -23,6 +23,7 @@ class jet:
         # Initialize basic parameters
         self.theta0 = theta0
         self.v0 = v0
+        self.energy0 = energy
         self.energy = energy
 
         # Initialize shower correction, then sample shower correction distribution to determine post-shower direction

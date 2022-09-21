@@ -156,9 +156,8 @@ def run_event(eventNo):
                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
 
         # Change jet energy to reflect lost energy
-        chosen_e = chosen_e + energy_loss
-        current_jet = jets.jet(x0=x0, y0=y0,
-                               theta0=theta0, event=current_event, energy=chosen_e)
+        new_e = chosen_e + energy_loss
+        current_jet.energy = new_e
 
         # Calculate momentPlasma
         logging.info('Calculating unhydrodynamic moment:')
@@ -194,7 +193,7 @@ def run_event(eventNo):
             {
                 "eventNo": [eventNo],
                 "jetNo": [jetNo],
-                "jet_e": [current_jet.energy],
+                "jet_e": [current_jet.energy0],
                 "e_loss": [energy_loss],
                 "e_loss_err": [energy_loss_err],
                 "pT_plasma": [momentPlasma],

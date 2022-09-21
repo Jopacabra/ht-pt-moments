@@ -250,7 +250,6 @@ def random_2d(num=1, boxSize=1.0, maxProb=1.0):
     return pointArray
 
 
-
 # Function to rejection sample E^{-4} dist. for jet energy selection.
 def jet_e_sample(maxAttempts=5, batch=1000, min_e=0):
 

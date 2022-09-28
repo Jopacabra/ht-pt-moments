@@ -152,34 +152,34 @@ def run_event(eventNo):
                 unhydro_time_total += config.transport.TIME_STEP
 
         # Calculate energy loss due to gluon exchange with the medium
-        energy_loss, energy_loss_err = pi.energy_loss_moment(event=current_event, jet=current_jet,
+        q_bbmg, q_bbmg_err = pi.energy_loss_moment(event=current_event, jet=current_jet,
                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
 
         # Change jet energy to reflect lost energy
-        new_e = chosen_e + energy_loss
+        new_e = chosen_e + q_bbmg
         current_jet.energy = new_e
 
         # Calculate momentPlasma
         logging.info('Calculating unhydrodynamic moment:')
-        momentUnhydro, momentUnhydroErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+        q_drift_unhydro, q_drift_unhydro_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
                                                               minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
         logging.info('Calculating hadron gas moment:')
-        momentHrg, momentHrgErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+        q_drift_hrg, q_drift_hrg_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
                                                       minTemp=config.transport.hydro.T_UNHYDRO,
                                                       maxTemp=config.transport.hydro.T_HRG)
         logging.info('Calculating plasma moment:')
-        momentPlasma, momentPlasmaErr = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
+        q_drift_plasma, q_drift_plasma_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
                                                             minTemp=config.transport.hydro.T_HRG)
 
         # Calculate deflection angle
         # Basic trig with k=0.
         if config.moment.K == 0:
-            deflection_angle_plasma = np.arctan((momentPlasma / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_plasma_error = np.arctan((momentPlasmaErr / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_hrg = np.arctan((momentHrg / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_hrg_error = np.arctan((momentHrgErr / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_unhydro = np.arctan((momentUnhydro / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_unhydro_error = np.arctan((momentUnhydroErr / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_plasma = np.arctan((q_drift_plasma / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_plasma_error = np.arctan((q_drift_plasma_err / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_hrg = np.arctan((q_drift_hrg / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_hrg_error = np.arctan((q_drift_hrg_err / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_unhydro = np.arctan((q_drift_unhydro / current_jet.energy)) * (180 / np.pi)
+            deflection_angle_unhydro_error = np.arctan((q_drift_unhydro_err / current_jet.energy)) * (180 / np.pi)
         else:
             deflection_angle_plasma = None
             deflection_angle_plasma_error = None
@@ -193,22 +193,16 @@ def run_event(eventNo):
             {
                 "eventNo": [eventNo],
                 "jetNo": [jetNo],
-                "jet_e": [current_jet.energy0],
-                "e_loss": [energy_loss],
-                "e_loss_err": [energy_loss_err],
-                "pT_plasma": [momentPlasma],
-                "pT_plasma_err": [momentPlasmaErr],
-                "pT_hrg": [momentHrg],
-                "pT_hrg_err": [momentHrgErr],
-                "pT_unhydro": [momentUnhydro],
-                "pT_unhydro_err": [momentUnhydroErr],
+                "jet_pT": [current_jet.energy0],
+                "q_BBMG": [q_bbmg],
+                "q_BBMG_err": [q_bbmg_err],
+                "q_drift_plasma": [q_drift_plasma],
+                "q_drift_plasma_err": [q_drift_plasma_err],
+                "q_drift_hrg": [q_drift_hrg],
+                "q_drift_hrg_err": [q_drift_hrg_err],
+                "q_drift_unhydro": [q_drift_unhydro],
+                "q_drift_unhydro_err": [q_drift_unhydro_err],
                 "k_moment": [config.moment.K],
-                "def_ang_plasma": [deflection_angle_plasma],
-                "def_ang_plasma_err": [deflection_angle_plasma_error],
-                "def_ang_hrg": [deflection_angle_hrg],
-                "def_ang_hrg_err": [deflection_angle_hrg_error],
-                "def_ang_unhydro": [deflection_angle_unhydro],
-                "def_ang_unhydro_err": [deflection_angle_unhydro_error],
                 "shower_correction": [current_jet.shower_correction],
                 "X0": [x0],
                 "Y0": [y0],
@@ -218,13 +212,13 @@ def run_event(eventNo):
                 "time_total_plasma": [plasma_time_total],
                 "time_total_hrg": [hrg_time_total],
                 "time_total_unhydro": [unhydro_time_total],
-                "jet_Tmax": [current_jet.max_temp(event=current_event)],
+                "Tmax_jet": [current_jet.max_temp(event=current_event)],
                 "initial_time": [current_event.t0],
                 "final_time": [current_event.tf],
                 "dx": [config.transport.GRID_STEP],
                 "dt": [config.transport.TIME_STEP],
                 "rmax": [rmax],
-                "Tmax": [current_event.max_temp()],
+                "Tmax_event": [current_event.max_temp()],
             }
         )
 

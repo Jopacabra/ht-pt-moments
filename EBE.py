@@ -126,21 +126,19 @@ def run_event(eventNo):
                 # Quit the loop - jet can't re-enter the geometry.
                 break
 
-            # Add to the total jet travel time
+            # Add to the total plasma jet travel time
             if current_temp > config.transport.hydro.T_HRG:
                 plasma_time_total += config.transport.TIME_STEP
 
             # Check if temp is under hadronization temp
-            if current_temp < config.transport.hydro.T_HRG:
+            if current_temp < config.transport.hydro.T_HRG and current_temp > config.transport.hydro.T_UNHYDRO:
                 # Check if this is the first transition below hadron gas temp
                 if bool(t_hrg) is False:
                     # Record time as transition time for hadron gas
                     t_hrg = t
 
-                # Check if above the unhydrodynamic temperature
-                if current_temp > config.transport.hydro.T_UNHYDRO:
-                    # Record one additional timestep spent in the hadron gas
-                    hrg_time_total += config.transport.TIME_STEP
+                # Record one additional timestep spent in the hadron gas
+                hrg_time_total += config.transport.TIME_STEP
 
             # Check if temp is under unhydrodynamic temp
             if current_temp < config.transport.hydro.T_UNHYDRO and current_temp > config.transport.hydro.T_END:

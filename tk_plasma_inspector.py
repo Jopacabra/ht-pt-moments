@@ -238,6 +238,7 @@ class MainPage(tk.Frame):
         fileMenu.add_command(label='Select File', command=self.select_file)
         fileMenu.add_command(label='Optical Glauber', command=self.optical_glauber)
         fileMenu.add_command(label='Log(Mult) Temp Optical Glauber', command=self.lmt_optical_glauber)
+        fileMenu.add_command(label='\"new\" Optical Glauber', command=self.new_optical_glauber)
         fileMenu.add_command(label='Exit', command=self.quit)
         parent.menubar.add_cascade(label='File', menu=fileMenu)
         # ---
@@ -397,6 +398,45 @@ class MainPage(tk.Frame):
 
     # Define the optical glauber selection
     def lmt_optical_glauber(self, value=None):
+        # Ask user for optical glauber input parameters:
+        R = askfloat("Input", "Enter ion radius (R) in fm: ", minvalue=0.0, maxvalue=25)
+        b = askfloat("Input", "Enter impact parameter (b) in fm (max 2R): ", minvalue=0.0, maxvalue=2 * R)
+        phi = askfloat("Input", "Enter reaction plane angle in rad: ", minvalue=0.0, maxvalue=2 * np.pi)
+        rmax = 15
+        event_lifetime = 20
+        self.file_selected = True  # Set that you have selected an event
+        print('Selected optical glauber:\nR = {}, b = {}, phi = {}'.format(R, b, phi))
+
+        # Generate optical glauber
+        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi)
+
+        # Create plasma object
+        self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
+                                                      y_vel_func=analytic_uy,
+                                                      xmax=rmax, time=event_lifetime)
+
+        # Find current_event parameters
+        self.tempMax = self.current_event.max_temp()
+        self.tempMin = self.current_event.min_temp()
+
+        # Set sliders limits to match bounds of the event
+        dec = 1  # number of decimals rounding to... Should match resolution of slider.
+        self.timeSlider.configure(from_=round_decimals_up(self.current_event.t0, decimals=dec))
+        self.timeSlider.configure(to=round_decimals_down(self.current_event.tf, decimals=dec))
+        self.time.set(round_decimals_up(self.current_event.t0, decimals=dec))
+
+        self.x0Slider.configure(from_=round_decimals_up(self.current_event.xmin, decimals=dec))
+        self.x0Slider.configure(to=round_decimals_down(self.current_event.xmax, decimals=dec))
+        self.x0.set(0)
+
+        self.y0Slider.configure(from_=round_decimals_up(self.current_event.ymin, decimals=dec))
+        self.y0Slider.configure(to=round_decimals_down(self.current_event.ymax, decimals=dec))
+        self.y0.set(0)
+
+        self.update_plots()
+
+    # Define the optical glauber selection
+    def new_optical_glauber(self, value=None):
         # Ask user for optical glauber input parameters:
         R = askfloat("Input", "Enter ion radius (R) in fm: ", minvalue=0.0, maxvalue=25)
         b = askfloat("Input", "Enter impact parameter (b) in fm (max 2R): ", minvalue=0.0, maxvalue=2 * R)

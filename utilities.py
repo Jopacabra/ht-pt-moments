@@ -94,61 +94,6 @@ def round_decimals_down(number: float, decimals: int = 1):
 
 
 # Function to create empty results dataframe.
-def resultsFrame():
-    resultsDataframe = pd.DataFrame(
-            {
-                "eventNo": [],
-                "jetNo": [],
-                "jet_pT": [],
-                "q_BBMG": [],
-                "q_BBMG_err": [],
-                "q_drift_plasma": [],
-                "q_drift_plasma_err": [],
-                "q_drift_hrg": [],
-                "q_drift_hrg_err": [],
-                "q_drift_unhydro": [],
-                "q_drift_unhydro_err": [],
-                "k_moment": [],
-                "shower_correction": [],
-                "X0": [],
-                "Y0": [],
-                "theta0": [],
-                "tau_unhydro": [],
-                "tau_hrg": [],
-                "t_total_plasma": [],
-                "t_total_hrg": [],
-                "t_total_unhydro": [],
-                "Tmax_jet": [],
-                "initial_time": [],
-                "final_time": [],
-                "dx": [],
-                "dt": [],
-                "rmax": [],
-                "Tmax_event": [],
-                "b": [],
-                "npart": [],
-                "mult": [],
-                "e2_re": [],
-                "e2_im": [],
-                "phi_2": [],
-                "e3_re": [],
-                "e3_im": [],
-                "phi_3": [],
-                "e4_re": [],
-                "e4_im": [],
-                "phi_4": [],
-                "e5_re": [],
-                "e5_im": [],
-                "phi_5": [],
-                "seed": [],
-                "cmd": [],
-            }
-        )
-
-    return resultsDataframe
-
-
-# Function to create empty results dataframe.
 def resultsFrameOG():
     resultsDataframe = pd.DataFrame(
             {

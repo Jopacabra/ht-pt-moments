@@ -8,7 +8,7 @@ import jets
 import plasma_interaction as pi
 import config
 import utilities
-from utilities import resultsFrame, tempDir
+from utilities import tempDir
 
 
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
@@ -40,17 +40,17 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
 def run_event(eventNo):
 
     # Generate empty results frame
-    results = resultsFrame()
+    results = pd.DataFrame({})
 
     ###############################
     # Generate new event geometry #
     ###############################
 
     # Run event generation using config setttings
-    trentoDataframe, rmax = hic.generate_event(get_rmax=True)
+    event_dataframe, rmax = hic.generate_event(get_rmax=True)
 
     # Record seed selected
-    seed = trentoDataframe.iloc[0]['seed']
+    seed = event_dataframe.iloc[0]['seed']
 
     # Open the hydro file and create file object for manipulation.
     plasmaFilePath = 'viscous_14_moments_evo.dat'
@@ -152,6 +152,7 @@ def run_event(eventNo):
                 unhydro_time_total += config.transport.TIME_STEP
 
         # Calculate energy loss due to gluon exchange with the medium
+        logging.info('Calculating BBMG energy loss...')
         q_bbmg, q_bbmg_err = pi.energy_loss_moment(event=current_event, jet=current_jet,
                                             minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
 
@@ -160,14 +161,14 @@ def run_event(eventNo):
         current_jet.energy = new_e
 
         # Calculate momentPlasma
-        logging.info('Calculating unhydrodynamic moment:')
+        logging.info('Calculating drift moment in \"unhydrodynamic\" phase...')
         q_drift_unhydro, q_drift_unhydro_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
                                                               minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
-        logging.info('Calculating hadron gas moment:')
+        logging.info('Calculating drift moment in \"hadron gas\" phase...')
         q_drift_hrg, q_drift_hrg_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
                                                       minTemp=config.transport.hydro.T_UNHYDRO,
                                                       maxTemp=config.transport.hydro.T_HRG)
-        logging.info('Calculating plasma moment:')
+        logging.info('Calculating drift moment in QGP phase...')
         q_drift_plasma, q_drift_plasma_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
                                                             minTemp=config.transport.hydro.T_HRG)
 
@@ -189,7 +190,7 @@ def run_event(eventNo):
             deflection_angle_unhydro_error = None
 
         # Create momentPlasma results dataframe
-        momentDataframe = pd.DataFrame(
+        jet_dataframe = pd.DataFrame(
             {
                 "eventNo": [eventNo],
                 "jetNo": [jetNo],
@@ -222,10 +223,11 @@ def run_event(eventNo):
             }
         )
 
-        # Merge the trento and momentPlasma dataframes
-        currentResultDataframe = pd.concat([momentDataframe, trentoDataframe], axis=1)
+        # Merge the event and jet dataframe lines
+        current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
-        results = results.append(currentResultDataframe)
+        # Append the total dataframe to the results dataframe
+        results = pd.concat([results, current_result_dataframe], axis=0)
 
         # Declare jet complete
         logging.info('- Jet ' + str(jetNo) + ' Complete -')
@@ -243,7 +245,7 @@ eventNo = 0
 
 # Set up results frame and filename.
 temp_dir = None  # Instantiates object for interrupt before temp_dir created.
-results = resultsFrame()
+results = pd.DataFrame({})
 identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
@@ -283,7 +285,7 @@ try:
         if len(results) > 10000:
             part += 1
             resultsFilename = 'results' + identifierString + 'p' + str(part)
-            results = resultsFrame()
+            results = pd.DataFrame({})
 
         eventNo += 1
 

@@ -143,7 +143,7 @@ def run_event(eventNo):
                     hrg_time_total += config.transport.TIME_STEP
 
             # Check if temp is under unhydrodynamic temp
-            if current_temp < config.transport.hydro.T_UNHYDRO:
+            if current_temp < config.transport.hydro.T_UNHYDRO and current_temp > config.transport.hydro.T_END:
                 # Check if this is the first transition below unhydrodynamic temp
                 if bool(t_unhydro) is False:
                     t_unhydro = t

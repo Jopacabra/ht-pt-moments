@@ -41,11 +41,11 @@ def temp_cut(event, jet, time, minTemp=0, maxTemp = 1000):
 # Define integrand - ONLY CORRECT FOR k=0 !!!!!!!!!!!
 def jet_drift_integrand(event, jet, k=0, minTemp=0, maxTemp=1000):
     FERMItoGeV = (1 / 0.19732687)
-    return lambda t: FERMItoGeV * (1 / jet.energy) *  ((event.i_int_factor(jet=jet, time=t)[0])
-                      * (event.u_perp(jet=jet, time=t) / (1 - event.u_par(jet=jet, time=t)))
-                      * (event.mu(jet=jet, time=t) ** (k + 2))
-                      * event.rho(jet=jet, time=t)
-                      * event.sigma(jet=jet, time=t)) if pos_cut(event=event, jet=jet, time=t) \
+    return lambda t: FERMItoGeV * (1 / jet.p_T) * ((event.i_int_factor(jet=jet, time=t)[0])
+                                                   * (event.u_perp(jet=jet, time=t) / (1 - event.u_par(jet=jet, time=t)))
+                                                   * (event.mu(jet=jet, time=t) ** (k + 2))
+                                                   * event.rho(jet=jet, time=t)
+                                                   * event.sigma(jet=jet, time=t)) if pos_cut(event=event, jet=jet, time=t) \
                                                          and time_cut(event=event, time=t) and \
                                                          temp_cut(event=event, jet=jet, time=t, minTemp=minTemp,
                                                                   maxTemp=maxTemp) else 0
@@ -112,7 +112,7 @@ def energy_loss_integrand(event, jet, minTemp=0, maxTemp=1000):
     FERMItoGeV = (1 / 0.19732687)  # Note that we apply this twice... Once for the t factor, once for the (int dt).
     return lambda t: ( (-1) * FERMItoGeV**2 * t * event.temp_jet(jet=jet, time=t)**3
                       * zeta(q=-1) * (1 / np.sqrt(1 - event.vel(jet=jet, time=t)**2))
-                      * (1 - event.vel(jet=jet, time=t) * np.cos(jet.theta0 - event.vel_angle(jet=jet, time=t)))
+                      * (1 - event.vel(jet=jet, time=t) * np.cos(jet.phi_0 - event.vel_angle(jet=jet, time=t)))
                       ) if pos_cut(event=event, jet=jet, time=t) \
                                                 and time_cut(event=event, time=t) and \
                                                 temp_cut(event=event, jet=jet, time=t, minTemp=minTemp,

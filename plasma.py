@@ -274,13 +274,13 @@ class plasma_event:
 
     # Method to return velocity perpendicular to given jet's trajectory at given time
     def u_perp(self, jet, time):
-        return -self.x_vel(jet.coords3(time=time)) * np.sin(jet.theta0) \
-               + self.y_vel(np.array(jet.coords3(time=time))) * np.cos(jet.theta0)
+        return -self.x_vel(jet.coords3(time=time)) * np.sin(jet.phi_0) \
+               + self.y_vel(np.array(jet.coords3(time=time))) * np.cos(jet.phi_0)
 
     # Method to return velocity parallel to given jet's trajectory at given time
     def u_par(self, jet, time):
-        return self.x_vel(jet.coords3(time=time)) * np.cos(jet.theta0) \
-               + self.y_vel(np.array(jet.coords3(time=time))) * np.sin(jet.theta0)
+        return self.x_vel(jet.coords3(time=time)) * np.cos(jet.phi_0) \
+               + self.y_vel(np.array(jet.coords3(time=time))) * np.sin(jet.phi_0)
 
     # Method to return density at a particular point
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
@@ -331,9 +331,9 @@ class plasma_event:
         # In jet mode, return the I(k) at the jet's position at given time
         elif not jet is None and point is None:
             current_point = jet.coords3(time=time)
-            jetEnergy = jet.energy
+            jetEnergy = jet.p_T
         else:
-            jetEnergy = jet.energy
+            jetEnergy = jet.p_T
             current_point = point
             print("Ill-defined I(k) call")
 

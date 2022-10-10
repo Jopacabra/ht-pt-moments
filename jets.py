@@ -3,7 +3,6 @@ import logging
 import hic
 import plasma_interaction as pi
 
-
 # Jet object class. Useful for plotting and simplifying everything.
 # Note jet energy (energy) in GeV
 # Note jet velocity (v0) in fraction of speed of light
@@ -13,121 +12,42 @@ import plasma_interaction
 
 class jet:
     # Instantiation statement. All parameters optional.
-    def __init__(self, x0=None, y0=None, theta0=0, v0=1, t0=None, event=None, energy=100):
+    def __init__(self, x_0=0, y_0=0, phi_0=0, v_0=1, p_T0=100):
         logging.info('Creating new jet...')
 
-        # Set default values
-        default_t0 = 0.48125  # Set default initial time for jet parametrization
-        point = [0, 0]  # Set default jet production point
-
         # Initialize basic parameters
-        self.theta0 = theta0
-        self.v0 = v0
-        self.energy0 = energy
-        self.energy = energy
+        self.phi_0 = phi_0
+        self.v_0 = v_0
+        self.p_T0 = p_T0
+        self.x_0 = x_0
+        self.y_0 = y_0
+        self.m = 0  # Jet is massless quark for now
+
+        # Muck about with your coordinates
+        self.p_x = self.p_T0 * np.cos(self.phi_0)
+        self.p_y = self.p_T0 * np.sin(self.phi_0)
 
         # Initialize shower correction, then sample shower correction distribution to determine post-shower direction
         self.shower_correction = 0
         self.shower_sample()
 
-        # If an event was provided for jet instantiation and either initial position was not defined,
-        # try to sample the event for jet production. If this fails, set it to the default.
-        # If nothing was provided to "event", just set to whatever x0 and y0 are (probably default)
-        if not event is None and (x0 is None or y0 is None):
-            try:
-                samPoint = hic.generate_jet_point(event)
-                self.x0, self.y0 = samPoint[0], samPoint[1]
-            except AttributeError:
-                logging.warning("Jet event object not sample-able. Using default jet production point: " + str(point))
-        elif event is None and (x0 is None or y0 is None):
-            self.x0 = point[0]
-            self.y0 = point[1]
-        else:
-            logging.info("Jet production point: {}, {}".format(x0, y0))
-            self.x0 = x0
-            self.y0 = y0
-
-
-        # If an event was provided for jet instantiation, try to set jet t0 to event t0.
-        # If this fails, set it to the default.
-        # If nothing was provided to "event", just set to whatever t0 is (probably default)
-        if event is None and t0 is None:
-            self.t0 = default_t0
-        elif not t0 is None:
-            self.t0 = t0
-        elif not event is None:
-            try:
-                self.t0 = event.t0
-                self.tf = event.tf
-            except (AttributeError, TypeError):
-                self.t0 = default_t0
-                logging.warning("Event object has no t0 and / or tf. Read failed. Jet t0 set to default, no tf.")
-
-    # Method to obtain the current coordinates of the jet
-    def xpos(self, time=None):
-        if time is None:
-            xpos = self.x0
-        else:
-            xpos = self.x0 + (self.v0 * np.cos(self.theta0) * (time - self.t0))
-        return xpos
-
-    # Method to obtain the current coordinates of the jet
-    def ypos(self, time=None):
-        if time is None:
-            ypos = self.y0
-        else:
-            ypos = self.y0 + (self.v0 * np.sin(self.theta0) * (time - self.t0))
-        return ypos
+        # Set current position and momentum values
+        self.x = self.x_0
+        self.y = self.y_0
 
     # Method to obtain the current 2D coordinates of the jet
-    def coords(self, time=None):
-        if time is None:
-            xpos = self.x0
-            ypos = self.y0
-        else:
-            xpos = self.xpos(time)
-            ypos = self.ypos(time)
-        return np.array([xpos, ypos])
+    def coords(self):
+        return np.array([self.x, self.y])
 
     # Method to obtain the current (2+1) coordinates of the jet
     def coords3(self, time=None):
-        xpos = self.xpos(time)
-        ypos = self.ypos(time)
-        return np.array([time, xpos, ypos])
+        return np.array([time, self.x, self.y])
 
-    # Method to obtain the current velocity of the jet
-    # As of now, the velocity is always zero.
-    def vel(self):
-        return self.v0
-
-    # Method to obtain the temperature in the given event at the jet's coordinates at given time.
-    # As of now, the velocity is always zero.
-    def temp(self, event, time=None):
-        temperature = None
-        if time is None:
-            time = event.t0
-        else:
-            pass
-
-        if pi.pos_cut(event=event, jet=self, time=time) and pi.pos_cut(event=event, jet=self, time=time):
-            temperature = float(event.temp(self.coords3(time=time)))
-
-        return temperature
-
-    # Method to find the maximum time seen by the jet in the known background
-    def max_temp(self, event):
-
-        tempArray = np.array([])
-
-        for t in np.arange(event.t0, event.tf, event.timestep):
-            try:
-                temperature = float(self.temp(event=event, time=t))
-            except TypeError:
-                temperature = 0
-            tempArray = np.append(tempArray, temperature)
-
-        maxTemp = np.amax(tempArray)
-        return maxTemp
+    # Method to obtain the current polar coordinates of the jet
+    def polar_coords(self):
+        phi = np.mod(np.arctan2(self.p_x, self.p_y), 2 * np.pi)
+        rho = np.sqrt(self.x ** 2 + self.y ** 2)
+        return np.array([rho, phi])
 
     # Method to sample a shower distribution and return a shower correction angle
     # As of now, this just returns zero
@@ -135,5 +55,49 @@ class jet:
         logging.info('Sampling shower correction distribution...')
         logging.debug('No shower correction for now!')
         self.shower_correction = 0
+
+    # Method to add a given momentum in xy coordinates to the jet
+    def add_q(self, dp_x=0, dp_y=0):
+        self.p_x = self.p_x + dp_x
+        self.p_y = self.p_y + dp_y
+
+    # Method to add given relative perpendicular momentum to the jet
+    def add_q_perp(self, q_perp):
+        angle = self.polar_coords()[1] + np.pi / 2
+        dp_x = q_perp * np.cos(angle)
+        dp_y = q_perp * np.sin(angle)
+        self.add_q(dp_x=dp_x, dp_y=dp_y)
+
+    # Method to add given relative parallel momentum to the jet
+    def add_q_par(self, q_par):
+        angle = self.polar_coords()[1]
+        dp_x = q_par * np.cos(angle)
+        dp_y = q_par * np.sin(angle)
+        self.add_q(dp_x=dp_x, dp_y=dp_y)
+
+    # Method to propagate the jet for time tau
+    def prop(self, tau=0):
+        rho, phi = self.polar_coords()
+        self.x = self.x + self.v_0 * np.cos(phi) * tau
+        self.y = self.y + self.v_0 * np.sin(phi) * tau
+
+    # Method to obtain the coordinates of the jet in tau amount of time
+    def coords_in(self, tau=0):
+        rho, phi = self.polar_coords()
+        new_x = self.x + self.v_0 * np.cos(phi) * tau
+        new_y = self.y + self.v_0 * np.sin(phi) * tau
+        return np.array([new_x, new_y])
+
+    # Method to obtain the coordinates of the jet in tau amount of time
+    # given the current trajectory
+    def coords3_in(self, tau=0, time=0):
+        rho, phi = self.polar_coords()
+        new_x = self.x + self.v_0 * np.cos(phi) * tau
+        new_y = self.y + self.v_0 * np.sin(phi) * tau
+        return np.array([time, new_x, new_y])
+
+    # Method to obtain jet p_T
+    def p_T(self):
+        return np.sqrt(self.p_x**2 + self.p_y**2)
 
 

@@ -62,11 +62,8 @@ class jet:
     JET_ENERGY = int(cfg['jet']['JET_ENERGY'])
     E_FLUCT = bool(cfg['jet']['E_FLUCT'])
     MIN_JET_ENERGY = float(cfg['jet']['MIN_JET_ENERGY'])
+    TAU = float(cfg['jet']['TAU'])
 
-
-# Moment calculation configuration
-class moment:
-    K = int(cfg['moment']['MOMENT_K'])
 
 
 # Global constants

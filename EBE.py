@@ -54,11 +54,11 @@ def run_event(eventNo):
 
     # Open the hydro file and create file object for manipulation.
     plasmaFilePath = 'viscous_14_moments_evo.dat'
-    current_file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(seed))
+    file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(seed))
 
     # Create event object
     # This asks the hydro file object to interpolate the relevant functions and pass them on to the plasma object.
-    current_event = plasma.plasma_event(event=current_file)
+    event = plasma.plasma_event(event=file)
 
     ################
     # Jet Analysis #
@@ -75,18 +75,13 @@ def run_event(eventNo):
             x0 = 0
             y0 = 0
         else:
-            newPoint = hic.generate_jet_point(current_event)
+            newPoint = hic.generate_jet_point(event)
             x0, y0 = newPoint[0], newPoint[1]
 
         # Select jet production angle
-        theta0 = np.random.uniform(0, 2 * np.pi)
+        phi_0 = np.random.uniform(0, 2 * np.pi)
 
-        # Generate jet object
-        # Includes shower sampling
-        # if config.jet.E_FLUCT:
-        #     chosen_e = utilities.jet_e_sample(maxAttempts=5, batch=1000, min_e=config.jet.MIN_JET_ENERGY, max_e=100)
-        # else:
-        #     chosen_e = config.jet.JET_ENERGY
+        # Select jet energy
         if config.jet.E_FLUCT:
             rng = np.random.default_rng()
             while True:
@@ -96,128 +91,157 @@ def run_event(eventNo):
         else:
             chosen_e = config.jet.JET_ENERGY
 
-        current_jet = jets.jet(x0=x0, y0=y0,
-                               theta0=theta0, event=current_event, energy=chosen_e)
+        # Create the jet object
+        jet = jets.jet(x_0=x0, y_0=y0,
+                               phi_0=phi_0, p_T0=chosen_e)
 
-        ################################################
-        # Find phase change times along jet trajectory #
-        ################################################
-        logging.info('Calculating phase change times...')
 
-        # Initialize transition time flags
-        t_hrg = False
-        t_unhydro = False
+        #############
+        # Time Loop #
+        #############
+        # Set loop parameters
+        tau = 0.1  # dt for time loop in fm
+        t = event.t0  # Set current time in fm to initial time
 
-        # Initialize counters for total time spent in each phase
-        plasma_time_total = 0
+        # Initialize counters & values
+        t_qgp = None
+        t_hrg = None
+        t_unhydro = None
+        qgp_time_total = 0
         hrg_time_total = 0
         unhydro_time_total = 0
+        maxT = 0
+        q_bbmg_total = 0
+        q_drift_total = 0
 
-        # Iterate over jet trajectory and find phase transition times and time spent in each phase
-        # Note that we work with the precision of the timestep. While this isn't strictly necessary,
-        # this is the maximum time precision that can be physically meaningful.
-        for t in np.arange(start=current_event.t0, stop=current_event.tf, step=config.transport.TIME_STEP):
+        # Initialize flags
+        first = True
+        qgp_first = True
+        hrg_first = True
+        unhydro_first = True
+        phase = None
 
-            # If the jet is still in the event geometry, check the temperature at its position.
-            # If it isn't, this position would make an out-of-bounds call to the interpolation function
-            if pi.pos_cut(event=current_event, jet=current_jet, time=t) and pi.time_cut(event=current_event, time=t):
-                current_temp = current_jet.temp(current_event, time=t)
-            else:
-                # Quit the loop - jet can't re-enter the geometry.
+        # Initiate loop
+        while True:
+            #####################
+            # Initial Step Only #
+            #####################
+            if first:
+                # Good luck!
+                first = False
+
+            #########################
+            # Set Current Step Data #
+            #########################
+            # Decide if we're in bounds of the grid
+            if jet.x > event.xmax or jet.y > event.ymax:
+                break
+            elif jet.x < event.xmin or jet.y < event.ymin:
+                break
+            elif t > event.tf:
                 break
 
-            # Add to the total plasma jet travel time
-            if current_temp > config.transport.hydro.T_HRG:
-                plasma_time_total += config.transport.TIME_STEP
+            # For timekeeping in phases, we approximate all time in one step as in one phase
+            temp = event.temp(jet.coords3(time=t))
 
-            # Check if temp is under hadronization temp
-            if current_temp < config.transport.hydro.T_HRG and current_temp > config.transport.hydro.T_UNHYDRO:
-                # Check if this is the first transition below hadron gas temp
-                if bool(t_hrg) is False:
-                    # Record time as transition time for hadron gas
+            # Decide phase
+            if temp > config.transport.hydro.T_HRG:
+                phase = 'qgp'
+            elif temp < config.transport.hydro.T_HRG and temp > config.transport.hydro.T_UNHYDRO:
+                phase = 'hrg'
+            elif temp < config.transport.hydro.T_UNHYDRO:
+                phase = 'unh'
+
+            ############################
+            # Perform jet calculations #
+            ############################
+
+            if phase == 'qgp':
+                # Calculate energy loss due to gluon exchange with the medium
+                q_bbmg = tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
+
+                # Calculate jet drift momentum transferred to jet
+                q_drift = tau * pi.jet_drift_integrand(event=event, jet=jet, time=t)
+            else:
+                q_bbmg = 0
+                q_drift = 0
+
+            ###################
+            # Data Accounting #
+            ###################
+            # Log momentum transfers
+            q_bbmg_total += q_bbmg
+            q_drift_total += q_drift
+
+            # Check for max temperature
+            if temp > maxT:
+                maxT = temp
+
+            # Decide phase for categorization & timekeeping
+            if phase == 'qgp':
+                if qgp_first:
+                    t_qgp = t
+                    qgp_first = False
+
+                qgp_time_total += tau
+
+            # Decide phase for categorization & timekeeping
+            if phase == 'hrg':
+                if hrg_first:
                     t_hrg = t
+                    hrg_first = False
 
-                # Record one additional timestep spent in the hadron gas
-                hrg_time_total += config.transport.TIME_STEP
+                hrg_time_total += tau
 
-            # Check if temp is under unhydrodynamic temp
-            if current_temp < config.transport.hydro.T_UNHYDRO and current_temp > config.transport.hydro.T_END:
-                # Check if this is the first transition below unhydrodynamic temp
-                if bool(t_unhydro) is False:
+            if phase == 'unh':
+                if unhydro_first:
                     t_unhydro = t
+                    unhydro_first = False
 
-                # Record one additional timestep spent in unhydrodynamic data
-                unhydro_time_total += config.transport.TIME_STEP
+                unhydro_time_total += tau
 
-        # Calculate energy loss due to gluon exchange with the medium
-        logging.info('Calculating BBMG energy loss...')
-        q_bbmg, q_bbmg_err = pi.energy_loss_moment(event=current_event, jet=current_jet,
-                                            minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
+            #########################
+            # Change Jet Parameters #
+            #########################
+            # Propagate jet position
 
-        # Change jet energy to reflect lost energy
-        new_e = chosen_e + q_bbmg
-        current_jet.energy = new_e
 
-        # Calculate momentPlasma
-        logging.info('Calculating drift moment in \"unhydrodynamic\" phase...')
-        q_drift_unhydro, q_drift_unhydro_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
-                                                              minTemp=0, maxTemp=config.transport.hydro.T_UNHYDRO)
-        logging.info('Calculating drift moment in \"hadron gas\" phase...')
-        q_drift_hrg, q_drift_hrg_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
-                                                      minTemp=config.transport.hydro.T_UNHYDRO,
-                                                      maxTemp=config.transport.hydro.T_HRG)
-        logging.info('Calculating drift moment in QGP phase...')
-        q_drift_plasma, q_drift_plasma_err = pi.jet_drift_moment(event=current_event, jet=current_jet, k=config.moment.K,
-                                                            minTemp=config.transport.hydro.T_HRG)
+            # Change jet momentum to reflect BBMG energy loss
 
-        # Calculate deflection angle
-        # Basic trig with k=0.
-        if config.moment.K == 0:
-            deflection_angle_plasma = np.arctan((q_drift_plasma / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_plasma_error = np.arctan((q_drift_plasma_err / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_hrg = np.arctan((q_drift_hrg / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_hrg_error = np.arctan((q_drift_hrg_err / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_unhydro = np.arctan((q_drift_unhydro / current_jet.energy)) * (180 / np.pi)
-            deflection_angle_unhydro_error = np.arctan((q_drift_unhydro_err / current_jet.energy)) * (180 / np.pi)
-        else:
-            deflection_angle_plasma = None
-            deflection_angle_plasma_error = None
-            deflection_angle_hrg = None
-            deflection_angle_hrg_error = None
-            deflection_angle_unhydro = None
-            deflection_angle_unhydro_error = None
+
+            # Change jet momentum to reflect drift effects
+
+
+            ###############
+            # Timekeeping #
+            ###############
+            t += tau
 
         # Create momentPlasma results dataframe
         jet_dataframe = pd.DataFrame(
             {
                 "eventNo": [eventNo],
                 "jetNo": [jetNo],
-                "jet_pT": [current_jet.energy0],
-                "q_BBMG": [q_bbmg],
-                "q_BBMG_err": [q_bbmg_err],
-                "q_drift_plasma": [q_drift_plasma],
-                "q_drift_plasma_err": [q_drift_plasma_err],
-                "q_drift_hrg": [q_drift_hrg],
-                "q_drift_hrg_err": [q_drift_hrg_err],
-                "q_drift_unhydro": [q_drift_unhydro],
-                "q_drift_unhydro_err": [q_drift_unhydro_err],
-                "k_moment": [config.moment.K],
-                "shower_correction": [current_jet.shower_correction],
+                "jet_pT": [jet.p_T0],
+                "q_BBMG": [q_bbmg_total],
+                "q_drift_plasma": [q_drift_total],
+                "shower_correction": [jet.shower_correction],
                 "X0": [x0],
                 "Y0": [y0],
-                "phi_0": [theta0],
-                "t_unhydro": [t_unhydro],
+                "phi_0": [phi_0],
+                "t_qgp": [t_qgp],
                 "t_hrg": [t_hrg],
-                "time_total_plasma": [plasma_time_total],
+                "t_unhydro": [t_unhydro],
+                "time_total_plasma": [qgp_time_total],
                 "time_total_hrg": [hrg_time_total],
                 "time_total_unhydro": [unhydro_time_total],
-                "Tmax_jet": [current_jet.max_temp(event=current_event)],
-                "initial_time": [current_event.t0],
-                "final_time": [current_event.tf],
+                "Tmax_jet": [maxT],
+                "initial_time": [event.t0],
+                "final_time": [event.tf],
                 "dx": [config.transport.GRID_STEP],
                 "dt": [config.transport.TIME_STEP],
                 "rmax": [rmax],
-                "Tmax_event": [current_event.max_temp()],
+                "Tmax_event": [event.max_temp()],
             }
         )
 

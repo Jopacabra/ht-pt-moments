@@ -243,25 +243,13 @@ class plasma_event:
     def tspace(self, resolution=100):
         return np.arange(start=self.t0, stop=self.tf, step=((self.tf - self.t0) / resolution))
 
-    # For multi-modal property calls. Determines what point to evaluate at.
-    def decide(self, point, jet, time):
-        if point is None:
-            current_point = jet.coords3(time)
-        elif jet is None and time is None:
-            current_point = point
-        else:
-            current_point = [0, 0, 0]
-
-        return current_point
-
     # Method to return the total magnitude of the velocity at a given point
-    def vel(self, point=None, jet=None, time=None):
-        current_point = self.decide(point, jet, time)
-        return np.sqrt(self.x_vel(current_point) ** 2 + self.y_vel(current_point) ** 2)
+    def vel(self, point=None):
+        return np.sqrt(self.x_vel(point) ** 2 + self.y_vel(point) ** 2)
 
     # Method to return angle of velocity vector at a given point
-    def vel_angle(self, point=None, jet=None, time=None):
-        current_point = self.decide(point, jet, time)
+    def vel_angle(self, point=None):
+        current_point = point
 
         # np.arctan2 gives a signed angle, as opposed to np.arctan
         arctan2 = np.arctan2(self.y_vel(current_point), self.x_vel(current_point))
@@ -273,69 +261,45 @@ class plasma_event:
             return arctan2
 
     # Method to return velocity perpendicular to given jet's trajectory at given time
-    def u_perp(self, jet, time):
-        return -self.x_vel(jet.coords3(time=time)) * np.sin(jet.phi_0) \
-               + self.y_vel(np.array(jet.coords3(time=time))) * np.cos(jet.phi_0)
+    def u_perp(self, point, phi):
+        return -self.x_vel(point) * np.sin(phi) \
+               + self.y_vel(np.array(point)) * np.cos(phi)
 
     # Method to return velocity parallel to given jet's trajectory at given time
-    def u_par(self, jet, time):
-        return self.x_vel(jet.coords3(time=time)) * np.cos(jet.phi_0) \
-               + self.y_vel(np.array(jet.coords3(time=time))) * np.sin(jet.phi_0)
+    def u_par(self, point, phi):
+        return self.x_vel(point) * np.cos(phi) \
+               + self.y_vel(np.array(point)) * np.sin(phi)
 
     # Method to return density at a particular point
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
-    def rho(self, point=None, jet=None, time=None):
-        current_point = self.decide(point, jet, time)
-
-        density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * self.temp(current_point) ** 3
-
+    def rho(self, point):
+        density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * self.temp(point) ** 3
         return density
 
     # Method to return DeBye mass at a particular point
     # Chosen to be simple approximation. Ref - ???
-    def mu(self, point=None, jet=None, time=None):
-        current_point = self.decide(point, jet, time)
-
-        debye_mass = config.constants.G * self.temp(current_point)
-
-        return debye_mass
-
-    # Method to return temperature from jet object and time
-    def temp_jet(self, point=None, jet=None, time=None):
-        current_point = self.decide(point, jet, time)
-
-        debye_mass = self.temp(current_point)
-
+    def mu(self, point):
+        debye_mass = config.constants.G * self.temp(point)
         return debye_mass
 
     # Method to return total cross section at a particular point
     # Total GW cross section, as per Sievert, Yoon, et. al.
-    def sigma(self, point=None, jet=None, time=None):
+    def sigma(self, point):
         """
         In the future, we can put in an if statement that determines if we're in a plasma state or hadron gas state.
         We can then return the appropriate cross section. This would require that this plasma object one day becomes
         simply an event object. This might make the object too heavy weight, but it would give us some very interesting
         powers.
         """
-        current_point = self.decide(point, jet, time)
+        current_point = point
 
         cross_section = np.pi * config.constants.G ** 4 / (self.mu(point=current_point) ** 2)
 
         return cross_section
 
-    def i_int_factor(self, point=None, jet=None, time=None, k=0, jetE=100):
-        # In point mode, give the I(k) at the given point
-        if jet is None and not point is None:
-            current_point = point
-            jetEnergy = jetE
-        # In jet mode, return the I(k) at the jet's position at given time
-        elif not jet is None and point is None:
-            current_point = jet.coords3(time=time)
-            jetEnergy = jet.p_T
-        else:
-            jetEnergy = jet.p_T
-            current_point = point
-            print("Ill-defined I(k) call")
+    def i_int_factor(self, point, k=0, jet_pT=10):
+        current_point = point
+        jetEnergy = jet_pT
 
         if k == 0:
             Ik = 3 * np.log(jetEnergy / self.mu(point=current_point))  # No idea what the error should be here

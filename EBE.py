@@ -102,7 +102,7 @@ def run_event(eventNo):
         # Time Loop #
         #############
         # Set loop parameters
-        tau = 0.1  # dt for time loop in fm
+        tau = config.jet.TAU  # dt for time loop in fm
         t = event.t0  # Set current time in fm to initial time
 
         # Initialize counters & values
@@ -152,7 +152,7 @@ def run_event(eventNo):
                 phase = 'qgp'
             elif temp < config.transport.hydro.T_HRG and temp > config.transport.hydro.T_UNHYDRO:
                 phase = 'hrg'
-            elif temp < config.transport.hydro.T_UNHYDRO:
+            elif temp < config.transport.hydro.T_UNHYDRO and temp > config.transport.hydro.T_END:
                 phase = 'unh'
 
             ############################
@@ -207,13 +207,13 @@ def run_event(eventNo):
             # Change Jet Parameters #
             #########################
             # Propagate jet position
-
+            jet.prop(tau=tau)
 
             # Change jet momentum to reflect BBMG energy loss
-
+            jet.add_q_par(q_par=q_bbmg)
 
             # Change jet momentum to reflect drift effects
-
+            jet.add_q_perp(q_perp=q_drift)
 
             ###############
             # Timekeeping #
@@ -228,7 +228,7 @@ def run_event(eventNo):
                 "jetNo": [jetNo],
                 "jet_pT": [jet.p_T0],
                 "q_BBMG": [q_bbmg_total],
-                "q_drift_plasma": [q_drift_total],
+                "q_drift": [q_drift_total],
                 "shower_correction": [jet.shower_correction],
                 "X0": [x0],
                 "Y0": [y0],
@@ -244,6 +244,7 @@ def run_event(eventNo):
                 "final_time": [event.tf],
                 "dx": [config.transport.GRID_STEP],
                 "dt": [config.transport.TIME_STEP],
+                "tau": [config.jet.TAU],
                 "rmax": [rmax],
                 "Tmax_event": [event.max_temp()],
             }

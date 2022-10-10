@@ -205,7 +205,7 @@ def run_event(eventNo):
                 "shower_correction": [current_jet.shower_correction],
                 "X0": [x0],
                 "Y0": [y0],
-                "theta0": [theta0],
+                "phi_0": [theta0],
                 "t_unhydro": [t_unhydro],
                 "t_hrg": [t_hrg],
                 "time_total_plasma": [plasma_time_total],

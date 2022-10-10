@@ -13,7 +13,7 @@ def jet_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_rho, jet_phi = jet.polar_coords()
     FERMItoGeV = (1 / 0.19732687)
-    return FERMItoGeV * (1 / jet.p_T) * ((event.i_int_factor(point=jet_point, jet_pT=jet.p_T()))
+    return FERMItoGeV * (1 / jet.p_T()) * ((event.i_int_factor(point=jet_point, jet_pT=jet.p_T()))
                                                    * (event.u_perp(point=jet_point, phi=jet_phi) /
                                                       (1 - event.u_par(point=jet_point, phi=jet_phi)))
                                                    * (event.mu(point=jet_point)**2)

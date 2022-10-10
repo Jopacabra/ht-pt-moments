@@ -46,6 +46,8 @@ def run_event(eventNo):
     # Generate new event geometry #
     ###############################
 
+    logging.info('Generating new event...')
+
     # Run event generation using config setttings
     event_dataframe, rmax = hic.generate_event(get_rmax=True)
 
@@ -122,6 +124,7 @@ def run_event(eventNo):
         phase = None
 
         # Initiate loop
+        logging.info('Initiating time loop...')
         while True:
             #####################
             # Initial Step Only #
@@ -217,6 +220,7 @@ def run_event(eventNo):
             ###############
             t += tau
 
+        logging.info('Time loop complete...')
         # Create momentPlasma results dataframe
         jet_dataframe = pd.DataFrame(
             {

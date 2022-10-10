@@ -361,7 +361,6 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=config.transport.GRID_STEP,
                    time_step=config.transport.TIME_STEP, tau_fs=config.transport.hydro.TAU_FS,
                    t_end=config.transport.hydro.T_END, seed=None, get_rmax=False):
-    logging.info('Generating new event.')
 
     # the "target" grid max: the grid shall be at least as large as the target
     # By defualt grid_max_target = config.transport.GRID_MAX_TARGET

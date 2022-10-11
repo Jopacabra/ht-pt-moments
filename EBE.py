@@ -160,10 +160,10 @@ def run_event(eventNo):
 
             if phase == 'qgp':
                 # Calculate energy loss due to gluon exchange with the medium
-                q_bbmg = tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
+                q_bbmg = float(tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau))
 
                 # Calculate jet drift momentum transferred to jet
-                q_drift = tau * pi.jet_drift_integrand(event=event, jet=jet, time=t)
+                q_drift = float(tau * pi.jet_drift_integrand(event=event, jet=jet, time=t))
             else:
                 q_bbmg = 0
                 q_drift = 0
@@ -233,8 +233,8 @@ def run_event(eventNo):
                 "jetNo": [jetNo],
                 "jet_pT": [jet.p_T0],
                 "jet_pT_f": [pT_final],
-                "q_BBMG": [q_bbmg_total],
-                "q_drift": [q_drift_total],
+                "q_BBMG": [float(q_bbmg_total)],
+                "q_drift": [float(q_drift_total)],
                 "shower_correction": [jet.shower_correction],
                 "X0": [x0],
                 "Y0": [y0],

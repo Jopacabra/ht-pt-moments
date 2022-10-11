@@ -220,18 +220,26 @@ def run_event(eventNo):
             t += tau
 
         logging.info('Time loop complete...')
+
+        # Get final jet parameters
+        rho_final, phi_final = jet.polar_coords()
+        pT_final = jet.p_T()
+
+
         # Create momentPlasma results dataframe
         jet_dataframe = pd.DataFrame(
             {
                 "eventNo": [eventNo],
                 "jetNo": [jetNo],
                 "jet_pT": [jet.p_T0],
+                "jet_pT_f": [pT_final],
                 "q_BBMG": [q_bbmg_total],
                 "q_drift": [q_drift_total],
                 "shower_correction": [jet.shower_correction],
                 "X0": [x0],
                 "Y0": [y0],
                 "phi_0": [phi_0],
+                "phi_f": [phi_final],
                 "t_qgp": [t_qgp],
                 "t_hrg": [t_hrg],
                 "t_unhydro": [t_unhydro],

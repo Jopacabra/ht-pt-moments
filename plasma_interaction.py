@@ -58,10 +58,11 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 # Integrand for parameterized energy loss over coupling
 def energy_loss_integrand(event, jet, time, tau):
     jet_point = jet.coords3(time=time)
+    jet_phi = jet.polar_coords()[1]
     FERMItoGeV = (1 / 0.19732687)  # Note that we apply this twice... Once for the t factor, once for the (int dt).
     return ( (-1) * FERMItoGeV**2 * tau * event.temp(jet_point)**3
                       * zeta(q=-1) * (1 / np.sqrt(1 - event.vel(point=jet_point)**2))
-                      * (1 - event.vel(point=jet_point) * np.cos(jet.polar_coords()[1]
+                      * (1 - event.vel(point=jet_point) * np.cos(jet_phi
                                                                  - event.vel_angle(point=jet_point))))
 
 

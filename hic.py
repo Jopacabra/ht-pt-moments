@@ -425,13 +425,11 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
                              coarseHydroDict['x'][:, 1:3] ** 2
                      ).sum(axis=1).max())
     logging.info('rmax = %.3f fm', rmax)
-    logging.info('rmax = {} fm'.format(rmax))
 
     # Determine maximum number of timesteps needed
     # This is the time it takes for a jet to travel across the plasma on its longest path at the speed of light
     maxTime = 2*rmax  # in fm --- equal to length to traverse in fm for c = 1 - 2x largest width of plasma
     logging.info('maxTime = %.3f fm', maxTime)
-    logging.info('maxTime = {} fm'.format(maxTime))
 
     # Fine run
     logging.info('Running fine hydro...')

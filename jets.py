@@ -45,7 +45,7 @@ class jet:
 
     # Method to obtain the current polar coordinates of the jet
     def polar_coords(self):
-        phi = np.mod(np.arctan2(self.p_x, self.p_y), 2 * np.pi)
+        phi = np.mod(np.arctan2(self.p_y, self.p_x), 2 * np.pi)
         rho = np.sqrt(self.x ** 2 + self.y ** 2)
         return np.array([rho, phi])
 
@@ -58,12 +58,12 @@ class jet:
 
     # Method to add a given momentum in xy coordinates to the jet
     def add_q(self, dp_x=0, dp_y=0):
-        self.p_x = self.p_x + dp_x
-        self.p_y = self.p_y + dp_y
+        self.p_x = float(self.p_x + dp_x)
+        self.p_y = float(self.p_y + dp_y)
 
     # Method to add given relative perpendicular momentum to the jet
     def add_q_perp(self, q_perp):
-        angle = self.polar_coords()[1] + np.pi / 2
+        angle = self.polar_coords()[1] + (np.pi / 2)
         dp_x = q_perp * np.cos(angle)
         dp_y = q_perp * np.sin(angle)
         self.add_q(dp_x=dp_x, dp_y=dp_y)
@@ -78,8 +78,8 @@ class jet:
     # Method to propagate the jet for time tau
     def prop(self, tau=0):
         rho, phi = self.polar_coords()
-        self.x = self.x + self.v_0 * np.cos(phi) * tau
-        self.y = self.y + self.v_0 * np.sin(phi) * tau
+        self.x = float(self.x + self.v_0 * np.cos(phi) * tau)
+        self.y = float(self.y + self.v_0 * np.sin(phi) * tau)
 
     # Method to obtain the coordinates of the jet in tau amount of time
     def coords_in(self, tau=0):

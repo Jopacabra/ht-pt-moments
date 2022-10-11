@@ -94,8 +94,7 @@ def run_event(eventNo):
             chosen_e = config.jet.JET_ENERGY
 
         # Create the jet object
-        jet = jets.jet(x_0=x0, y_0=y0,
-                               phi_0=phi_0, p_T0=chosen_e)
+        jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e)
 
 
         #############

@@ -67,7 +67,8 @@ def run_event(eventNo):
     ################
     # Oversample the background with jets
     for jetNo in range(0, config.EBE.NUM_SAMPLES):
-
+        # Create unique jet tag
+        jet_tag = str(int(np.random.uniform(0, 1000000000000)))
         ##################
         # Create new jet #
         ##################
@@ -93,175 +94,189 @@ def run_event(eventNo):
         else:
             chosen_e = config.jet.JET_ENERGY
 
-        # Create the jet object
-        jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e)
+        for case in ['db', 'd', 'b']:
+            logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
+            # Create the jet object
+            jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e)
 
 
-        #############
-        # Time Loop #
-        #############
-        # Set loop parameters
-        tau = config.jet.TAU  # dt for time loop in fm
-        t = event.t0  # Set current time in fm to initial time
+            #############
+            # Time Loop #
+            #############
+            # Set loop parameters
+            tau = config.jet.TAU  # dt for time loop in fm
+            t = event.t0  # Set current time in fm to initial time
 
-        # Initialize counters & values
-        t_qgp = None
-        t_hrg = None
-        t_unhydro = None
-        qgp_time_total = 0
-        hrg_time_total = 0
-        unhydro_time_total = 0
-        maxT = 0
-        q_bbmg_total = 0
-        q_drift_total = 0
+            # Initialize counters & values
+            t_qgp = None
+            t_hrg = None
+            t_unhydro = None
+            qgp_time_total = 0
+            hrg_time_total = 0
+            unhydro_time_total = 0
+            maxT = 0
+            q_bbmg_total = 0
+            q_drift_total = 0
 
-        # Initialize flags
-        first = True
-        qgp_first = True
-        hrg_first = True
-        unhydro_first = True
-        phase = None
+            # Initialize flags
+            first = True
+            qgp_first = True
+            hrg_first = True
+            unhydro_first = True
+            phase = None
 
-        # Initiate loop
-        logging.info('Initiating time loop...')
-        while True:
-            #####################
-            # Initial Step Only #
-            #####################
-            if first:
-                # Good luck!
-                first = False
+            # Initiate loop
+            logging.info('Initiating time loop...')
+            while True:
+                #####################
+                # Initial Step Only #
+                #####################
+                if first:
+                    # Good luck!
+                    first = False
 
-            #########################
-            # Set Current Step Data #
-            #########################
-            # Decide if we're in bounds of the grid
-            if jet.x > event.xmax or jet.y > event.ymax:
-                break
-            elif jet.x < event.xmin or jet.y < event.ymin:
-                break
-            elif t > event.tf:
-                break
+                #########################
+                # Set Current Step Data #
+                #########################
+                # Decide if we're in bounds of the grid
+                if jet.x > event.xmax or jet.y > event.ymax:
+                    break
+                elif jet.x < event.xmin or jet.y < event.ymin:
+                    break
+                elif t > event.tf:
+                    break
 
-            # For timekeeping in phases, we approximate all time in one step as in one phase
-            temp = event.temp(jet.coords3(time=t))
+                # For timekeeping in phases, we approximate all time in one step as in one phase
+                temp = event.temp(jet.coords3(time=t))
 
-            # Decide phase
-            if temp > config.transport.hydro.T_HRG:
-                phase = 'qgp'
-            elif temp < config.transport.hydro.T_HRG and temp > config.transport.hydro.T_UNHYDRO:
-                phase = 'hrg'
-            elif temp < config.transport.hydro.T_UNHYDRO and temp > config.transport.hydro.T_END:
-                phase = 'unh'
+                # Decide phase
+                if temp > config.transport.hydro.T_HRG:
+                    phase = 'qgp'
+                elif temp < config.transport.hydro.T_HRG and temp > config.transport.hydro.T_UNHYDRO:
+                    phase = 'hrg'
+                elif temp < config.transport.hydro.T_UNHYDRO and temp > config.transport.hydro.T_END:
+                    phase = 'unh'
 
-            ############################
-            # Perform jet calculations #
-            ############################
+                ############################
+                # Perform jet calculations #
+                ############################
 
-            if phase == 'qgp':
-                # Calculate energy loss due to gluon exchange with the medium
-                q_bbmg = float(tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau))
+                if phase == 'qgp':
+                    if case == 'db':
+                        # Calculate energy loss due to gluon exchange with the medium
+                        q_bbmg = float(tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau))
 
-                # Calculate jet drift momentum transferred to jet
-                q_drift = float(tau * pi.jet_drift_integrand(event=event, jet=jet, time=t))
-            else:
-                q_bbmg = 0
-                q_drift = 0
+                        # Calculate jet drift momentum transferred to jet
+                        q_drift = float(tau * pi.jet_drift_integrand(event=event, jet=jet, time=t))
+                    elif case == 'd':
+                        q_bbmg = 0
+                        q_drift = float(tau * pi.jet_drift_integrand(event=event, jet=jet, time=t))
+                    elif case == 'b':
+                        q_bbmg = float(tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau))
+                        q_drift = 0
+                    else:
+                        q_bbmg = 0
+                        q_drift = 0
+                else:
+                    q_bbmg = 0
+                    q_drift = 0
 
-            ###################
-            # Data Accounting #
-            ###################
-            # Log momentum transfers
-            q_bbmg_total += q_bbmg
-            q_drift_total += q_drift
+                ###################
+                # Data Accounting #
+                ###################
+                # Log momentum transfers
+                q_bbmg_total += q_bbmg
+                q_drift_total += q_drift
 
-            # Check for max temperature
-            if temp > maxT:
-                maxT = temp
+                # Check for max temperature
+                if temp > maxT:
+                    maxT = temp
 
-            # Decide phase for categorization & timekeeping
-            if phase == 'qgp':
-                if qgp_first:
-                    t_qgp = t
-                    qgp_first = False
+                # Decide phase for categorization & timekeeping
+                if phase == 'qgp':
+                    if qgp_first:
+                        t_qgp = t
+                        qgp_first = False
 
-                qgp_time_total += tau
+                    qgp_time_total += tau
 
-            # Decide phase for categorization & timekeeping
-            if phase == 'hrg':
-                if hrg_first:
-                    t_hrg = t
-                    hrg_first = False
+                # Decide phase for categorization & timekeeping
+                if phase == 'hrg':
+                    if hrg_first:
+                        t_hrg = t
+                        hrg_first = False
 
-                hrg_time_total += tau
+                    hrg_time_total += tau
 
-            if phase == 'unh':
-                if unhydro_first:
-                    t_unhydro = t
-                    unhydro_first = False
+                if phase == 'unh':
+                    if unhydro_first:
+                        t_unhydro = t
+                        unhydro_first = False
 
-                unhydro_time_total += tau
+                    unhydro_time_total += tau
 
-            #########################
-            # Change Jet Parameters #
-            #########################
-            # Propagate jet position
-            jet.prop(tau=tau)
+                #########################
+                # Change Jet Parameters #
+                #########################
+                # Propagate jet position
+                jet.prop(tau=tau)
 
-            # Change jet momentum to reflect BBMG energy loss
-            jet.add_q_par(q_par=q_bbmg)
+                # Change jet momentum to reflect BBMG energy loss
+                jet.add_q_par(q_par=q_bbmg)
 
-            # Change jet momentum to reflect drift effects
-            jet.add_q_perp(q_perp=q_drift)
+                # Change jet momentum to reflect drift effects
+                jet.add_q_perp(q_perp=q_drift)
 
-            ###############
-            # Timekeeping #
-            ###############
-            t += tau
+                ###############
+                # Timekeeping #
+                ###############
+                t += tau
 
-        logging.info('Time loop complete...')
+            logging.info('Time loop complete...')
 
-        # Get final jet parameters
-        rho_final, phi_final = jet.polar_coords()
-        pT_final = jet.p_T()
+            # Get final jet parameters
+            rho_final, phi_final = jet.polar_mom_coords()
+            pT_final = jet.p_T()
 
 
-        # Create momentPlasma results dataframe
-        jet_dataframe = pd.DataFrame(
-            {
-                "eventNo": [eventNo],
-                "jetNo": [jetNo],
-                "jet_pT": [jet.p_T0],
-                "jet_pT_f": [pT_final],
-                "q_BBMG": [float(q_bbmg_total)],
-                "q_drift": [float(q_drift_total)],
-                "shower_correction": [jet.shower_correction],
-                "X0": [x0],
-                "Y0": [y0],
-                "phi_0": [phi_0],
-                "phi_f": [phi_final],
-                "t_qgp": [t_qgp],
-                "t_hrg": [t_hrg],
-                "t_unhydro": [t_unhydro],
-                "time_total_plasma": [qgp_time_total],
-                "time_total_hrg": [hrg_time_total],
-                "time_total_unhydro": [unhydro_time_total],
-                "Tmax_jet": [maxT],
-                "initial_time": [event.t0],
-                "final_time": [event.tf],
-                "dx": [config.transport.GRID_STEP],
-                "dt": [config.transport.TIME_STEP],
-                "tau": [config.jet.TAU],
-                "rmax": [rmax],
-                "Tmax_event": [event.max_temp()],
-            }
-        )
+            # Create momentPlasma results dataframe
+            jet_dataframe = pd.DataFrame(
+                {
+                    "eventNo": [eventNo],
+                    "jetNo": [jetNo],
+                    "jet_tag": [jet_tag],
+                    "jet_pT": [jet.p_T0],
+                    "jet_pT_f": [pT_final],
+                    "q_BBMG": [float(q_bbmg_total)],
+                    "q_drift": [float(q_drift_total)],
+                    "shower_correction": [jet.shower_correction],
+                    "X0": [x0],
+                    "Y0": [y0],
+                    "phi_0": [phi_0],
+                    "phi_f": [phi_final],
+                    "t_qgp": [t_qgp],
+                    "t_hrg": [t_hrg],
+                    "t_unhydro": [t_unhydro],
+                    "time_total_plasma": [qgp_time_total],
+                    "time_total_hrg": [hrg_time_total],
+                    "time_total_unhydro": [unhydro_time_total],
+                    "Tmax_jet": [maxT],
+                    "initial_time": [event.t0],
+                    "final_time": [event.tf],
+                    "dx": [config.transport.GRID_STEP],
+                    "dt": [config.transport.TIME_STEP],
+                    "tau": [config.jet.TAU],
+                    "rmax": [rmax],
+                    "Tmax_event": [event.max_temp()],
+                    "case": [case]
+                }
+            )
 
-        # Merge the event and jet dataframe lines
-        current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+            # Merge the event and jet dataframe lines
+            current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
-        # Append the total dataframe to the results dataframe
-        results = pd.concat([results, current_result_dataframe], axis=0)
+            # Append the total dataframe to the results dataframe
+            results = pd.concat([results, current_result_dataframe], axis=0)
 
         # Declare jet complete
         logging.info('- Jet ' + str(jetNo) + ' Complete -')
@@ -311,7 +326,7 @@ try:
 
         # Generate a new HIC event and samples config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe
-        results = results.append(run_event(eventNo=eventNo))
+        results = results.append(run_event(eventNo=int(identifierString)))
 
         # Exits directory, saves all current data, and dumps temporary files.
         safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString)

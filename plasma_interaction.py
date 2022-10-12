@@ -11,11 +11,11 @@ relative_error = percent_error*0.01
 # Define integrand - ONLY CORRECT FOR k=0 !!!!!!!!!!!
 def jet_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
-    jet_rho, jet_phi = jet.polar_coords()
+    jet_p_rho, jet_p_phi = jet.polar_mom_coords()
     FERMItoGeV = (1 / 0.19732687)
     return FERMItoGeV * (1 / jet.p_T()) * ((event.i_int_factor(point=jet_point, jet_pT=jet.p_T()))
-                                                   * (event.u_perp(point=jet_point, phi=jet_phi) /
-                                                      (1 - event.u_par(point=jet_point, phi=jet_phi)))
+                                                   * (event.u_perp(point=jet_point, phi=jet_p_phi) /
+                                                      (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
                                                    * (event.mu(point=jet_point)**2)
                                                    * event.rho(point=jet_point)
                                                    * event.sigma(point=jet_point))
@@ -58,11 +58,11 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 # Integrand for parameterized energy loss over coupling
 def energy_loss_integrand(event, jet, time, tau):
     jet_point = jet.coords3(time=time)
-    jet_phi = jet.polar_coords()[1]
+    jet_p_phi = jet.polar_mom_coords()[1]
     FERMItoGeV = (1 / 0.19732687)  # Note that we apply this twice... Once for the t factor, once for the (int dt).
     return ( (-1) * FERMItoGeV**2 * tau * event.temp(jet_point)**3
                       * zeta(q=-1) * (1 / np.sqrt(1 - event.vel(point=jet_point)**2))
-                      * (1 - event.vel(point=jet_point) * np.cos(jet_phi
+                      * (1 - event.vel(point=jet_point) * np.cos(jet_p_phi
                                                                  - event.vel_angle(point=jet_point))))
 
 

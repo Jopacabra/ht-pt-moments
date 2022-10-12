@@ -117,6 +117,7 @@ def run_event(eventNo):
             maxT = 0
             q_bbmg_total = 0
             q_drift_total = 0
+            q_drift_abs_total = 0
 
             # Initialize flags
             first = True
@@ -124,6 +125,7 @@ def run_event(eventNo):
             hrg_first = True
             unhydro_first = True
             phase = None
+            extinguished = False
 
             # Initiate loop
             logging.info('Initiating time loop...')
@@ -146,6 +148,9 @@ def run_event(eventNo):
                 elif t > event.tf:
                     break
 
+                # Record p_T at beginning of step for extinction check
+                jet_og_p_T = jet.p_T()
+
                 # For timekeeping in phases, we approximate all time in one step as in one phase
                 temp = event.temp(jet.coords3(time=t))
 
@@ -165,7 +170,6 @@ def run_event(eventNo):
                     if case == 'db':
                         # Calculate energy loss due to gluon exchange with the medium
                         q_bbmg = float(tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau))
-
                         # Calculate jet drift momentum transferred to jet
                         q_drift = float(tau * pi.jet_drift_integrand(event=event, jet=jet, time=t))
                     elif case == 'd':
@@ -187,6 +191,7 @@ def run_event(eventNo):
                 # Log momentum transfers
                 q_bbmg_total += q_bbmg
                 q_drift_total += q_drift
+                q_drift_abs_total += np.abs(q_drift)
 
                 # Check for max temperature
                 if temp > maxT:
@@ -227,6 +232,16 @@ def run_event(eventNo):
                 # Change jet momentum to reflect drift effects
                 jet.add_q_perp(q_perp=q_drift)
 
+                # Check if the jet would be extinguished (prevents flipping directions
+                # when T >> p_T, since q_bbmg has no p_T dependence):
+                # If the jet lost more energy to BBMG this step than it had
+                # at the beginning of the step, we extinguish the jet and end things
+                if np.abs(q_bbmg) >= jet_og_p_T:
+                    logging.info('Jet extinguished')
+                    jet.p_x = 0
+                    jet.p_y = 0
+                    extinguished = True
+
                 ###############
                 # Timekeeping #
                 ###############
@@ -249,6 +264,8 @@ def run_event(eventNo):
                     "jet_pT_f": [pT_final],
                     "q_BBMG": [float(q_bbmg_total)],
                     "q_drift": [float(q_drift_total)],
+                    "q_drift_abs": [float(q_drift_abs_total)],
+                    "extinguished": [extinguished],
                     "shower_correction": [jet.shower_correction],
                     "X0": [x0],
                     "Y0": [y0],

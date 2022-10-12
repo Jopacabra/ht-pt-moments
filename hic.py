@@ -615,14 +615,10 @@ def generate_jet_point(event, num=1):
 
 
 # Function to generate new optical glauber event callable functions
-def optical_glauber(R=7.5, b=7.5, phi=0):
+def optical_glauber(R=7.5, b=7.5, phi=0, T0=1, U0=1):
     # Calculate ellipse height and width from ion radius (R) and impact parameter (b).
     W = 2 * R - b
     H = np.sqrt(4 * R ** 2 - b ** 2)
-
-    # Set temperature normalizations
-    T0 = 1
-    U0 = 1
 
     # Calculate event multiplicity and eccentricity
     mult = 2*H*W*np.pi  # Integral of the 2D Gaussian for the temperature profile.

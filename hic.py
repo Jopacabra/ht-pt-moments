@@ -648,7 +648,7 @@ def optical_glauber(R=7.5, b=7.5, phi=0, T0=1, U0=1):
 
 
 # Function to generate new optical glauber event callable functions with log(mult) suppressed temps.
-def optical_glauber_logT(R=7.5, b=7.5, phi=0):
+def optical_glauber_logT(R=7.5, b=7.5, phi=0, T0=1, U0=1):
     # Calculate ellipse height and width from ion radius (R) and impact parameter (b).
     W = 2 * R - b
     H = np.sqrt(4 * R ** 2 - b ** 2)
@@ -657,9 +657,8 @@ def optical_glauber_logT(R=7.5, b=7.5, phi=0):
     mult = 2*H*W*np.pi  # Integral of the 2D Gaussian for the temperature profile.
     e2 = np.sqrt(1 - (W ** 2 / H ** 2))  # sqrt(1 - (semi-minor^2 / semi-major^2))
 
-    # Set temperature normalizations
-    T0 = np.log(mult)
-    U0 = 1
+    # Set temperature normalization
+    T0 = T0 * np.log(mult)
 
     # Get cosine and sine of phi as fixed constants.
     cos_fac = np.cos(phi)
@@ -685,7 +684,7 @@ def optical_glauber_logT(R=7.5, b=7.5, phi=0):
 
 
 # Function to generate new optical glauber event callable functions
-def optical_glauber_new(R=7.5, b=7.5, phi=0):
+def optical_glauber_new(R=7.5, b=7.5, phi=0, T0=1, U0=1):
     # Calculate ellipse height and width from ion radius (R) and impact parameter (b).
     W = 2 * R - b
     H = np.sqrt(4 * R ** 2 - b ** 2)
@@ -695,8 +694,7 @@ def optical_glauber_new(R=7.5, b=7.5, phi=0):
     e2 = np.sqrt(1 - (W ** 2 / H ** 2))  # sqrt(1 - (semi-minor^2 / semi-major^2))
 
     # Set temperature normalizations
-    T0 = np.log(mult)
-    U0 = 1
+    T0 = T0 * np.log(mult)
 
     # Get cosine and sine of phi as fixed constants.
     cos_fac = np.cos(phi)

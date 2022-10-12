@@ -241,6 +241,7 @@ def run_event(eventNo):
                     jet.p_x = 0
                     jet.p_y = 0
                     extinguished = True
+                    break
 
                 ###############
                 # Timekeeping #

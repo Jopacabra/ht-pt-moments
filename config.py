@@ -69,3 +69,4 @@ class jet:
 # Global constants
 class constants:
     G = float(cfg['global_constants']['G'])
+    KAPPA = float(cfg['global_constants']['KAPPA'])

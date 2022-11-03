@@ -142,15 +142,12 @@ class MainPage(tk.Frame):
         self.momentDisplay = tk.StringVar()
         self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
                                             k=self.K, label='Total'))
-        self.momentPlasmaDisplay = tk.StringVar()
-        self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                  k=self.K, label='Plasma'))
+        self.BBMGDisplay = tk.StringVar()
+        self.BBMGDisplay.set('...')
         self.momentHRGDisplay = tk.StringVar()
-        self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                               k=self.K, label='HRG'))
+        self.momentHRGDisplay.set('...')
         self.momentUnhydroDisplay = tk.StringVar()
-        self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                   k=self.K, label='Unhydro'))
+        self.momentUnhydroDisplay.set('...')
 
         ################
         # Plot Objects #
@@ -184,7 +181,7 @@ class MainPage(tk.Frame):
 
         # Set up the moment display
         self.momentLabel = tk.Label(self, textvariable=self.momentDisplay, font=LARGE_FONT)
-        self.momentPlasmaLabel = tk.Label(self, textvariable=self.momentPlasmaDisplay, font=LARGE_FONT)
+        self.momentPlasmaLabel = tk.Label(self, textvariable=self.BBMGDisplay, font=LARGE_FONT)
         self.momentHRGLabel = tk.Label(self, textvariable=self.momentHRGDisplay, font=LARGE_FONT)
         self.momentUnhydroLabel = tk.Label(self, textvariable=self.momentUnhydroDisplay, font=LARGE_FONT)
 
@@ -592,14 +589,10 @@ class MainPage(tk.Frame):
 
             # Set moment display
             # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!
-            self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                k=self.K, label='Total'))
-            self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                      k=self.K, label='Plasma'))
-            self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                   k=self.K, label='HRG'))
-            self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                       k=self.K, label='Unhydro'))
+            self.momentDisplay.set('...')
+            self.BBMGDisplay.set('...')
+            self.momentHRGDisplay.set('...')
+            self.momentUnhydroDisplay.set('...')
 
             # Decide if you want to feed tempHRG to the integrand function to bring it to zero.
             if self.plotColors.get():
@@ -643,12 +636,9 @@ class MainPage(tk.Frame):
                 # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!
                 self.momentDisplay.set(moment_label(moment=np.sum(q_drift_array), angleDeflection=None,
                                                     k=self.K, label='Total'))
-                self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                          k=self.K, label='Plasma'))
-                self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                       k=self.K, label='HRG'))
-                self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
-                                                           k=self.K, label='Unhydro'))
+                self.BBMGDisplay.set('Total BBMG: {} GeV'.format(np.sum(q_BBMG_array)))
+                self.momentHRGDisplay.set('...')
+                self.momentUnhydroDisplay.set('...')
 
                 # Select medium properties figure as current figure
                 plt.figure(self.propertyFigure.number)

@@ -15,6 +15,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg  # , NavigationT
 # import matplotlib.animation as animation
 # import matplotlib.colors as colors
 from utilities import round_decimals_up, round_decimals_down
+import timekeeper
+import config
 
 matplotlib.use('TkAgg')  # Use proper matplotlib backend
 style.use('Solarize_Light2')
@@ -99,13 +101,21 @@ class MainPage(tk.Frame):
         self.x0 = tk.DoubleVar()
         self.y0 = tk.DoubleVar()
         self.jetE = tk.DoubleVar()
-        self.jetE.set(100)
+        self.jetE.set(5)
+        self.nth = tk.IntVar()
+        self.nth.set(10)
+        self.calculated = tk.BooleanVar()
+        self.calculated.set(False)
+        self.drift = tk.BooleanVar()
+        self.drift.set(True)
+        self.bbmg = tk.BooleanVar()
+        self.bbmg.set(True)
 
         # Integration options
         self.tempHRG = tk.DoubleVar()
-        self.tempHRG.set(0.200)
+        self.tempHRG.set(config.transport.hydro.T_HRG)
         self.tempUnhydro = tk.DoubleVar()
-        self.tempUnhydro.set(0.150)
+        self.tempUnhydro.set(config.transport.hydro.T_UNHYDRO)
 
         # Plotting options
         self.velocityType = tk.StringVar()
@@ -120,6 +130,8 @@ class MainPage(tk.Frame):
         self.plotColors.set(True)
 
         # Moment variables
+        self.jet_dataframe = None
+        self.jet_xarray = None
         self.moment = 0
         self.angleDeflection = 0
         self.momentPlasma = 0
@@ -187,12 +199,14 @@ class MainPage(tk.Frame):
                                    command=self.update_plots)
 
         # Create button to calculate and display moment
-        self.moment_button = ttk.Button(self, text='Moment',
-                                        command=self.calc_moment)
+        self.run_jet_button = ttk.Button(self, text='Run Jet',
+                                         command=self.run_jet)
 
         # Create button to sample the event and set jet initial conditions.
         self.sample_button = ttk.Button(self, text='Sample',
                                         command=self.sample_event)
+
+
 
         # Create time slider
         self.timeSlider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.time,
@@ -208,7 +222,7 @@ class MainPage(tk.Frame):
                                      from_=0, to=2*np.pi, length=200, resolution=0.1, label='theta0 (rad)')
         # Create jetE slider
         self.jetESlider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.jetE,
-                                   from_=10, to=100, length=200, resolution=0.1, label='jetE (GeV)')
+                                   from_=0.1, to=100, length=200, resolution=0.1, label='jetE (GeV)')
         # Create tempHRG slider
         self.tempCutoffSlider = tk.Scale(self, orient=tk.HORIZONTAL,
                                          variable=self.tempHRG, from_=0, to=1, length=200, resolution=0.01,
@@ -221,13 +235,13 @@ class MainPage(tk.Frame):
 
         # Register update ON RELEASE - use of command parameter applies action immediately
         #self.update_button.bind("<ButtonRelease-1>", self.update_plots)
-        self.timeSlider.bind("<ButtonRelease-1>", self.update_plots)
-        #self.x0Slider.bind("<ButtonRelease-1>", self.update_plots)
-        #self.y0Slider.bind("<ButtonRelease-1>", self.update_plots)
-        #self.theta0Slider.bind("<ButtonRelease-1>", self.update_plots)
-        #self.jetESlider.bind("<ButtonRelease-1>", self.update_plots)
-        #self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_plots)
-        #self.tempUnhydroSlider.bind("<ButtonRelease-1>", self.update_plots)
+        self.timeSlider.bind("<ButtonRelease-1>", self.update_jet)
+        self.x0Slider.bind("<ButtonRelease-1>", self.update_jet)
+        self.y0Slider.bind("<ButtonRelease-1>", self.update_jet)
+        self.theta0Slider.bind("<ButtonRelease-1>", self.update_jet)
+        self.jetESlider.bind("<ButtonRelease-1>", self.update_jet)
+        self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_jet)
+        self.tempUnhydroSlider.bind("<ButtonRelease-1>", self.update_jet)
 
         #########
         # Menus #
@@ -243,11 +257,46 @@ class MainPage(tk.Frame):
         parent.menubar.add_cascade(label='File', menu=fileMenu)
         # ---
 
+        # Create physics menu cascade
+        # ---
+        physicsMenu = tk.Menu(parent.menubar, tearoff=0)
+        # drift submenu
+        driftMenu = tk.Menu(physicsMenu, tearoff=0)
+        physicsMenu.add_cascade(label='Drift', menu=driftMenu)
+        driftMenu.add_radiobutton(label='On', variable=self.drift, value=True,
+                                command=self.not_calculated)
+        driftMenu.add_radiobutton(label='Off', variable=self.drift, value=False,
+                                  command=self.not_calculated)
+        # bbmg submenu
+        bbmgMenu = tk.Menu(physicsMenu, tearoff=0)
+        physicsMenu.add_cascade(label='BBMG', menu=bbmgMenu)
+        bbmgMenu.add_radiobutton(label='On', variable=self.bbmg, value=True,
+                                  command=self.not_calculated)
+        bbmgMenu.add_radiobutton(label='Off', variable=self.bbmg, value=False,
+                                  command=self.not_calculated)
+        parent.menubar.add_cascade(label='Physics', menu=physicsMenu)
+
         # Create plasma plot menu cascade
         # ---
         plasmaMenu = tk.Menu(parent.menubar, tearoff=0)
+        # Jet submenu
+        jetMenu = tk.Menu(plasmaMenu, tearoff=0)
+        plasmaMenu.add_cascade(label='Jet', menu=jetMenu)
+        jetMenu.add_radiobutton(label='Coarse (Every 20th)', variable=self.nth, value=20,
+                                    command=self.update_plots)
+        jetMenu.add_radiobutton(label='Medium-Coarse (Every 15th)', variable=self.nth, value=15,
+                                    command=self.update_plots)
+        jetMenu.add_radiobutton(label='Medium (Every 10th)', variable=self.nth, value=10,
+                                    command=self.update_plots)
+        jetMenu.add_radiobutton(label='Medium-Fine (Every 5th)', variable=self.nth, value=5,
+                                    command=self.update_plots)
+        jetMenu.add_radiobutton(label='Fine (Every 2nd)', variable=self.nth, value=2,
+                                    command=self.update_plots)
+        jetMenu.add_radiobutton(label='Ultra-Fine (1)', variable=self.nth, value=1,
+                                    command=self.update_plots)
         # Temperature submenu
         tempMenu = tk.Menu(plasmaMenu, tearoff=0)
+        plasmaMenu.add_cascade(label='Temperatures', menu=tempMenu)
         # Contours sub-submenu
         contourMenu = tk.Menu(tempMenu, tearoff=0)
         contourMenu.add_radiobutton(label='Coarse (10)', variable=self.contourNumber, value=10,
@@ -265,12 +314,13 @@ class MainPage(tk.Frame):
         tempMenu.add_cascade(label='No. Contours', menu=contourMenu)
         # Plot type sub-submenu
         tempTypeMenu = tk.Menu(tempMenu, tearoff=0)
+        tempMenu.add_cascade(label='Plot Type', menu=tempTypeMenu)
         tempTypeMenu.add_radiobutton(label='Contour', variable=self.tempType, value='contour',
                                     command=self.update_plots)
         tempTypeMenu.add_radiobutton(label='Density', variable=self.tempType, value='density',
                                     command=self.update_plots)
-        tempMenu.add_cascade(label='Plot Type', menu=tempTypeMenu)
-        plasmaMenu.add_cascade(label='Temperatures', menu=tempMenu)
+
+
 
         # Velocity submenu
         velMenu = tk.Menu(plasmaMenu, tearoff=0)
@@ -308,7 +358,7 @@ class MainPage(tk.Frame):
         # Smash everything into the window
         self.update_button.grid(row=0, column=0)
         self.sample_button.grid(row=0, column=1)
-        self.moment_button.grid(row=0, column=2)
+        self.run_jet_button.grid(row=0, column=2)
         self.timeSlider.grid(row=1, column=0, columnspan=2)
         self.x0Slider.grid(row=1, column=2, columnspan=2)
         self.y0Slider.grid(row=1, column=4, columnspan=2)
@@ -323,6 +373,9 @@ class MainPage(tk.Frame):
         self.momentHRGLabel.grid(row=5, column=4, columnspan=4)
         self.momentUnhydroLabel.grid(row=6, column=4, columnspan=4)
         # buttonPage1.grid()  # Unused second page
+
+        # Create the jet object
+        self.update_jet(0)
 
     # Define the select file function
     def select_file(self, value=None):
@@ -501,6 +554,16 @@ class MainPage(tk.Frame):
             unhydroHRGTimes = np.append(unhydroHRGTimes, time)
         return colorArray, hydroHRGTimes, unhydroHRGTimes
 
+    # Define set not calculated function
+    def not_calculated(self, value=None):
+        self.calculated.set(False)
+
+    # Define jet update function
+    def update_jet(self, value=None):
+        # Set current_jet object to current slider parameters
+        self.current_jet = jets.jet(x_0=self.x0.get(), y_0=self.y0.get(),
+                                    phi_0=self.theta0.get(), p_T0=self.jetE.get(), tag=None)
+        self.not_calculated(0)
 
     # Define the update function
     def update_plots(self, value=None):
@@ -527,7 +590,8 @@ class MainPage(tk.Frame):
                                                                   temptype=self.tempType.get(),
                                                                   numContours=self.contourNumber.get())
 
-            # Set moment display to None
+            # Set moment display
+            # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!
             self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
                                                 k=self.K, label='Total'))
             self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
@@ -537,83 +601,11 @@ class MainPage(tk.Frame):
             self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
                                                        k=self.K, label='Unhydro'))
 
-            # Set current_jet object to current slider parameters
-            self.current_jet = jets.jet(x0=self.x0.get(), y0=self.y0.get(),
-                                   theta0=self.theta0.get(), event=self.current_event, energy=self.jetE.get())
-
-            timeRange = np.arange(self.current_event.t0, self.current_event.tf, self.propPlotRes.get())
-            t = np.array([])
-            for time in timeRange:
-                if pi.time_cut(self.current_event, time) and pi.pos_cut(self.current_event, self.current_jet, time) \
-                        and pi.temp_cut(self.current_event, self.current_jet, time):
-                    t = np.append(t, time)
-                else:
-                    break
-
-            # Plot jet trajectory
-            # Find final time within position bounds
-            jetTrajTime = np.array([])
-            for time in t:
-                if pi.pos_cut(self.current_event, self.current_jet, time):
-                    jetTrajTime = np.append(jetTrajTime, time)
-
-
-            jetInitialX = self.current_jet.xpos(jetTrajTime[0])
-            jetInitialY = self.current_jet.ypos(jetTrajTime[0])
-            jetFinalX = self.current_jet.xpos(jetTrajTime[-1])
-            jetFinalY = self.current_jet.ypos(jetTrajTime[-1])
-            self.plasmaAxis.plot([jetInitialX, jetFinalX], [jetInitialY, jetFinalY], ls=':', color='w')
-
-            # Plot new jet position
-            self.plasmaAxis.plot(self.current_jet.xpos(self.time.get()), self.current_jet.ypos(self.time.get()), 'ro')
-
-            # Select medium properties figure as current figure
-            plt.figure(self.propertyFigure.number)
-
-            # Initialize empty arrays for the plot data
-            uPerpArray = np.array([])
-            uParArray = np.array([])
-            tempArray = np.array([])
-            velArray = np.array([])
-            overLambdaArray = np.array([])
-            iIntArray = np.array([])
-            XArray = np.array([])
-            YArray = np.array([])
-            integrandArray = np.array([])
-
             # Decide if you want to feed tempHRG to the integrand function to bring it to zero.
             if self.plotColors.get():
                 decidedCut = 0
             else:
                 decidedCut = self.tempHRG.get()
-
-            # Calculate plot data
-            for time in t:
-                uPerp = self.current_event.u_perp(jet=self.current_jet, time=time)
-                uPar = self.current_event.u_par(jet=self.current_jet, time=time)
-                temp = self.current_event.temp(self.current_jet.coords3(time=time))
-                vel = self.current_event.vel(jet=self.current_jet, time=time)
-                overLambda = self.current_event.rho(jet=self.current_jet, time=time) \
-                             * self.current_event.sigma(jet=self.current_jet, time=time)
-                iInt = self.current_event.i_int_factor(jet=self.current_jet, time=time)
-                xPOS = self.current_jet.xpos(time)
-                yPOS = self.current_jet.ypos(time)
-                integrand = pi.jet_drift_integrand(event=self.current_event, jet=self.current_jet, k=self.K,
-                                                   minTemp=decidedCut)(time)
-
-                uPerpArray = np.append(uPerpArray, uPerp)
-                uParArray = np.append(uParArray, uPar)
-                tempArray = np.append(tempArray, temp)
-                velArray = np.append(velArray, vel)
-
-                overLambdaArray = np.append(overLambdaArray, overLambda)
-
-                integrandArray = np.append(integrandArray, integrand)
-
-                iIntArray = np.append(iIntArray, iInt)
-
-                XArray = np.append(XArray, xPOS)
-                YArray = np.append(YArray, yPOS)
 
             # Set plot font hardcoded options
             plotFontSize = 8
@@ -622,105 +614,142 @@ class MainPage(tk.Frame):
             connectorLineStyle = '-'
             # connectorLineColor = 'black'  # Not set up
 
+            #print(self.calculated.get())
+            if self.calculated.get():
+
+                # Plot jet trajectory
+                # Select QGP figure as current figure
+                plt.figure(self.plasmaFigure.number)
+                # Plot initial trajectory
+                d_x = np.cos(self.current_jet.phi_0) * self.current_jet.beta_0 * (0.5 * self.current_event.tf)
+                d_y = np.sin(self.current_jet.phi_0) * self.current_jet.beta_0 * (0.5 * self.current_event.tf)
+                self.plasmaAxis.arrow(self.current_jet.x_0, self.current_jet.y_0, d_x, d_y, color='white', width=0.1)
+                # Get trajectory points
+                time_array = self.jet_xarray['time'].to_numpy()
+                xpos_array = self.jet_xarray['x'].to_numpy()
+                ypos_array = self.jet_xarray['y'].to_numpy()
+                q_drift_array = self.jet_xarray['q_drift'].to_numpy()
+                q_BBMG_array = self.jet_xarray['q_BBMG'].to_numpy()
+                pT_array = self.jet_xarray['q_pT'].to_numpy()
+                temp_seen_array = self.jet_xarray['temp'].to_numpy()
+                u_perp_array = self.jet_xarray['u_perp'].to_numpy()
+                u_par_array = self.jet_xarray['u_par'].to_numpy()
+                u_array = self.jet_xarray['u'].to_numpy()
+                phase_array = self.jet_xarray['phase'].to_numpy()
+                # Plot trajectory
+                self.plasmaAxis.plot(xpos_array[::self.nth.get()], ypos_array[::self.nth.get()], marker=',', color='black')
+
+                # Set moment display
+                # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!
+                self.momentDisplay.set(moment_label(moment=np.sum(q_drift_array), angleDeflection=None,
+                                                    k=self.K, label='Total'))
+                self.momentPlasmaDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                          k=self.K, label='Plasma'))
+                self.momentHRGDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                       k=self.K, label='HRG'))
+                self.momentUnhydroDisplay.set(moment_label(moment=None, angleDeflection=None,
+                                                           k=self.K, label='Unhydro'))
+
+                # Select medium properties figure as current figure
+                plt.figure(self.propertyFigure.number)
+
+                # Plot connector lines for properties
+                self.propertyAxes[0, 0].plot(time_array, u_perp_array, ls=connectorLineStyle)
+                self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 0].plot(time_array, temp_seen_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 1].plot(time_array, u_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 0].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
+                # self.propertyAxes[2, 1].plot(time_array, 1 / (5 * overLambdaArray), ls=connectorLineStyle)
+                # self.propertyAxes[1, 2].plot(time_array, 1 / (overLambdaArray), ls=connectorLineStyle)
+                self.propertyAxes[2, 2].plot(time_array, 4 * temp_seen_array ** 2, ls=connectorLineStyle)
+                # self.propertyAxes[0, 2].plot(time_array, iIntArray, ls=connectorLineStyle)
+                self.propertyAxes[0, 3].plot(time_array, xpos_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 3].plot(time_array, ypos_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 3].plot(time_array, q_drift_array, ls=connectorLineStyle)
+
+                if self.plotColors.get():
+                    # Determine colors from temp seen by jet at each time.
+                    color_array = np.array([])
+                    for phase in phase_array:
+                        if phase == 'qgp':
+                            color_array = np.append(color_array, 'b')
+                        elif phase == 'hrg':
+                            color_array = np.append(color_array, 'g')
+                        elif phase == 'unh':
+                            color_array = np.append(color_array, 'r')
+                        else:
+                            color_array = np.append(color_array, 'black')
+
+                    # Plot colored markers.
+                    for i in range(0, len(time_array)):
+                        self.propertyAxes[0, 0].plot(time_array[i], u_perp_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 0].plot(time_array[i], temp_seen_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 1].plot(time_array[i], u_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 0].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i]
+                                                     , markersize=markSize)
+                        #self.propertyAxes[2, 1].plot(t[i], 1 / (5 * overLambdaArray[i]), 'o', color=color_array[i]
+                        #                             , markersize=markSize)
+                        #self.propertyAxes[1, 2].plot(t[i], 1 / (overLambdaArray[i]), 'o', color=color_array[i]
+                        #                             , markersize=markSize)
+                        self.propertyAxes[2, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i]
+                                                     , markersize=markSize)
+                        #self.propertyAxes[0, 2].plot(time_array[i], iIntArray[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 3].plot(time_array[i], xpos_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 3].plot(time_array[i], ypos_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 3].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
+
+                    # if len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) > 0:
+                    #     # Fill under the curve for hydrodynamic hadron gas phase
+                    #     self.propertyAxes[2, 3].fill_between(
+                    #         x=t,
+                    #         y1=integrandArray,
+                    #         where=hydroHRGTimes[0] < t,
+                    #         color='g',
+                    #         alpha=0.2)
+                    #     # Fill under the curve for unhydrodynamic hadron gas phase
+                    #     self.propertyAxes[2, 3].fill_between(
+                    #         x=t,
+                    #         y1=integrandArray,
+                    #         where=unhydroHRGTimes[0] < t,
+                    #         color='r',
+                    #         alpha=0.2)
+                    # elif len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) == 0:
+                    #     # Fill under the curve for hydrodynamic hadron gas phase
+                    #     self.propertyAxes[2, 3].fill_between(
+                    #         x=t,
+                    #         y1=integrandArray,
+                    #         where= t > hydroHRGTimes[0],
+                    #         color='g',
+                    #         alpha=0.2)
+                    # elif len(hydroHRGTimes) == 0 and len(unhydroHRGTimes) > 0:
+                    #     # Fill under the curve for unhydrodynamic hadron gas phase
+                    #     self.propertyAxes[2, 3].fill_between(
+                    #         x=t,
+                    #         y1=integrandArray,
+                    #         where=unhydroHRGTimes[0] < t,
+                    #         color='r',
+                    #         alpha=0.2)
+
+
             # Gridlines and ticks
             # Plot horizontal gridlines at y=0
             for axisList in self.propertyAxes:  # Medium property plots
                 for axis in axisList:
                     axis.axhline(y=0, color='black', linestyle=':', lw=gridLineWidth)
+
             # Plot horizontal gridline at temp minTemp for temp plot
             self.propertyAxes[1, 0].axhline(y=self.tempHRG.get(), color='black', linestyle=':', lw=gridLineWidth)
+
             # Plot vertical gridline at current time from slider
             for axisList in self.propertyAxes:  # Iterate through medium property plots
                 for axis in axisList:
                     axis.axvline(x=self.time.get(), color='black', ls=':', lw=gridLineWidth)
+
             # Plot tick at temp minTemp for temp plot
             self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempHRG.get()])
 
-            if self.plotColors.get():
-                # Determine colors from temp seen by jet at each time.
-                colorArray, hydroHRGTimes, unhydroHRGTimes = self.tempColoringFunc(t)
-
-                # Plot connector line
-                self.propertyAxes[0, 0].plot(t, uPerpArray, ls=connectorLineStyle)
-                self.propertyAxes[0, 1].plot(t, uParArray, ls=connectorLineStyle)
-                self.propertyAxes[1, 0].plot(t, tempArray, ls=connectorLineStyle)
-                self.propertyAxes[1, 1].plot(t, velArray, ls=connectorLineStyle)
-                self.propertyAxes[2, 0].plot(t, (uPerpArray / (1 - uParArray)), ls=connectorLineStyle)
-                self.propertyAxes[2, 1].plot(t, 1 / (5 * overLambdaArray), ls=connectorLineStyle)
-                self.propertyAxes[1, 2].plot(t, 1 / (overLambdaArray), ls=connectorLineStyle)
-                self.propertyAxes[2, 2].plot(t, 4 * tempArray ** 2, ls=connectorLineStyle)
-                self.propertyAxes[0, 2].plot(t, iIntArray, ls=connectorLineStyle)
-                self.propertyAxes[0, 3].plot(t, XArray, ls=connectorLineStyle)
-                self.propertyAxes[1, 3].plot(t, YArray, ls=connectorLineStyle)
-                self.propertyAxes[2, 3].plot(t, integrandArray, ls=connectorLineStyle)
-
-                # Plot colored markers.
-                for i in range(0,len(t)):
-                    self.propertyAxes[0, 0].plot(t[i], uPerpArray[i], 'o', color=colorArray[i], markersize=markSize)
-                    self.propertyAxes[0, 1].plot(t[i], uParArray[i], 'o', color=colorArray[i], markersize=markSize)
-                    self.propertyAxes[1, 0].plot(t[i], tempArray[i], 'o', color=colorArray[i], markersize=markSize)
-                    self.propertyAxes[1, 1].plot(t[i], velArray[i], 'o', color=colorArray[i], markersize=markSize)
-                    self.propertyAxes[2, 0].plot(t[i], (uPerpArray[i] / (1 - uParArray[i])), 'o', color=colorArray[i]
-                                                 , markersize=markSize)
-                    self.propertyAxes[2, 1].plot(t[i], 1 / (5 * overLambdaArray[i]), 'o', color=colorArray[i]
-                                                 , markersize=markSize)
-                    self.propertyAxes[1, 2].plot(t[i], 1 / (overLambdaArray[i]), 'o', color=colorArray[i]
-                                                 , markersize=markSize)
-                    self.propertyAxes[2, 2].plot(t[i], 4 * tempArray[i] ** 2, 'o', color=colorArray[i]
-                                                 , markersize=markSize)
-                    self.propertyAxes[0, 2].plot(t[i], iIntArray[i], 'o', color=colorArray[i], markersize=markSize)
-                    self.propertyAxes[0, 3].plot(t[i], XArray[i], 'o', color=colorArray[i], markersize=markSize)
-                    self.propertyAxes[1, 3].plot(t[i], YArray[i], 'o', color=colorArray[i], markersize=markSize)
-                    self.propertyAxes[2, 3].plot(t[i], integrandArray[i], 'o', color=colorArray[i], markersize=markSize)
-
-                if len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) > 0:
-                    # Fill under the curve for hydrodynamic hadron gas phase
-                    self.propertyAxes[2, 3].fill_between(
-                        x=t,
-                        y1=integrandArray,
-                        where=hydroHRGTimes[0] < t,
-                        color='g',
-                        alpha=0.2)
-                    # Fill under the curve for unhydrodynamic hadron gas phase
-                    self.propertyAxes[2, 3].fill_between(
-                        x=t,
-                        y1=integrandArray,
-                        where=unhydroHRGTimes[0] < t,
-                        color='r',
-                        alpha=0.2)
-                elif len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) == 0:
-                    # Fill under the curve for hydrodynamic hadron gas phase
-                    self.propertyAxes[2, 3].fill_between(
-                        x=t,
-                        y1=integrandArray,
-                        where= t > hydroHRGTimes[0],
-                        color='g',
-                        alpha=0.2)
-                elif len(hydroHRGTimes) == 0 and len(unhydroHRGTimes) > 0:
-                    # Fill under the curve for unhydrodynamic hadron gas phase
-                    self.propertyAxes[2, 3].fill_between(
-                        x=t,
-                        y1=integrandArray,
-                        where=unhydroHRGTimes[0] < t,
-                        color='r',
-                        alpha=0.2)
-
-
-            else:
-                # Plot usual plots based on style sheet
-                self.propertyAxes[0, 0].plot(t, uPerpArray)
-                self.propertyAxes[0, 1].plot(t, uParArray)
-                self.propertyAxes[1, 0].plot(t, tempArray)
-                self.propertyAxes[1, 1].plot(t, velArray)
-                self.propertyAxes[2, 0].plot(t, (uPerpArray / (1 - uParArray)))
-                self.propertyAxes[2, 1].plot(t, 1 / (5 * overLambdaArray))
-                self.propertyAxes[1, 2].plot(t, 1 / (overLambdaArray))
-                self.propertyAxes[2, 2].plot(t, 4 * tempArray ** 2)
-                self.propertyAxes[0, 2].plot(t, iIntArray)
-                self.propertyAxes[0, 3].plot(t, XArray)
-                self.propertyAxes[1, 3].plot(t, YArray)
-                self.propertyAxes[2, 3].plot(t, integrandArray)
-
+            # Plot property titles
             self.propertyAxes[0, 0].set_title("u_perp", fontsize=plotFontSize)
             self.propertyAxes[0, 1].set_title("u_par", fontsize=plotFontSize)
             self.propertyAxes[1, 0].set_title("T (GeV)", fontsize=plotFontSize)
@@ -732,7 +761,7 @@ class MainPage(tk.Frame):
             self.propertyAxes[0, 2].set_title("I(k) Factor", fontsize=plotFontSize)
             self.propertyAxes[0, 3].set_title("X Pos", fontsize=plotFontSize)
             self.propertyAxes[1, 3].set_title("Y Pos", fontsize=plotFontSize)
-            self.propertyAxes[2, 3].set_title("Integrand", fontsize=plotFontSize)
+            self.propertyAxes[2, 3].set_title("q_drift", fontsize=plotFontSize)
 
 
 
@@ -746,46 +775,23 @@ class MainPage(tk.Frame):
     def animate_plasma(self):
         return None
 
-    def calc_moment(self):
+    def run_jet(self, value=None):
         if self.file_selected:
+            # Update jet object
+            self.update_jet(0)
+
+            # Calculate the jet trajectory
+            print('Calculating jet trajectory...')
+            # Run the time loop
+            self.jet_dataframe, self.jet_xarray = timekeeper.time_loop(event=self.current_event,
+                                                             jet=self.current_jet,
+                                                             drift=self.drift.get(), bbmg=self.bbmg.get())
+
+            print('Jet trajectory complete.')
+            self.calculated.set(True)
             # Update plots to set current jet and event business.
             self.update_plots()
 
-            # Calculate plasma moment
-            momentPlasmaRaw = pi.jet_drift_moment(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
-
-            self.angleDeflectionPlasma = np.arctan((momentPlasmaRaw[0] / self.current_jet.energy)) * (180 / np.pi)
-            self.momentPlasma = momentPlasmaRaw[0]
-            self.momentPlasmaDisplay.set(moment_label(moment=self.momentPlasma,
-                                                      angleDeflection=self.angleDeflectionPlasma,
-                                                      k=self.K, label='plasma'))
-
-            # Calculate hadron gas (HRG) moment
-            momentHRGRaw = pi.jet_drift_moment(self.current_event, self.current_jet, minTemp=self.tempUnhydro.get(),
-                                               maxTemp=self.tempHRG.get())
-
-            self.angleDeflectionHRG = np.arctan((momentHRGRaw[0] / self.current_jet.energy)) * (180 / np.pi)
-            self.momentHRG = momentHRGRaw[0]
-            self.momentHRGDisplay.set(moment_label(moment=self.momentHRG, angleDeflection=self.angleDeflectionHRG,
-                                                   k=self.K, label='HRG'))
-
-            # Calculate unhydro hadron gas (HRG) moment
-            momentUnhydroRaw = pi.jet_drift_moment(self.current_event, self.current_jet, maxTemp=self.tempUnhydro.get(),
-                                                   minTemp=0)
-
-            self.angleDeflectionUnhydro = np.arctan((momentUnhydroRaw[0] / self.current_jet.energy)) * (180 / np.pi)
-            self.momentUnhydro = momentUnhydroRaw[0]
-            self.momentUnhydroDisplay.set(moment_label(moment=self.momentUnhydro,
-                                                       angleDeflection=self.angleDeflectionUnhydro,
-                                                       k=self.K, label='Unhydro'))
-
-            # ???
-            # momentRaw = pi.moment_integral(self.current_event, self.current_jet, minTemp=self.tempHRG.get())
-
-            self.angleDeflection = self.angleDeflectionHRG + self.angleDeflectionPlasma + self.angleDeflectionUnhydro
-            self.moment = self.momentHRG + self.momentPlasma + self.momentUnhydro
-            self.momentDisplay.set(moment_label(moment=self.moment, angleDeflection=self.angleDeflection,
-                                                k=self.K, label='Total'))
         else:
             print('Select a file!!!')
 

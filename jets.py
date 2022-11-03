@@ -12,20 +12,26 @@ import plasma_interaction
 
 class jet:
     # Instantiation statement. All parameters optional.
-    def __init__(self, x_0=0, y_0=0, phi_0=0, v_0=1, p_T0=100):
+    def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, tag=None, no=None):
         logging.info('Creating new jet...')
 
         # Initialize basic parameters
         self.phi_0 = phi_0
-        self.v_0 = v_0
-        self.p_T0 = p_T0
+        self.p_T0 = p_T0  # in GeV
         self.x_0 = x_0
         self.y_0 = y_0
-        self.m = 0  # Jet is massless quark for now
+        # Quark masses - https://pdg.lbl.gov/2010/tables/rpp2010-sum-quarks.pdf
+        self.m = 0.0039  # in GeV - jet is quark for now - averaged up & down quark
+        self.tag = tag
+        self.no = no
+        self.record = None
 
         # Muck about with your coordinates
         self.p_x = self.p_T0 * np.cos(self.phi_0)
         self.p_y = self.p_T0 * np.sin(self.phi_0)
+
+        # Set calculated properties
+        self.beta_0 = self.beta()
 
         # Initialize shower correction, then sample shower correction distribution to determine post-shower direction
         self.shower_correction = 0
@@ -84,26 +90,34 @@ class jet:
     # Method to propagate the jet for time tau
     def prop(self, tau=0):
         rho, phi = self.polar_mom_coords()
-        self.x = float(self.x + self.v_0 * np.cos(phi) * tau)
-        self.y = float(self.y + self.v_0 * np.sin(phi) * tau)
+        self.x = float(self.x + self.beta() * np.cos(phi) * tau)
+        self.y = float(self.y + self.beta() * np.sin(phi) * tau)
 
     # Method to obtain the coordinates of the jet in tau amount of time
     def coords_in(self, tau=0):
         rho, phi = self.polar_mom_coords()
-        new_x = self.x + self.v_0 * np.cos(phi) * tau
-        new_y = self.y + self.v_0 * np.sin(phi) * tau
+        new_x = self.x + self.beta() * np.cos(phi) * tau
+        new_y = self.y + self.beta() * np.sin(phi) * tau
         return np.array([new_x, new_y])
 
     # Method to obtain the coordinates of the jet in tau amount of time
     # given the current trajectory
     def coords3_in(self, tau=0, time=0):
         rho, phi = self.polar_mom_coords()
-        new_x = self.x + self.v_0 * np.cos(phi) * tau
-        new_y = self.y + self.v_0 * np.sin(phi) * tau
+        new_x = self.x + self.beta() * np.cos(phi) * tau
+        new_y = self.y + self.beta() * np.sin(phi) * tau
         return np.array([time, new_x, new_y])
 
     # Method to obtain jet p_T
     def p_T(self):
         return np.sqrt(self.p_x**2 + self.p_y**2)
+
+    # Method to obtain jet velocity (fraction of light speed)
+    # Uses relativistic on-shell condition
+    def beta(self):
+        # On-shell condition with c=1: p = gamma * m * beta
+        # beta is fraction of speed of light
+        # beta = p / sqrt(m^2 + p^2)
+        return self.p_T() / np.sqrt(self.m**2 + self.p_T()**2)
 
 

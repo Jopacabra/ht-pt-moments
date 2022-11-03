@@ -191,7 +191,7 @@ class osu_hydro_file:
 
 # Plasma object as used for integration and muckery
 class plasma_event:
-    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, event=None, name=None):
+    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, event=None, name=None, rmax=None):
         # Initialize all the ordinary plasma parameters
         if event is not None:
             self.temp = event.interpolate_temp_grid()
@@ -232,6 +232,8 @@ class plasma_event:
         else:
             print('Plasma instantiation failed.')
             raise Exception
+
+        self.rmax = rmax
 
 
 
@@ -473,7 +475,7 @@ class plasma_event:
 
 # Takes functions that take parameters (t, x, y) and makes plasma objects
 def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=None,
-                      resolution=10, xmax=15, time=None):
+                      resolution=10, xmax=15, time=None, rmax=None):
     # Define grid time and space domains
     if time is None:
         t_space = np.linspace(0, 2*xmax, int((xmax + xmax) * resolution))
@@ -496,7 +498,7 @@ def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=Non
 
     # Create and return plasma object
     plasma_object = plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
-                               y_vel_func=interped_y_vel_function, name=name)
+                               y_vel_func=interped_y_vel_function, name=name, rmax=rmax)
     return plasma_object
 
 

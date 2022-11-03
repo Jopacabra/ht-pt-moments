@@ -718,3 +718,29 @@ def optical_glauber_new(R=7.5, b=7.5, phi=0, T0=1, U0=1):
 
     return analytic_t, analytic_ux, analytic_uy, mult, e2
 
+
+# Function to select initial jet p_T based on 1/(p_T^4) distribution
+def jet_pT_1opT4():
+    rng = np.random.default_rng()
+    while True:
+        chosen_e = rng.uniform(config.jet.MIN_JET_ENERGY, 20)
+        chosen_prob = rng.uniform(0, 1)
+        if chosen_e > config.jet.MIN_JET_ENERGY and chosen_prob < (1 / chosen_e ** 4):
+            break
+
+    return chosen_e
+
+
+# Function to select initial jet p_T based on jet spectra in sqrt(s)_{NN} = 200 GeV
+# collisions at RHIC.
+def jet_pT_RHIC():
+    rng = np.random.default_rng()
+    while True:
+        chosen_e = rng.uniform(config.jet.MIN_JET_ENERGY, 20)
+        chosen_prob = rng.uniform(0, 1)
+        prob_pT = chosen_e * 1  # Function for pT probability
+        if chosen_e > config.jet.MIN_JET_ENERGY and chosen_prob < prob_pT:
+            break
+
+    return chosen_e
+

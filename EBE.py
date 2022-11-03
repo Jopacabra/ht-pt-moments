@@ -88,34 +88,43 @@ def run_event(eventNo):
 
         # Select jet energy
         if config.jet.E_FLUCT:
-            rng = np.random.default_rng()
-            while True:
-                chosen_e = rng.uniform(config.jet.MIN_JET_ENERGY, 20)
-                chosen_prob = rng.uniform(0, 1)
-                if chosen_e > config.jet.MIN_JET_ENERGY and chosen_prob < (1/chosen_e**4):
-                    break
+            chosen_e = hic.jet_pT_RHIC()
         else:
             chosen_e = config.jet.JET_ENERGY
 
-        for case in ['db', 'd', 'b']:
+        for case in ['db', 'd', 'b', 'd/2b', '2db']:
             logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
             # Create the jet object
             jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo)
 
             if case == 'db':
+                g_drift = 1
                 drift = True
                 bbmg = True
             elif case == 'd':
+                g_drift = 1
                 drift = True
                 bbmg = False
             elif case == 'b':
+                g_drift = 0
                 drift = False
                 bbmg = True
+            elif case == '2db':
+                g_drift = 2
+                drift = True
+                bbmg = True
+            elif case == 'd/2b':
+                g_drift = 1/2
+                drift = True
+                bbmg = True
             else:
+                g_drift = 0
+                g_BBMG = 0
                 drift = False
                 bbmg = False
             # Run the time loop
-            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg)
+            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
+                                                             g_drift=g_drift)
 
             # Merge the event and jet dataframe lines
             current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)

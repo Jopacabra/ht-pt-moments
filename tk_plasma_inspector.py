@@ -412,14 +412,16 @@ class MainPage(tk.Frame):
         # Ask user for optical glauber input parameters:
         R = askfloat("Input", "Enter ion radius (R) in fm: ", minvalue=0.0, maxvalue=25)
         b = askfloat("Input", "Enter impact parameter (b) in fm (max 2R): ", minvalue=0.0, maxvalue=2*R)
+        T0 = askfloat("Input", "Enter temperature norm in GeV: ", minvalue=0.0, maxvalue=500)
+        V0 = askfloat("Input", "Enter flow velocity norm in c: ", minvalue=0.0, maxvalue=1)
         phi = askfloat("Input", "Enter reaction plane angle in rad: ", minvalue=0.0, maxvalue=2*np.pi)
         rmax = 15
         event_lifetime = 20
         self.file_selected = True  # Set that you have selected an event
-        print('Selected optical glauber:\nR = {}, b = {}, phi = {}'.format(R, b, phi))
+        print('Selected optical glauber:\nR = {}, b = {}, phi = {}, T0 = {}, V0 = {}'.format(R, b, phi, T0, V0))
 
         # Generate optical glauber
-        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber(R=R, b=b, phi=phi)
+        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber(R=R, b=b, phi=phi, T0=T0, U0=V0)
 
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
@@ -451,14 +453,16 @@ class MainPage(tk.Frame):
         # Ask user for optical glauber input parameters:
         R = askfloat("Input", "Enter ion radius (R) in fm: ", minvalue=0.0, maxvalue=25)
         b = askfloat("Input", "Enter impact parameter (b) in fm (max 2R): ", minvalue=0.0, maxvalue=2 * R)
+        T0 = askfloat("Input", "Enter temperature norm in GeV: ", minvalue=0.0, maxvalue=500)
+        V0 = askfloat("Input", "Enter flow velocity norm in c: ", minvalue=0.0, maxvalue=1)
         phi = askfloat("Input", "Enter reaction plane angle in rad: ", minvalue=0.0, maxvalue=2 * np.pi)
         rmax = 15
         event_lifetime = 20
         self.file_selected = True  # Set that you have selected an event
-        print('Selected optical glauber:\nR = {}, b = {}, phi = {}'.format(R, b, phi))
+        print('Selected lmt optical glauber:\nR = {}, b = {}, phi = {}, T0 = {}, V0 = {}'.format(R, b, phi, T0, V0))
 
         # Generate optical glauber
-        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi)
+        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi, T0=T0, U0=V0)
 
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
@@ -490,14 +494,16 @@ class MainPage(tk.Frame):
         # Ask user for optical glauber input parameters:
         R = askfloat("Input", "Enter ion radius (R) in fm: ", minvalue=0.0, maxvalue=25)
         b = askfloat("Input", "Enter impact parameter (b) in fm (max 2R): ", minvalue=0.0, maxvalue=2 * R)
+        T0 = askfloat("Input", "Enter temperature norm in GeV: ", minvalue=0.0, maxvalue=500)
+        V0 = askfloat("Input", "Enter flow velocity norm in c: ", minvalue=0.0, maxvalue=1)
         phi = askfloat("Input", "Enter reaction plane angle in rad: ", minvalue=0.0, maxvalue=2 * np.pi)
         rmax = 15
         event_lifetime = 20
         self.file_selected = True  # Set that you have selected an event
-        print('Selected optical glauber:\nR = {}, b = {}, phi = {}'.format(R, b, phi))
+        print('Selected "new" optical glauber:\nR = {}, b = {}, phi = {}, T0 = {}, V0 = {}'.format(R, b, phi, T0, V0))
 
         # Generate optical glauber
-        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi)
+        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi, T0=T0, U0=V0)
 
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,

@@ -690,7 +690,7 @@ class MainPage(tk.Frame):
                         #                             , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i]
                                                      , markersize=markSize)
-                        #self.propertyAxes[0, 2].plot(time_array[i], iIntArray[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 2].plot(time_array[i], q_BBMG_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 3].plot(time_array[i], xpos_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 3].plot(time_array[i], ypos_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 3].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)

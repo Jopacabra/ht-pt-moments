@@ -197,11 +197,11 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         ###############
         t += tau
 
-        logging.info('Time loop complete...')
-
         # Get final jet parameters
         rho_final, phi_final = jet.polar_mom_coords()
         pT_final = jet.p_T()
+
+    logging.info('Time loop complete...')
 
     # Create momentPlasma results dataframe
     jet_dataframe = pd.DataFrame(

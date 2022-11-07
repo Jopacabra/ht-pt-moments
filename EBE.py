@@ -15,9 +15,16 @@ import timekeeper
 
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
 def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False):
-    # Save dataframe
+    # Save hydro event file
+    if keep_event:
+        logging.info('Saving event hydro data...')
+        # Copy config file to results directory, tagged with identifier
+        utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat',
+                            '../hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=False)
+
     # Note that we exit the directory first in order to retain a valid current working directory when cleaned up.
     # This prevents os.get_cwd() from throwing an error.
+
     os.chdir('..')
 
     # Save the dataframe into the identified results folder

@@ -28,8 +28,8 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
     if keep_event:
         logging.info('Saving event hydro data...')
         # Copy config file to results directory, tagged with identifier
-        utilities.run_cmd(*['cp', 'viscous_14_moments_evo.dat', os.getcwd()
-                            + '/results/{}/hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=True)
+        utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat', os.getcwd()
+                            + '/hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=True)
 
     # Return to the project root.
     os.chdir('..')

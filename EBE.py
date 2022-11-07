@@ -14,7 +14,7 @@ import timekeeper
 
 
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
-def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
+def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event):
     # Save dataframe
     # Note that we exit the directory first in order to retain a valid current working directory when cleaned up.
     # This prevents os.get_cwd() from throwing an error.
@@ -24,6 +24,11 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier):
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
     resultsDataFrame.to_pickle(os.getcwd() + '/{}.pkl'.format(filename))  # Save dataframe to pickle
+
+    if keep_event:
+        # Copy config file to results directory, tagged with identifier
+        utilities.run_cmd(*['cp', 'viscous_14_moments_evo.dat', os.getcwd()
+                            + '/results/{}/hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=True)
 
     # Return to the project root.
     os.chdir('..')

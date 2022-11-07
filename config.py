@@ -24,6 +24,7 @@ class mode:
     RANDOM_ANGLE = bool(cfg['mode']['RANDOM_ANGLE'])
     VARY_POINT = bool(cfg['mode']['VARY_POINT'])
     WEIGHT_POINT = bool(cfg['mode']['WEIGHT_POINT'])
+    KEEP_EVENT = bool(cfg['mode']['KEEP_EVENT'])
 
 
 class transport:

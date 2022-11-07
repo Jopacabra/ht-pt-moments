@@ -26,6 +26,7 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event):
     resultsDataFrame.to_pickle(os.getcwd() + '/{}.pkl'.format(filename))  # Save dataframe to pickle
 
     if keep_event:
+        logging.info('Saving event hydro data...')
         # Copy config file to results directory, tagged with identifier
         utilities.run_cmd(*['cp', 'viscous_14_moments_evo.dat', os.getcwd()
                             + '/results/{}/hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=True)
@@ -188,7 +189,8 @@ try:
         results = results.append(run_event(eventNo=int(identifierString)))
 
         # Exits directory, saves all current data, and dumps temporary files.
-        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString)
+        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+                  keep_event=config.mode.KEEP_EVENT)
 
         if len(results) > 10000:
             part += 1
@@ -202,14 +204,16 @@ except KeyboardInterrupt:
     logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString)
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+              keep_event=config.mode.KEEP_EVENT)
 
 except hic.StopEvent:
     logging.warning('HIC event error.')
     logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString)
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+              keep_event=config.mode.KEEP_EVENT)
 
 logging.info('Results identifier: {}'.format(identifierString))
 logging.info('Please have an excellent day. :)')

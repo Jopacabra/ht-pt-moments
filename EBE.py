@@ -14,7 +14,7 @@ import timekeeper
 
 
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
-def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event):
+def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False):
     # Save dataframe
     # Note that we exit the directory first in order to retain a valid current working directory when cleaned up.
     # This prevents os.get_cwd() from throwing an error.

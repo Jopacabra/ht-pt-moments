@@ -655,7 +655,7 @@ class MainPage(tk.Frame):
                 self.propertyAxes[1, 0].plot(time_array, temp_seen_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 1].plot(time_array, u_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 0].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
-                # self.propertyAxes[2, 1].plot(time_array, 1 / (5 * overLambdaArray), ls=connectorLineStyle)
+                self.propertyAxes[2, 1].plot(time_array, pT_array, ls=connectorLineStyle)
                 # self.propertyAxes[1, 2].plot(time_array, 1 / (overLambdaArray), ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, 4 * temp_seen_array ** 2, ls=connectorLineStyle)
                 self.propertyAxes[0, 2].plot(time_array, q_BBMG_array, ls=connectorLineStyle)
@@ -684,10 +684,8 @@ class MainPage(tk.Frame):
                         self.propertyAxes[1, 1].plot(time_array[i], u_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 0].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i]
                                                      , markersize=markSize)
-                        #self.propertyAxes[2, 1].plot(t[i], 1 / (5 * overLambdaArray[i]), 'o', color=color_array[i]
-                        #                             , markersize=markSize)
-                        #self.propertyAxes[1, 2].plot(t[i], 1 / (overLambdaArray[i]), 'o', color=color_array[i]
-                        #                             , markersize=markSize)
+                        self.propertyAxes[2, 1].plot(time_array[i], pT_array[i], 'o', color=color_array[i], markersize=markSize)
+                        #self.propertyAxes[1, 2].plot(t[i], 1 / (overLambdaArray[i]), 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i]
                                                      , markersize=markSize)
                         self.propertyAxes[0, 2].plot(time_array[i], q_BBMG_array[i], 'o', color=color_array[i], markersize=markSize)
@@ -751,8 +749,8 @@ class MainPage(tk.Frame):
             self.propertyAxes[1, 0].set_title("T (GeV)", fontsize=plotFontSize)
             self.propertyAxes[1, 1].set_title("|u|", fontsize=plotFontSize)
             self.propertyAxes[2, 0].set_title("prp / (1-par)", fontsize=plotFontSize)
-            self.propertyAxes[2, 1].set_title("1/Lmda (fm)", fontsize=plotFontSize)
-            self.propertyAxes[1, 2].set_title("1/Lmda (GeV^-1)", fontsize=plotFontSize)
+            self.propertyAxes[2, 1].set_title("p_T", fontsize=plotFontSize)
+            self.propertyAxes[1, 2].set_title("...", fontsize=plotFontSize)
             self.propertyAxes[2, 2].set_title("mu^2 (GeV^2)", fontsize=plotFontSize)
             self.propertyAxes[0, 2].set_title("q_BBMG", fontsize=plotFontSize)
             self.propertyAxes[0, 3].set_title("X Pos", fontsize=plotFontSize)

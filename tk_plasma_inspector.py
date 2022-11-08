@@ -629,7 +629,7 @@ class MainPage(tk.Frame):
                 ypos_array = self.jet_xarray['y'].to_numpy()
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
                 q_BBMG_array = self.jet_xarray['q_BBMG'].to_numpy()
-                pT_array = self.jet_xarray['q_pT'].to_numpy()
+                pT_array = self.jet_xarray['pT'].to_numpy()
                 temp_seen_array = self.jet_xarray['temp'].to_numpy()
                 u_perp_array = self.jet_xarray['u_perp'].to_numpy()
                 u_par_array = self.jet_xarray['u_par'].to_numpy()
@@ -654,14 +654,14 @@ class MainPage(tk.Frame):
                 self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 0].plot(time_array, temp_seen_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 1].plot(time_array, u_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 0].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
+                self.propertyAxes[2, 0].plot(time_array, q_BBMG_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 1].plot(time_array, pT_array, ls=connectorLineStyle)
-                # self.propertyAxes[1, 2].plot(time_array, 1 / (overLambdaArray), ls=connectorLineStyle)
-                self.propertyAxes[2, 2].plot(time_array, 4 * temp_seen_array ** 2, ls=connectorLineStyle)
-                self.propertyAxes[0, 2].plot(time_array, q_BBMG_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 2].plot(time_array, 4 * temp_seen_array ** 2, ls=connectorLineStyle)
+                self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
+                self.propertyAxes[0, 2].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
                 self.propertyAxes[0, 3].plot(time_array, xpos_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 3].plot(time_array, ypos_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 3].plot(time_array, q_drift_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 3].plot(time_array, np.empty_like(time_array), ls=connectorLineStyle)
 
                 if self.plotColors.get():
                     # Determine colors from temp seen by jet at each time.
@@ -682,16 +682,14 @@ class MainPage(tk.Frame):
                         self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 0].plot(time_array[i], temp_seen_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 1].plot(time_array[i], u_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 0].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i]
-                                                     , markersize=markSize)
+                        self.propertyAxes[2, 0].plot(time_array[i], q_BBMG_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 1].plot(time_array[i], pT_array[i], 'o', color=color_array[i], markersize=markSize)
-                        #self.propertyAxes[1, 2].plot(t[i], 1 / (overLambdaArray[i]), 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i]
-                                                     , markersize=markSize)
-                        self.propertyAxes[0, 2].plot(time_array[i], q_BBMG_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i] , markersize=markSize)
+                        self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 2].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 3].plot(time_array[i], xpos_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 3].plot(time_array[i], ypos_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 3].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 3].plot(time_array[i], 0, 'o', color=color_array[i], markersize=markSize)
 
                     # if len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) > 0:
                     #     # Fill under the curve for hydrodynamic hadron gas phase
@@ -744,18 +742,18 @@ class MainPage(tk.Frame):
             self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempHRG.get()])
 
             # Plot property titles
-            self.propertyAxes[0, 0].set_title("u_perp", fontsize=plotFontSize)
-            self.propertyAxes[0, 1].set_title("u_par", fontsize=plotFontSize)
-            self.propertyAxes[1, 0].set_title("T (GeV)", fontsize=plotFontSize)
-            self.propertyAxes[1, 1].set_title("|u|", fontsize=plotFontSize)
-            self.propertyAxes[2, 0].set_title("prp / (1-par)", fontsize=plotFontSize)
-            self.propertyAxes[2, 1].set_title("p_T", fontsize=plotFontSize)
-            self.propertyAxes[1, 2].set_title("...", fontsize=plotFontSize)
-            self.propertyAxes[2, 2].set_title("mu^2 (GeV^2)", fontsize=plotFontSize)
-            self.propertyAxes[0, 2].set_title("q_BBMG", fontsize=plotFontSize)
-            self.propertyAxes[0, 3].set_title("X Pos", fontsize=plotFontSize)
-            self.propertyAxes[1, 3].set_title("Y Pos", fontsize=plotFontSize)
-            self.propertyAxes[2, 3].set_title("q_drift", fontsize=plotFontSize)
+            self.propertyAxes[0, 0].set_title(r"$u_\perp$", fontsize=plotFontSize)
+            self.propertyAxes[0, 1].set_title(r"$u_\parallel$", fontsize=plotFontSize)
+            self.propertyAxes[1, 0].set_title(r"$T$ (GeV)", fontsize=plotFontSize)
+            self.propertyAxes[1, 1].set_title(r"$|u|$", fontsize=plotFontSize)
+            self.propertyAxes[2, 0].set_title(r"$q_{BBMG}$", fontsize=plotFontSize)
+            self.propertyAxes[2, 1].set_title(r"$p_T$", fontsize=plotFontSize)
+            self.propertyAxes[1, 2].set_title(r"$\mu^2$ (GeV$\,^2$)", fontsize=plotFontSize)
+            self.propertyAxes[2, 2].set_title(r"$q_{drift}$", fontsize=plotFontSize)
+            self.propertyAxes[0, 2].set_title(r"$u_\perp / (1-u_\parallel)$", fontsize=plotFontSize)
+            self.propertyAxes[0, 3].set_title(r"$X$ Pos", fontsize=plotFontSize)
+            self.propertyAxes[1, 3].set_title(r"$Y$ Pos", fontsize=plotFontSize)
+            self.propertyAxes[2, 3].set_title(r"jet traj. $\phi$", fontsize=plotFontSize)
 
 
 

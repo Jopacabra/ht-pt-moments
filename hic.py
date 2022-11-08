@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy import interpolate
 import matplotlib.pyplot as plt
 import h5py
 import math
@@ -734,12 +735,24 @@ def jet_pT_1opT4():
 # Function to select initial jet p_T based on jet spectra in sqrt(s)_{NN} = 200 GeV
 # collisions at RHIC.
 def jet_pT_RHIC():
+    pT_Domain = [1.25, 1.75, 2.25, 2.75, 3.5, 4.5, 5.5, 6.5, 7.5, 9, 11, 13, 15.5]
+    cross_sections = [0.259, 0.0483, 0.0119, 0.00364, 0.000438, 6.72E-05, 1.40E-05, 3.73E-06,
+                      1.18E-06, 3.08E-07, 7.92E-08, 2.13E-08, 5.11E-09]
+
+    interpolator = interpolate.interp1d(pT_Domain, cross_sections)
+
     rng = np.random.default_rng()
     while True:
-        chosen_e = rng.uniform(config.jet.MIN_JET_ENERGY, 20)
-        chosen_prob = rng.uniform(0, 1)
-        prob_pT = chosen_e * 1  # Function for pT probability
-        if chosen_e > config.jet.MIN_JET_ENERGY and chosen_prob < prob_pT:
+        chosen_e = rng.uniform(config.jet.MIN_JET_ENERGY, pT_Domain[-1])
+        chosen_prob = rng.uniform(0, np.amax(cross_sections))
+        try:
+            prob_pT = interpolator(chosen_e)  # Function for pT probability
+        except ValueError:
+            # Do something else, throw a fit!
+            logging.info('Problem sampling jet p_T spectrum!!!')
+            prob_pT = chosen_e * 1  # Function for pT probability
+
+        if chosen_e >= config.jet.MIN_JET_ENERGY and chosen_prob < prob_pT:
             break
 
     return chosen_e

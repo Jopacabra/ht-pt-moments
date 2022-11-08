@@ -162,7 +162,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         ypos_array = np.append(ypos_array, jet.y)
         q_drift_array = np.append(q_drift_array, q_drift)
         q_BBMG_array = np.append(q_BBMG_array, q_bbmg)
-        pT_array = np.append(pT_array, jet.p_T)
+        pT_array = np.append(pT_array, jet.p_T())
         temp_seen_array = np.append(temp_seen_array, temp)
         u_perp_array = np.append(u_perp_array, u_perp)
         u_par_array = np.append(u_par_array, u_par)

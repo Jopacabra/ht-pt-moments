@@ -639,9 +639,7 @@ class MainPage(tk.Frame):
                 self.plasmaAxis.plot(xpos_array[::self.nth.get()], ypos_array[::self.nth.get()], marker=',', color='black')
 
                 # Set moment display
-                # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!
-                self.momentDisplay.set(moment_label(moment=np.sum(q_drift_array), angleDeflection=None,
-                                                    k=self.K, label='Total'))
+                self.momentDisplay.set('Total Drift: {} GeV'.format(np.sum(q_drift_array)))
                 self.BBMGDisplay.set('Total BBMG: {} GeV'.format(np.sum(q_BBMG_array)))
                 self.momentHRGDisplay.set('...')
                 self.momentUnhydroDisplay.set('...')
@@ -661,7 +659,7 @@ class MainPage(tk.Frame):
                 self.propertyAxes[0, 2].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
                 self.propertyAxes[0, 3].plot(time_array, xpos_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 3].plot(time_array, ypos_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 3].plot(time_array, np.empty_like(time_array), ls=connectorLineStyle)
+                self.propertyAxes[2, 3].plot(time_array, np.zeros_like(time_array), ls=connectorLineStyle)
 
                 if self.plotColors.get():
                     # Determine colors from temp seen by jet at each time.

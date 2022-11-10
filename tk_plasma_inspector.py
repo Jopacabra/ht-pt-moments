@@ -753,7 +753,7 @@ class MainPage(tk.Frame):
             self.propertyAxes[0, 2].set_title(r"$u_\perp / (1-u_\parallel)$", fontsize=plotFontSize)
             self.propertyAxes[0, 3].set_title(r"$X$ Pos", fontsize=plotFontSize)
             self.propertyAxes[1, 3].set_title(r"$Y$ Pos", fontsize=plotFontSize)
-            self.propertyAxes[2, 3].set_title(r"jet traj. $\phi$", fontsize=plotFontSize)
+            self.propertyAxes[2, 3].set_title("...", fontsize=plotFontSize)
 
 
 

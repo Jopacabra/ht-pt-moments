@@ -46,6 +46,8 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
     ypos_array = np.array([])
     q_drift_array = np.array([])
     q_BBMG_array = np.array([])
+    int_drift_array = np.array([])
+    int_BBMG_array = np.array([])
     pT_array = np.array([])
     temp_seen_array = np.array([])
     u_perp_array = np.array([])
@@ -102,17 +104,19 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         # Perform jet calculations #
         ############################
 
+        int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
+        int_bbmg = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
         if phase == 'qgp':
             if drift and bbmg:
                 # Calculate energy loss due to gluon exchange with the medium
-                q_bbmg = float(jet.beta() * tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau))
+                q_bbmg = float(jet.beta() * tau * int_bbmg)
                 # Calculate jet drift momentum transferred to jet
-                q_drift = g_drift * float(jet.beta() * tau * pi.jet_drift_integrand(event=event, jet=jet, time=t))
+                q_drift = g_drift * float(jet.beta() * tau * int_drift)
             elif drift and not bbmg:
                 q_bbmg = 0
-                q_drift = g_drift * float(jet.beta() * tau * pi.jet_drift_integrand(event=event, jet=jet, time=t))
+                q_drift = g_drift * float(jet.beta() * tau * int_drift)
             elif not drift and bbmg:
-                q_bbmg = float(jet.beta() * tau * pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau))
+                q_bbmg = float(jet.beta() * tau * int_bbmg)
                 q_drift = 0
             else:
                 q_bbmg = 0
@@ -162,6 +166,8 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         ypos_array = np.append(ypos_array, jet.y)
         q_drift_array = np.append(q_drift_array, q_drift)
         q_BBMG_array = np.append(q_BBMG_array, q_bbmg)
+        int_drift_array = np.append(int_drift_array, int_drift)
+        int_BBMG_array = np.append(int_BBMG_array, int_bbmg)
         pT_array = np.append(pT_array, jet.p_T())
         temp_seen_array = np.append(temp_seen_array, temp)
         u_perp_array = np.append(u_perp_array, u_perp)
@@ -253,6 +259,12 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
                  'q_BBMG': (['time'], q_BBMG_array,
                             {'units': 'GeV',
                              'long_name': 'Momentum obtained by the jet at this timestep due to BBMG energy loss'}),
+                 'int_drift': (['time'], int_drift_array,
+                             {'units': 'GeV/fm',
+                              'long_name': 'Drift integrand seen by the jet at this timestep due to jet drift'}),
+                 'int_BBMG': (['time'], int_BBMG_array,
+                            {'units': 'GeV',
+                             'long_name': 'BBMG integrand seen by the jet at this timestep due to BBMG energy loss'}),
                  'pT': (['time'], pT_array,
                           {'units': 'GeV',
                            'long_name': 'Transverse momentum of the jet at this timestep'}),

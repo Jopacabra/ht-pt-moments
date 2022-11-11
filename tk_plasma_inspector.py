@@ -629,12 +629,15 @@ class MainPage(tk.Frame):
                 ypos_array = self.jet_xarray['y'].to_numpy()
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
                 q_BBMG_array = self.jet_xarray['q_BBMG'].to_numpy()
+                int_drift_array = self.jet_xarray['int_drift'].to_numpy()
+                int_BBMG_array = self.jet_xarray['int_BBMG'].to_numpy()
                 pT_array = self.jet_xarray['pT'].to_numpy()
                 temp_seen_array = self.jet_xarray['temp'].to_numpy()
                 u_perp_array = self.jet_xarray['u_perp'].to_numpy()
                 u_par_array = self.jet_xarray['u_par'].to_numpy()
                 u_array = self.jet_xarray['u'].to_numpy()
                 phase_array = self.jet_xarray['phase'].to_numpy()
+                rpos_array = np.sqrt(xpos_array**2 + ypos_array**2)
                 # Plot trajectory
                 self.plasmaAxis.plot(xpos_array[::self.nth.get()], ypos_array[::self.nth.get()], marker=',', color='black')
 
@@ -657,9 +660,9 @@ class MainPage(tk.Frame):
                 self.propertyAxes[1, 2].plot(time_array, 4 * temp_seen_array ** 2, ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 2].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
-                self.propertyAxes[0, 3].plot(time_array, xpos_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 3].plot(time_array, ypos_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 3].plot(time_array, np.zeros_like(time_array), ls=connectorLineStyle)
+                self.propertyAxes[0, 3].plot(time_array, rpos_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 3].plot(time_array, int_BBMG_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 3].plot(time_array, int_drift_array, ls=connectorLineStyle)
 
                 if self.plotColors.get():
                     # Determine colors from temp seen by jet at each time.
@@ -685,42 +688,53 @@ class MainPage(tk.Frame):
                         self.propertyAxes[1, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 2].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[0, 3].plot(time_array[i], xpos_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 3].plot(time_array[i], ypos_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 3].plot(time_array[i], 0, 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 3].plot(time_array[i], rpos_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 3].plot(time_array[i], int_BBMG_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 3].plot(time_array[i], int_drift_array[i], 'o', color=color_array[i], markersize=markSize)
 
-                    # if len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) > 0:
-                    #     # Fill under the curve for hydrodynamic hadron gas phase
-                    #     self.propertyAxes[2, 3].fill_between(
-                    #         x=t,
-                    #         y1=integrandArray,
-                    #         where=hydroHRGTimes[0] < t,
-                    #         color='g',
-                    #         alpha=0.2)
-                    #     # Fill under the curve for unhydrodynamic hadron gas phase
-                    #     self.propertyAxes[2, 3].fill_between(
-                    #         x=t,
-                    #         y1=integrandArray,
-                    #         where=unhydroHRGTimes[0] < t,
-                    #         color='r',
-                    #         alpha=0.2)
-                    # elif len(hydroHRGTimes) > 0 and len(unhydroHRGTimes) == 0:
-                    #     # Fill under the curve for hydrodynamic hadron gas phase
-                    #     self.propertyAxes[2, 3].fill_between(
-                    #         x=t,
-                    #         y1=integrandArray,
-                    #         where= t > hydroHRGTimes[0],
-                    #         color='g',
-                    #         alpha=0.2)
-                    # elif len(hydroHRGTimes) == 0 and len(unhydroHRGTimes) > 0:
-                    #     # Fill under the curve for unhydrodynamic hadron gas phase
-                    #     self.propertyAxes[2, 3].fill_between(
-                    #         x=t,
-                    #         y1=integrandArray,
-                    #         where=unhydroHRGTimes[0] < t,
-                    #         color='r',
-                    #         alpha=0.2)
-
+                        # # PERFORMANCE ISSUES:
+                        # # Fill under the drift integrand curve for qgp phase
+                        # self.propertyAxes[2, 3].fill_between(
+                        #     x=time_array,
+                        #     y1=int_drift_array,
+                        #     where=(phase_array == 'qgp'),
+                        #     color='b',
+                        #     alpha=0.2)
+                        # # Fill under the drift integrand curve for hydrodynamic hadron gas phase
+                        # self.propertyAxes[2, 3].fill_between(
+                        #     x=time_array,
+                        #     y1=int_drift_array,
+                        #     where=(phase_array == 'hrg'),
+                        #     color='g',
+                        #     alpha=0.2)
+                        # # Fill under the drift integrand curve for unhydrodynamic phase
+                        # self.propertyAxes[2, 3].fill_between(
+                        #     x=time_array,
+                        #     y1=int_drift_array,
+                        #     where=(phase_array == 'unh'),
+                        #     color='g',
+                        #     alpha=0.2)
+                        # # Fill under the bbmg integrand curve for qgp phase
+                        # self.propertyAxes[1, 3].fill_between(
+                        #     x=time_array,
+                        #     y1=int_BBMG_array,
+                        #     where=(phase_array == 'qgp'),
+                        #     color='b',
+                        #     alpha=0.2)
+                        # # Fill under the bbmg integrand curve for hydrodynamic hadron gas phase
+                        # self.propertyAxes[1, 3].fill_between(
+                        #     x=time_array,
+                        #     y1=int_BBMG_array,
+                        #     where=(phase_array == 'hrg'),
+                        #     color='g',
+                        #     alpha=0.1)
+                        # # Fill under the bbmg integrand curve for unhydrodynamic phase
+                        # self.propertyAxes[1, 3].fill_between(
+                        #     x=time_array,
+                        #     y1=int_BBMG_array,
+                        #     where=(phase_array == 'unh'),
+                        #     color='g',
+                        #     alpha=0.2)
 
             # Gridlines and ticks
             # Plot horizontal gridlines at y=0
@@ -749,9 +763,9 @@ class MainPage(tk.Frame):
             self.propertyAxes[1, 2].set_title(r"$\mu^2$ (GeV$\,^2$)", fontsize=plotFontSize)
             self.propertyAxes[2, 2].set_title(r"$q_{drift}$", fontsize=plotFontSize)
             self.propertyAxes[0, 2].set_title(r"$u_\perp / (1-u_\parallel)$", fontsize=plotFontSize)
-            self.propertyAxes[0, 3].set_title(r"$X$ Pos", fontsize=plotFontSize)
-            self.propertyAxes[1, 3].set_title(r"$Y$ Pos", fontsize=plotFontSize)
-            self.propertyAxes[2, 3].set_title("...", fontsize=plotFontSize)
+            self.propertyAxes[0, 3].set_title(r"$r$ Position", fontsize=plotFontSize)
+            self.propertyAxes[1, 3].set_title(r"BBMG Integrand", fontsize=plotFontSize)
+            self.propertyAxes[2, 3].set_title(r"Drift Integrand", fontsize=plotFontSize)
 
 
 

@@ -734,6 +734,7 @@ def jet_pT_1opT4():
 
 # Function to select initial jet p_T based on jet spectra in sqrt(s)_{NN} = 200 GeV
 # collisions at RHIC.
+# https://inspirehep.net/literature/836952
 def jet_pT_RHIC():
     pT_Domain = [1.25, 1.75, 2.25, 2.75, 3.5, 4.5, 5.5, 6.5, 7.5, 9, 11, 13, 15.5]
     cross_sections = [0.259, 0.0483, 0.0119, 0.00364, 0.000438, 6.72E-05, 1.40E-05, 3.73E-06,

@@ -242,6 +242,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
             "Tmax_event": [event.max_temp()],
             "drift": [drift],
             "bbmg": [bbmg],
+            "g_drift": [g_drift]
         }
     )
 

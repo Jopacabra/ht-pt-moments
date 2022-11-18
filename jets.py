@@ -21,7 +21,7 @@ class jet:
         self.x_0 = x_0
         self.y_0 = y_0
         # Quark masses - https://pdg.lbl.gov/2010/tables/rpp2010-sum-quarks.pdf
-        self.m = 0.0039  # in GeV - jet is quark for now - averaged up & down quark
+        self.m = 0  # in GeV - jet is gluon for now - massless
         self.tag = tag
         self.no = no
         self.record = None

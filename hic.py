@@ -734,27 +734,45 @@ def jet_pT_1opT4():
 
 # Function to select initial jet p_T based on jet spectra in sqrt(s)_{NN} = 200 GeV
 # collisions at RHIC.
-# https://inspirehep.net/literature/836952
+# https://inspirehep.net/literature/836952 - Cross-sections
+# https://inspirehep.net/literature/595058 - Cold nuclear matter effects envelope
 def jet_pT_RHIC():
-    pT_Domain = [1.25, 1.75, 2.25, 2.75, 3.5, 4.5, 5.5, 6.5, 7.5, 9, 11, 13, 15.5]
-    cross_sections = [0.259, 0.0483, 0.0119, 0.00364, 0.000438, 6.72E-05, 1.40E-05, 3.73E-06,
+    # Full data
+    #pT_Domain = [1.25, 1.75, 2.25, 2.75, 3.5, 4.5, 5.5, 6.5, 7.5, 9, 11, 13, 15.5]
+    #cross_sections = [0.259, 0.0483, 0.0119, 0.00364, 0.000438, 6.72E-05, 1.40E-05, 3.73E-06,
+    #                  1.18E-06, 3.08E-07, 7.92E-08, 2.13E-08, 5.11E-09]
+    # Cross sections for pi^0 production in pp
+    pT_domain = [2.25, 2.75, 3.5, 4.5, 5.5, 6.5, 7.5, 9, 11, 13, 15.5]
+    cross_sections = [0.0119, 0.00364, 0.000438, 6.72E-05, 1.40E-05, 3.73E-06,
                       1.18E-06, 3.08E-07, 7.92E-08, 2.13E-08, 5.11E-09]
 
-    interpolator = interpolate.interp1d(pT_Domain, cross_sections)
+    # Cold nuclear matter envelope on cross-sections
+    # THESE ARE EYEBALLED NUMBERS. DO NOT TRUST THESE!!!
+    env_pT_domain = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26]
+    env = [1.15, 1.6, 1.3, 1.2, 1.1, 1.05, 0.98, 0.9, 0.88, 0.85, 0.8, 0.78, 0.76]
+
+    # Interpolate envelope
+    env_interpolator = interpolate.interp1d(env_pT_domain, env)
+
+    # Apply envelope to cross-sections
+    env_on_cross_sections = cross_sections * env_interpolator(pT_domain)
+
+    # Interpolate enveloped cross-sections
+    interpolator = interpolate.interp1d(pT_domain, env_on_cross_sections)
 
     rng = np.random.default_rng()
     while True:
-        chosen_e = rng.uniform(config.jet.MIN_JET_ENERGY, pT_Domain[-1])
+        chosen_pT = rng.uniform(config.jet.MIN_JET_ENERGY, pT_domain[-1])
         chosen_prob = rng.uniform(0, np.amax(cross_sections))
         try:
-            prob_pT = interpolator(chosen_e)  # Function for pT probability
+            prob_pT = interpolator(chosen_pT)  # Function for pT probability
         except ValueError:
             # Do something else, throw a fit!
             logging.info('Problem sampling jet p_T spectrum!!!')
-            prob_pT = chosen_e * 1  # Function for pT probability
+            prob_pT = chosen_pT * 1  # Function for pT probability
 
-        if chosen_e >= config.jet.MIN_JET_ENERGY and chosen_prob < prob_pT:
+        if chosen_pT >= config.jet.MIN_JET_ENERGY and chosen_prob < prob_pT:
             break
 
-    return chosen_e
+    return chosen_pT
 

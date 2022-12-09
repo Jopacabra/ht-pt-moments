@@ -733,7 +733,7 @@ def jet_pT_1opT4():
 
 
 # Function to select initial jet p_T based on jet spectra in sqrt(s)_{NN} = 200 GeV
-# collisions at RHIC.
+# collisions at RHIC, as told by pi^0 production in pp + estimated cold nuclear matter effects
 # https://inspirehep.net/literature/836952 - Cross-sections
 # https://inspirehep.net/literature/595058 - Cold nuclear matter effects envelope
 def jet_pT_RHIC():
@@ -775,4 +775,87 @@ def jet_pT_RHIC():
             break
 
     return chosen_pT
+
+# Function to sample realistic cross-sections including cold nuclear matter effects
+# to select jet pilot parton type and p_T.
+def jet_sample_LHC(cent=None):
+    cross_section_max = 1
+    #max_jet_pT_index = int(config.jet.MAX_JET_ENERGY * 100)  # Could use to limit data loaded
+
+    # Select centrality bin fileset
+    # Load proper file
+
+    # Load file directly if in project root directory
+    if cent is None:
+        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+    else:
+        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+    while True:
+        try:
+            cs_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
+                                        names=['pT', 'g', 'd', 'dbar', 'u', 'ubar', 's', 'sbar'], skiprows=1)
+
+        except FileNotFoundError:
+            # Load file from directory above if in temporary directory
+            file_path = '../' + file_path
+            continue
+        break
+
+    # Cast to numpy arrays for interpolation
+    pT_domain = cs_data['pT'].to_numpy()
+    sigma_u = cs_data['u'].to_numpy()
+    sigma_ubar = cs_data['ubar'].to_numpy()
+    sigma_d = cs_data['d'].to_numpy()
+    sigma_dbar = cs_data['dbar'].to_numpy()
+    sigma_s = cs_data['s'].to_numpy()
+    sigma_sbar = cs_data['sbar'].to_numpy()
+    sigma_g = cs_data['g'].to_numpy()
+
+    # Interpolate cross-section spectra
+    sigma_u_int = interpolate.interp1d(pT_domain, sigma_u)
+    sigma_ubar_int = interpolate.interp1d(pT_domain, sigma_ubar)
+    sigma_d_int = interpolate.interp1d(pT_domain, sigma_d)
+    sigma_dbar_int = interpolate.interp1d(pT_domain, sigma_dbar)
+    sigma_s_int = interpolate.interp1d(pT_domain, sigma_s)
+    sigma_sbar_int = interpolate.interp1d(pT_domain, sigma_sbar)
+    sigma_g_int = interpolate.interp1d(pT_domain, sigma_g)
+
+
+    rng = np.random.default_rng()
+    while True:
+        # Randomly select a point in the phase space and a corresponding probability measure
+        chosen_pT = rng.uniform(config.jet.MIN_JET_ENERGY, config.jet.MAX_JET_ENERGY)
+        chosen_prob = rng.uniform(0, cross_section_max)
+        chosen_pilot = rng.choice(['s', 'sbar', 'u', 'ubar', 'd', 'dbar', 'g'])
+
+        # Check corresponding real probability of this point
+        try:
+            if chosen_pilot == 'u':
+                prob_pT = sigma_u_int(chosen_pT)
+            elif chosen_pilot == 'ubar':
+                prob_pT = sigma_ubar_int(chosen_pT)
+            elif chosen_pilot == 'd':
+                prob_pT = sigma_d_int(chosen_pT)
+            elif chosen_pilot == 'dbar':
+                prob_pT = sigma_dbar_int(chosen_pT)
+            elif chosen_pilot == 's':
+                prob_pT = sigma_s_int(chosen_pT)
+            elif chosen_pilot == 'sbar':
+                prob_pT = sigma_sbar_int(chosen_pT)
+            elif chosen_pilot == 'g':
+                prob_pT = sigma_g_int(chosen_pT)
+            else:
+                prob_pT = 0
+
+        except ValueError:
+            # Do something else, throw a fit!
+            logging.info('Problem sampling jet p_T spectrum!!!')
+            prob_pT = chosen_pT * 1  # Function for pT probability
+
+        # If chosen probability is less than true probability, accept this point
+        if chosen_prob < prob_pT:
+            break
+
+    return chosen_pilot, chosen_pT
+
 

@@ -1,7 +1,5 @@
 import numpy as np
 import logging
-import hic
-import plasma_interaction as pi
 
 # Jet object class. Useful for plotting and simplifying everything.
 # Note jet energy (energy) in GeV
@@ -12,7 +10,7 @@ import plasma_interaction
 
 class jet:
     # Instantiation statement. All parameters optional.
-    def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, tag=None, no=None):
+    def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, part=None, tag=None, no=None):
         logging.info('Creating new jet...')
 
         # Initialize basic parameters
@@ -20,8 +18,29 @@ class jet:
         self.p_T0 = p_T0  # in GeV
         self.x_0 = x_0
         self.y_0 = y_0
-        # Quark masses - https://pdg.lbl.gov/2010/tables/rpp2010-sum-quarks.pdf
-        self.m = 0  # in GeV - jet is gluon for now - massless
+        self.part = part
+
+        # If no particle type supplied, particle is a gluon (most common case).
+        if self.part is None:
+            self.part = 'g'
+
+        # Quark masses - https://pdglive.lbl.gov/Particle.action?node=Q123&home=
+        # Masses should be in GeV
+        if self.part == 'u':
+            self.m = 0.00216
+        elif self.part == 'ubar':
+            self.m = 0.00216  # anti-quark masses must be same!!!
+        elif self.part == 'd':
+            self.m = 0.00467
+        elif self.part == 'dbar':
+            self.m = 0.00467  # anti-quark masses must be same!!!
+        elif self.part == 's':
+            self.m = 0.0934
+        elif self.part == 'sbar':
+            self.m = 0.0934  # anti-quark masses must be same!!!
+        elif self.part == 'g':
+            self.m = 0  # Massless boson
+
         self.tag = tag
         self.no = no
         self.record = None

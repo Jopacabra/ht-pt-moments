@@ -52,10 +52,6 @@ class jet:
         # Set calculated properties
         self.beta_0 = self.beta()
 
-        # Initialize shower correction, then sample shower correction distribution to determine post-shower direction
-        self.shower_correction = 0
-        self.shower_sample()
-
         # Set current position and momentum values
         self.x = self.x_0
         self.y = self.y_0
@@ -79,13 +75,6 @@ class jet:
         phi = np.mod(np.arctan2(self.p_y, self.p_x), 2 * np.pi)
         rho = np.sqrt(self.p_x ** 2 + self.p_y ** 2)
         return np.array([rho, phi])
-
-    # Method to sample a shower distribution and return a shower correction angle
-    # As of now, this just returns zero
-    def shower_sample(self):
-        logging.info('Sampling shower correction distribution...')
-        logging.debug('No shower correction for now!')
-        self.shower_correction = 0
 
     # Method to add a given momentum in xy coordinates to the jet
     def add_q(self, dp_x=0, dp_y=0):

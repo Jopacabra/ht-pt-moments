@@ -5,7 +5,7 @@ import logging
 # Note jet energy (energy) in GeV
 # Note jet velocity (v0) in fraction of speed of light
 # Note jet angle (theta0) in radians
-import plasma_interaction
+
 
 
 class jet:

@@ -1,14 +1,8 @@
-import os
 import numpy as np
 import pandas as pd
 import logging
-import hic
-import plasma
-import jets
 import plasma_interaction as pi
 import config
-import utilities
-from utilities import tempDir
 import xarray as xr
 
 

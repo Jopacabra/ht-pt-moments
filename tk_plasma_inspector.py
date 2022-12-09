@@ -5,7 +5,6 @@ from tkinter.simpledialog import askfloat
 from tkinter import messagebox
 import numpy as np
 import plasma
-import plasma_interaction as pi
 import hic
 import jets
 import matplotlib

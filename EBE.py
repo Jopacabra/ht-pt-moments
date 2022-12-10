@@ -101,14 +101,15 @@ def run_event(eventNo):
 
         # Select jet energy
         if config.jet.E_FLUCT:
-            chosen_e = hic.jet_pT_RHIC()
+            chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
         else:
+            chosen_pilot = 'g'
             chosen_e = config.jet.JET_ENERGY
 
         for case in ['db', 'd', 'b', 'd/2b', '2db']:
             logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
             # Create the jet object
-            jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo)
+            jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot)
 
             if case == 'db':
                 g_drift = 1

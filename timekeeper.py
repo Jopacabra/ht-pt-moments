@@ -98,7 +98,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         elif temp < config.transport.hydro.T_UNHYDRO and temp > config.transport.hydro.T_END:
             phase = 'unh'
         else:
-            phase = 'esc'
+            phase = 'vac'
 
         ############################
         # Perform jet calculations #

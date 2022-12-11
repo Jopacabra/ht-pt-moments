@@ -57,7 +57,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
     # Initiate loop
     logging.info('Initiating time loop...')
     while True:
-        logging.info('t = {}'.format(t))
+        #logging.info('t = {}'.format(t))
         #####################
         # Initial Step Only #
         #####################

@@ -47,7 +47,7 @@ def run_cmd(*args, quiet=False):
             for line in outputCopyStdout:
                 logging.info(line)
                 outputArray = np.append(outputArray, line)
-            logging.debug('stderr:\n')
+            logging.info('stderr:\n')
             while True:
                 try:
                     line = outputCopyStderr.readline()

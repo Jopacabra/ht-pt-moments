@@ -223,7 +223,6 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
             "q_drift": [float(q_drift_total)],
             "q_drift_abs": [float(q_drift_abs_total)],
             "extinguished": [extinguished],
-            "shower_correction": [jet.shower_correction],
             "X0": [jet.x_0],
             "Y0": [jet.y_0],
             "phi_0": [jet.phi_0],

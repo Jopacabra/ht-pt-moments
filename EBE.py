@@ -226,4 +226,5 @@ except hic.StopEvent:
               keep_event=config.mode.KEEP_EVENT)
 
 logging.info('Results identifier: {}'.format(identifierString))
+logging.info('Successful completion!')
 logging.info('Please have an excellent day. :)')

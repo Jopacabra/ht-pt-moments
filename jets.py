@@ -40,6 +40,8 @@ class jet:
             self.m = 0.0934  # anti-quark masses must be same!!!
         elif self.part == 'g':
             self.m = 0  # Massless boson
+        else:
+            self.m = 0  # Default to massless gluon properties
 
         self.tag = tag
         self.no = no

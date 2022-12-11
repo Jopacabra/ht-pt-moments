@@ -794,10 +794,11 @@ def jet_sample_LHC(cent=None):
         try:
             cs_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
                                         names=['pT', 'g', 'd', 'dbar', 'u', 'ubar', 's', 'sbar'], skiprows=1)
-
+            logging.info('Found and read cross-section file...')
         except FileNotFoundError:
             # Load file from directory above if in temporary directory
             file_path = '../' + file_path
+            logging.info('Failed to find cross-section file...')
             continue
         break
 
@@ -812,6 +813,7 @@ def jet_sample_LHC(cent=None):
     sigma_g = cs_data['g'].to_numpy()
 
     # Interpolate cross-section spectra
+    logging.info('Interpolating cross section data')
     sigma_u_int = interpolate.interp1d(pT_domain, sigma_u)
     sigma_ubar_int = interpolate.interp1d(pT_domain, sigma_ubar)
     sigma_d_int = interpolate.interp1d(pT_domain, sigma_d)

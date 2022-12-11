@@ -101,10 +101,13 @@ def run_event(eventNo):
 
         # Select jet energy
         if config.jet.E_FLUCT:
+            logging.info('Sampling cross-sections...')
             chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
         else:
             chosen_pilot = 'g'
             chosen_e = config.jet.JET_ENERGY
+
+        logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
         for case in ['db', 'd', 'b', 'd/2b', '2db']:
             logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))

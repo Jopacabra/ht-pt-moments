@@ -822,7 +822,7 @@ def jet_sample_LHC(cent=None):
     sigma_sbar_int = interpolate.interp1d(pT_domain, sigma_sbar)
     sigma_g_int = interpolate.interp1d(pT_domain, sigma_g)
 
-
+    logging.info('Sampling cross-sections...')
     rng = np.random.default_rng()
     while True:
         # Randomly select a point in the phase space and a corresponding probability measure

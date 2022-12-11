@@ -57,6 +57,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
     # Initiate loop
     logging.info('Initiating time loop...')
     while True:
+        logging.info('t = {}'.format(t))
         #####################
         # Initial Step Only #
         #####################
@@ -69,10 +70,13 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         #########################
         # Decide if we're in bounds of the grid
         if jet.x > event.xmax or jet.y > event.ymax:
+            logging.info('Jet escaped event space...')
             break
         elif jet.x < event.xmin or jet.y < event.ymin:
+            logging.info('Jet escaped event space...')
             break
         elif t > event.tf:
+            logging.info('Jet escaped event time...')
             break
 
         # Record p_T at beginning of step for extinction check
@@ -93,6 +97,8 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
             phase = 'hrg'
         elif temp < config.transport.hydro.T_UNHYDRO and temp > config.transport.hydro.T_END:
             phase = 'unh'
+        else:
+            phase = 'esc'
 
         ############################
         # Perform jet calculations #
@@ -242,6 +248,8 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         }
     )
 
+    logging.info('Pandas dataframe generated...')
+
     # Create and store jet record xarray
     # define data with variable attributes
     data_vars = {'x': (['time'], xpos_array,
@@ -294,5 +302,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
                             attrs=attrs)
 
     jet.record = jet_xarray
+
+    logging.info('Xarray dataframe generated...')
 
     return jet_dataframe, jet_xarray

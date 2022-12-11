@@ -285,8 +285,8 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
                        {'units': 'GeV',
                         'long_name': 'Temperature seen by the jet at this timestep'}),
                  'phase': (['time'], phase_array,
-                           {'units': 'GeV',
-                            'long_name': 'Temperature seen by the jet at this timestep'})
+                           {'units': 'qgp = Quark Gluon Plasma, hrg = HadRon Gas, unh = UNHydrodynamic hadron gas, vac = below unh cutoff / vacuum',
+                            'long_name': 'Phase seen by the jet at this timestep'})
                  }
 
     # define coordinates

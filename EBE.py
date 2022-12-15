@@ -177,7 +177,7 @@ else:
 
 # Create log file & configure logging to be handled into the file AND stdout
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     handlers=[
         logging.FileHandler(os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString)),
         logging.StreamHandler()
@@ -209,22 +209,38 @@ try:
 
         eventNo += 1
 
-except KeyboardInterrupt:
-    logging.warning('Interrupted!')
+except KeyboardInterrupt as error:
+    logging.exception('Interrupted!!!: {}'.format(str(error)))
     logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
     safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
               keep_event=config.mode.KEEP_EVENT)
 
-except hic.StopEvent:
-    logging.warning('HIC event error.')
+except hic.StopEvent as error:
+    logging.exception('HIC event error: {}'.format(str(error)))
     logging.info('Cleaning up...')
+
+    # Clean up and get everything sorted
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+              keep_event=config.mode.KEEP_EVENT)
+
+except MemoryError as error:
+    logging.exception('Memory error: {}'.format(str(error)))
+    logging.info('Cleaning up...')
+
+    # Clean up and get everything sorted
+    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+              keep_event=config.mode.KEEP_EVENT)
+
+except BaseException as error:
+    logging.exception('Unhandled error: {}'.format(str(error)))
+    logging.info('Attempting to clean up...')
 
     # Clean up and get everything sorted
     safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
               keep_event=config.mode.KEEP_EVENT)
 
 logging.info('Results identifier: {}'.format(identifierString))
-logging.info('Successful completion!')
+logging.info('Successful clean exit!')
 logging.info('Please have an excellent day. :)')

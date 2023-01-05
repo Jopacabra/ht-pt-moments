@@ -413,7 +413,7 @@ class plasma_event:
             # Create arrays of each coordinate
             # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
             # We necessarily must set time equal to a constant to plot in 2D.
-            x_space_vel = self.xspace(resolution=vel_resolution)
+            x_space_vel = self.xspace(resolution=vel_resolution, fraction=zoom)
             vel_x_coords, vel_y_coords = np.meshgrid(x_space_vel, x_space_vel, indexing='ij')
 
             # t_coords set to be an array matching the length of x_coords full of constant time

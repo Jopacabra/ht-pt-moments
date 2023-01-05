@@ -238,8 +238,9 @@ class plasma_event:
 
 
     # Method to get array on space domain of event with given resolution
-    def xspace(self, resolution=100):
-        return np.arange(start=self.xmin, stop=self.xmax, step=((self.xmax - self.xmin) / resolution))
+    def xspace(self, resolution=100, fraction=1):
+        return np.arange(start=fraction*self.xmin, stop=fraction*self.xmax,
+                         step=((fraction*self.xmax - fraction*self.xmin) / resolution))
 
     # Method to get array on time domain of event with given resolution
     def tspace(self, resolution=100):
@@ -380,13 +381,13 @@ class plasma_event:
     # Other options can adjust the output.
     # Returns the plot object to make integration elsewhere nicer.
     def plot(self, time, temp_resolution=100, vel_resolution=30,
-             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True, numContours=15):
+             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True, numContours=15, zoom=1):
         tempMax = self.max_temp()
 
         # Domains of physical positions to plot at (in fm)
         # These limits of the linear space obtain the largest and smallest input value for
         # the interpolating function's position inputs.
-        x_space = self.xspace(resolution=temp_resolution)
+        x_space = self.xspace(resolution=temp_resolution, fraction=zoom)
 
         transposeAxes = (2, 1, 0)
 

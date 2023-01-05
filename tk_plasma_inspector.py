@@ -127,6 +127,8 @@ class MainPage(tk.Frame):
         self.propPlotRes.set(0.2)
         self.plotColors = tk.BooleanVar()
         self.plotColors.set(True)
+        self.zoom = tk.DoubleVar()
+        self.zoom.set(1)
 
         # Moment variables
         self.jet_dataframe = None
@@ -227,6 +229,10 @@ class MainPage(tk.Frame):
         self.tempUnhydroSlider = tk.Scale(self, orient=tk.HORIZONTAL,
                                           variable=self.tempUnhydro, from_=0, to=1, length=200, resolution=0.01,
                                           label='Unhydro Temp (GeV)')
+        # Create zoom slider
+        self.zoomSlider = tk.Scale(self, orient=tk.HORIZONTAL,
+                                          variable=self.zoom, from_=0, to=1, length=200, resolution=0.01,
+                                          label='Zoom')
 
 
         # Register update ON RELEASE - use of command parameter applies action immediately
@@ -238,6 +244,7 @@ class MainPage(tk.Frame):
         self.jetESlider.bind("<ButtonRelease-1>", self.update_jet)
         self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_jet)
         self.tempUnhydroSlider.bind("<ButtonRelease-1>", self.update_jet)
+        self.zoomSlider.bind("<ButtonRelease-1>", self.update_jet)
 
         #########
         # Menus #
@@ -360,6 +367,7 @@ class MainPage(tk.Frame):
         self.y0Slider.grid(row=1, column=4, columnspan=2)
         self.theta0Slider.grid(row=1, column=6, columnspan=2)
         self.jetESlider.grid(row=1, column=8, columnspan=2)
+        self.zoomSlider.grid(row=1, column=10, columnspan=1)
         self.tempCutoffSlider.grid(row=5, column=8, columnspan=2)
         self.tempUnhydroSlider.grid(row=6, column=8, columnspan=2)
         self.canvas.get_tk_widget().grid(row=2, column=0, columnspan=6, rowspan=3)
@@ -587,10 +595,12 @@ class MainPage(tk.Frame):
 
             # Plot new temperatures & velocities
             self.tempPlot, self.velPlot, self.tempcb, self.velcb = self.current_event.plot(self.time.get(),
-                                                                  temp_resolution=100, vel_resolution=30,
+                                                                  temp_resolution=100,
+                                                                  vel_resolution=30,
                                                                   veltype=self.velocityType.get(),
                                                                   temptype=self.tempType.get(),
-                                                                  numContours=self.contourNumber.get())
+                                                                  numContours=self.contourNumber.get(),
+                                                                  zoom=self.zoom.get())
 
             # Set moment display
             # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!

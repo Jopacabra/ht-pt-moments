@@ -621,7 +621,7 @@ class MainPage(tk.Frame):
                 # Plot initial trajectory
                 d_x = np.cos(self.current_jet.phi_0) * self.current_jet.beta_0 * (0.5 * self.current_event.tf)
                 d_y = np.sin(self.current_jet.phi_0) * self.current_jet.beta_0 * (0.5 * self.current_event.tf)
-                self.plasmaAxis.arrow(self.current_jet.x_0, self.current_jet.y_0, d_x, d_y, color='white', width=0.1)
+                self.plasmaAxis.arrow(self.current_jet.x_0, self.current_jet.y_0, d_x, d_y, color='white', width=0.15)
                 # Get trajectory points
                 time_array = self.jet_xarray['time'].to_numpy()
                 xpos_array = self.jet_xarray['x'].to_numpy()
@@ -638,7 +638,8 @@ class MainPage(tk.Frame):
                 phase_array = self.jet_xarray['phase'].to_numpy()
                 rpos_array = np.sqrt(xpos_array**2 + ypos_array**2)
                 # Plot trajectory
-                self.plasmaAxis.plot(xpos_array[::self.nth.get()], ypos_array[::self.nth.get()], marker=',', color='black')
+                self.plasmaAxis.plot(xpos_array[::self.nth.get()], ypos_array[::self.nth.get()], marker=',',
+                                     color='black', markersize=15)
 
                 # Set moment display
                 self.momentDisplay.set('Total Drift: {} GeV'.format(np.sum(q_drift_array)))

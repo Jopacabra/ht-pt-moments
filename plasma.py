@@ -436,7 +436,7 @@ class plasma_event:
             plt.gca().set_aspect('equal')
             plt.gca().set_xlabel('X Position [fm]')
             plt.gca().set_ylabel('Y Position [fm]')
-            tempcb = plt.colorbar(temps, label='GeV')
+            tempcb = plt.colorbar(temps, label='Temperature (GeV)')
         elif temptype == 'contour' and plot_temp:
             tempLevels = np.linspace(0, tempMax, numContours)
             temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma',
@@ -444,7 +444,7 @@ class plasma_event:
             plt.gca().set_aspect('equal')
             plt.gca().set_xlabel('X Position [fm]')
             plt.gca().set_ylabel('Y Position [fm]')
-            tempcb = plt.colorbar(temps, label='GeV')
+            tempcb = plt.colorbar(temps, label='Temperature (GeV)')
         else:
             temps = 0
             tempcb = 0
@@ -457,7 +457,7 @@ class plasma_event:
             plt.gca().set_aspect('equal')
             plt.gca().set_xlabel('X Position [fm]')
             plt.gca().set_ylabel('Y Position [fm]')
-            velcb = plt.colorbar(vels.lines, label='c')
+            velcb = plt.colorbar(vels.lines, label='Flow Velocity (c)')
         elif veltype == 'quiver' and plot_vel:
             vels = plt.quiver(x_space_vel, x_space_vel, x_vels, y_vels, np.sqrt(x_vels ** 2 + y_vels ** 2),
                               linewidth=1,
@@ -465,7 +465,7 @@ class plasma_event:
             plt.gca().set_aspect('equal')
             plt.gca().set_xlabel('X Position [fm]')
             plt.gca().set_ylabel('Y Position [fm]')
-            velcb = plt.colorbar(vels, label='c')
+            velcb = plt.colorbar(vels, label='Flow Velocity (c)')
         else:
             vels = 0
             velcb = 0

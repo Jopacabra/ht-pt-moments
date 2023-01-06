@@ -649,7 +649,7 @@ class MainPage(tk.Frame):
                 rpos_array = np.sqrt(xpos_array**2 + ypos_array**2)
                 # Plot trajectory
                 self.plasmaAxis.plot(xpos_array[::self.nth.get()], ypos_array[::self.nth.get()], marker=',',
-                                     color='black', markersize=15)
+                                     color='black', markersize=20)
 
                 # Set moment display
                 self.momentDisplay.set('Total Drift: {} GeV'.format(np.sum(q_drift_array)))

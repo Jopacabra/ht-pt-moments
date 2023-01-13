@@ -779,7 +779,6 @@ def jet_pT_RHIC():
 # Function to sample realistic cross-sections including cold nuclear matter effects
 # to select jet pilot parton type and p_T.
 def jet_sample_LHC(cent=None):
-    cross_section_max = 1
     #max_jet_pT_index = int(config.jet.MAX_JET_ENERGY * 100)  # Could use to limit data loaded
 
     # Select centrality bin fileset
@@ -811,6 +810,12 @@ def jet_sample_LHC(cent=None):
     sigma_s = cs_data['s'].to_numpy()
     sigma_sbar = cs_data['sbar'].to_numpy()
     sigma_g = cs_data['g'].to_numpy()
+
+    # Compute maximum of cross-sections
+    cross_section_max = np.amax(
+        [np.amax(sigma_u), np.amax(sigma_ubar), np.amax(sigma_d),
+         np.amax(sigma_dbar), np.amax(sigma_s),
+         np.amax(sigma_sbar), np.amax(sigma_g)])
 
     # Interpolate cross-section spectra
     logging.info('Interpolating cross section data')

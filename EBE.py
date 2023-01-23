@@ -101,7 +101,11 @@ def run_event(eventNo):
 
         # Select jet energy
         if config.jet.E_FLUCT:
-            chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
+            if config.jet.E_IS:
+                chosen_pilot, chosen_e, chosen_weight = hic.jet_IS_LHC(cent=None)
+            else:
+                chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
+                chosen_weight = 1
         else:
             chosen_pilot = 'g'
             chosen_e = config.jet.JET_ENERGY

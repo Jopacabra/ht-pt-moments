@@ -25,6 +25,7 @@ trento:
 jet:  # Parameters for the jets to be run
     JET_ENERGY: 22.5  # Jet energy in GeV - corresponds to TOTAL jet E, not just charged particle E
     E_FLUCT: True  # Vary jet energy EBE? - If True, JET_ENERGY does nothing.
+    E_IS: True  # Importance sample jet energy - uses uniform approximate distribution
     MIN_JET_ENERGY: 1  # Minimum jet energy in GeV to use if jet energy fluctuates. - Min 1.25 if RHIC sampling
     MAX_JET_ENERGY: 10
     TAU: 0.01  # Timestep used for jet propagation

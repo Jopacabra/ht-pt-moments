@@ -865,4 +865,84 @@ def jet_sample_LHC(cent=None):
 
     return chosen_pilot, chosen_pT
 
+# Function to use importance sampling to select a uniform-random jet pilot and pT
+# with an associated weight drawn from the ratio of the pilot's cross-section distribution
+# and the maximum cross-section value.
+def jet_IS_LHC(cent=None):
+    # Select centrality bin fileset
+    # Load proper file
 
+    # Load file directly if in project root directory
+    if cent is None:
+        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+    else:
+        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+    while True:
+        try:
+            cs_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
+                                    names=['pT', 'g', 'd', 'dbar', 'u', 'ubar', 's', 'sbar'], skiprows=1)
+            logging.info('Found and read cross-section file...')
+        except FileNotFoundError:
+            # Load file from directory above if in temporary directory
+            file_path = '../' + file_path
+            logging.info('Failed to find cross-section file...')
+            continue
+        break
+
+    # Cast to numpy arrays for interpolation
+    pT_domain = cs_data['pT'].to_numpy()
+    sigma_u = cs_data['u'].to_numpy()
+    sigma_ubar = cs_data['ubar'].to_numpy()
+    sigma_d = cs_data['d'].to_numpy()
+    sigma_dbar = cs_data['dbar'].to_numpy()
+    sigma_s = cs_data['s'].to_numpy()
+    sigma_sbar = cs_data['sbar'].to_numpy()
+    sigma_g = cs_data['g'].to_numpy()
+
+    # Compute maximum of cross-sections
+    cross_section_max = np.amax(
+        [np.amax(sigma_u), np.amax(sigma_ubar), np.amax(sigma_d),
+         np.amax(sigma_dbar), np.amax(sigma_s),
+         np.amax(sigma_sbar), np.amax(sigma_g)])
+
+    # Interpolate cross-section spectra
+    logging.info('Interpolating cross section data')
+    sigma_u_int = interpolate.interp1d(pT_domain, sigma_u)
+    sigma_ubar_int = interpolate.interp1d(pT_domain, sigma_ubar)
+    sigma_d_int = interpolate.interp1d(pT_domain, sigma_d)
+    sigma_dbar_int = interpolate.interp1d(pT_domain, sigma_dbar)
+    sigma_s_int = interpolate.interp1d(pT_domain, sigma_s)
+    sigma_sbar_int = interpolate.interp1d(pT_domain, sigma_sbar)
+    sigma_g_int = interpolate.interp1d(pT_domain, sigma_g)
+
+    logging.info('Sampling cross-sections...')
+    rng = np.random.default_rng()
+    # Randomly select a point in the phase space and a corresponding probability measure
+    chosen_pT = rng.uniform(config.jet.MIN_JET_ENERGY, config.jet.MAX_JET_ENERGY)
+    chosen_pilot = rng.choice(['s', 'sbar', 'u', 'ubar', 'd', 'dbar', 'g'])
+
+    # Check corresponding real probability of this point
+    try:
+        if chosen_pilot == 'u':
+            chosen_weight = sigma_u_int(chosen_pT)/cross_section_max
+        elif chosen_pilot == 'ubar':
+            chosen_weight = sigma_ubar_int(chosen_pT)/cross_section_max
+        elif chosen_pilot == 'd':
+            chosen_weight = sigma_d_int(chosen_pT)/cross_section_max
+        elif chosen_pilot == 'dbar':
+            chosen_weight = sigma_dbar_int(chosen_pT)/cross_section_max
+        elif chosen_pilot == 's':
+            chosen_weight = sigma_s_int(chosen_pT)/cross_section_max
+        elif chosen_pilot == 'sbar':
+            chosen_weight = sigma_sbar_int(chosen_pT)/cross_section_max
+        elif chosen_pilot == 'g':
+            chosen_weight = sigma_g_int(chosen_pT)/cross_section_max
+        else:
+            chosen_weight = 0
+
+    except ValueError:
+        # Do something else, throw a fit!
+        logging.warning('Problem sampling jet p_T spectrum!!!')
+        chosen_weight = 1  # Function for pT probability
+
+    return chosen_pilot, chosen_pT, chosen_weight

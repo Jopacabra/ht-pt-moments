@@ -29,6 +29,7 @@ jet:  # Parameters for the jets to be run
     MIN_JET_ENERGY: 1  # Minimum jet energy in GeV to use if jet energy fluctuates. - Min 1.25 if RHIC sampling
     MAX_JET_ENERGY: 10
     TAU: 0.01  # Timestep used for jet propagation
+    RECORD: True  # Save xarray jet record?
 global_constants:  # Physical constants to be set by the user.
     G: 2  # Coupling constant for strong interaction
     KAPPA: 254.9  # Coupling constant for BBMG energy loss - Current default 250 ???

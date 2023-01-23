@@ -66,6 +66,7 @@ class jet:
     MIN_JET_ENERGY = float(cfg['jet']['MIN_JET_ENERGY'])
     MAX_JET_ENERGY = float(cfg['jet']['MAX_JET_ENERGY'])
     TAU = float(cfg['jet']['TAU'])
+    RECORD = bool(cfg['jet']['RECORD'])
 
 
 

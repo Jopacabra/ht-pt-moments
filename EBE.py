@@ -146,6 +146,11 @@ def run_event(eventNo):
             jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
                                                              g_drift=g_drift)
 
+            # Save the xarray trajectory file
+            # Note we are currently in a temp directory... Save record in directory above.
+            if config.jet.RECORD:
+                jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
+
             # Merge the event and jet dataframe lines
             current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
 

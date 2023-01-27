@@ -1,24 +1,22 @@
 # ht-pt-moments
 Integration of asymmetric transverse momentum moments in hydrodynamic QGP grids.
 
-Python modules required:
+### Python modules required:
 
-scipy
+* scipy
+* numpy
+* h5py
+* tkinter
+* pandas
+* xarray
+* matplotlib
+* py-yaml
+* seaborn (Future?)
 
-numpy
+### Trento & OSU-Hydro dependencies
 
-h5py
+* Python 3.5+ with numpy, scipy, cython, and h5py
+* C, C++, and Fortran compilers
+* CMake 3.4+
+* Boost and HDF5 C++ libraries
 
-tkinter
-
-pandas
-
-xarray
-
-matplotlib
-
-py-yaml
-
-Future:
-
-seaborn

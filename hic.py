@@ -868,7 +868,7 @@ def jet_sample_LHC(cent=None):
 # Function to use importance sampling to select a uniform-random jet pilot and pT
 # with an associated weight drawn from the ratio of the pilot's cross-section distribution
 # and the maximum cross-section value.
-def jet_IS_LHC(cent=None):
+def jet_IS_LHC(cent=None, num_samples=1):
     # Select centrality bin fileset
     # Load proper file
 
@@ -917,32 +917,43 @@ def jet_IS_LHC(cent=None):
 
     logging.info('Sampling cross-sections...')
     rng = np.random.default_rng()
-    # Randomly select a point in the phase space and a corresponding probability measure
-    chosen_pT = rng.uniform(config.jet.MIN_JET_ENERGY, config.jet.MAX_JET_ENERGY)
-    chosen_pilot = rng.choice(['s', 'sbar', 'u', 'ubar', 'd', 'dbar', 'g'])
+    chosen_pT_array = np.array([])
+    chosen_pilot_array = np.array([])
+    chosen_weight_array = np.array([])
+    while len(chosen_weight_array) < num_samples:
+        # Randomly select a point in the phase space and a corresponding probability measure
+        chosen_pT = rng.uniform(config.jet.MIN_JET_ENERGY, config.jet.MAX_JET_ENERGY)
+        chosen_pilot = rng.choice(['s', 'sbar', 'u', 'ubar', 'd', 'dbar', 'g'])
 
-    # Check corresponding real probability of this point
-    try:
-        if chosen_pilot == 'u':
-            chosen_weight = sigma_u_int(chosen_pT)/cross_section_max
-        elif chosen_pilot == 'ubar':
-            chosen_weight = sigma_ubar_int(chosen_pT)/cross_section_max
-        elif chosen_pilot == 'd':
-            chosen_weight = sigma_d_int(chosen_pT)/cross_section_max
-        elif chosen_pilot == 'dbar':
-            chosen_weight = sigma_dbar_int(chosen_pT)/cross_section_max
-        elif chosen_pilot == 's':
-            chosen_weight = sigma_s_int(chosen_pT)/cross_section_max
-        elif chosen_pilot == 'sbar':
-            chosen_weight = sigma_sbar_int(chosen_pT)/cross_section_max
-        elif chosen_pilot == 'g':
-            chosen_weight = sigma_g_int(chosen_pT)/cross_section_max
-        else:
-            chosen_weight = 0
+        # Check corresponding real probability of this point
+        try:
+            if chosen_pilot == 'u':
+                chosen_weight = sigma_u_int(chosen_pT)/cross_section_max
+            elif chosen_pilot == 'ubar':
+                chosen_weight = sigma_ubar_int(chosen_pT)/cross_section_max
+            elif chosen_pilot == 'd':
+                chosen_weight = sigma_d_int(chosen_pT)/cross_section_max
+            elif chosen_pilot == 'dbar':
+                chosen_weight = sigma_dbar_int(chosen_pT)/cross_section_max
+            elif chosen_pilot == 's':
+                chosen_weight = sigma_s_int(chosen_pT)/cross_section_max
+            elif chosen_pilot == 'sbar':
+                chosen_weight = sigma_sbar_int(chosen_pT)/cross_section_max
+            elif chosen_pilot == 'g':
+                chosen_weight = sigma_g_int(chosen_pT)/cross_section_max
+            else:
+                chosen_weight = 0
 
-    except ValueError:
-        # Do something else, throw a fit!
-        logging.warning('Problem sampling jet p_T spectrum!!!')
-        chosen_weight = 1  # Function for pT probability
+        except ValueError:
+            # Do something else, throw a fit!
+            logging.warning('Problem sampling jet p_T spectrum!!!')
+            chosen_weight = 1  # Function for pT probability
 
-    return chosen_pilot, chosen_pT, chosen_weight
+        chosen_pT_array = np.append(chosen_pT_array, chosen_pT)
+        chosen_pilot_array = np.append(chosen_pilot_array, chosen_pilot)
+        chosen_weight_array = np.append(chosen_weight_array, chosen_weight)
+
+    if num_samples == 1:
+        return chosen_pilot_array[0], chosen_pT_array[0], chosen_weight_array[0]
+    else:
+        return chosen_pilot_array, chosen_pT_array, chosen_weight_array

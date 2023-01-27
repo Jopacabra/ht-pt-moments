@@ -81,12 +81,36 @@ def run_event(eventNo):
     # Jet Analysis #
     ################
     # Oversample the background with jets
+    # Select jet energy
+    if config.jet.E_FLUCT:
+        if config.jet.E_IS:
+            chosen_pilot_array, chosen_e_array, chosen_weight_array = hic.jet_IS_LHC(cent=None, num_samples=config.EBE.NUM_SAMPLES)
+        else:
+            ##################
+            # BROKENNNNNNNNN #
+            ##################
+            raise Exception("Non-importance sampling mode is broken!!!")
+            #chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
+            #chosen_weight = 1
+    else:
+        ##################
+        # BROKENNNNNNNNN #
+        ##################
+        raise Exception("Non-importance sampling mode is broken!!!")
+        # chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
+        # chosen_weight = 1
+
     for jetNo in range(0, config.EBE.NUM_SAMPLES):
         # Create unique jet tag
         jet_tag = str(int(np.random.uniform(0, 1000000000000)))
         ##################
         # Create new jet #
         ##################
+        # Pull jet properties from sampled list
+        chosen_pilot = chosen_pilot_array[jetNo]
+        chosen_e = chosen_e_array[jetNo]
+        chosen_weight = chosen_weight_array[jetNo]
+
         logging.info('- Jet {} -'.format(jetNo))
         # Select jet production point
         if not config.mode.VARY_POINT:
@@ -99,17 +123,7 @@ def run_event(eventNo):
         # Select jet production angle
         phi_0 = np.random.uniform(0, 2 * np.pi)
 
-        # Select jet energy
-        if config.jet.E_FLUCT:
-            if config.jet.E_IS:
-                chosen_pilot, chosen_e, chosen_weight = hic.jet_IS_LHC(cent=None)
-            else:
-                chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
-                chosen_weight = 1
-        else:
-            chosen_pilot = 'g'
-            chosen_e = config.jet.JET_ENERGY
-
+        # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
         for case in ['db', 'd', 'b', 'd/2b', '2db']:

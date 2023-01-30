@@ -27,9 +27,9 @@ jet:  # Parameters for the jets to be run
     E_FLUCT: True  # Vary jet energy EBE? - If True, JET_ENERGY does nothing.
     E_IS: True  # Importance sample jet energy - uses uniform approximate distribution
     MIN_JET_ENERGY: 1  # Minimum jet energy in GeV to use if jet energy fluctuates. - Min 1.25 if RHIC sampling
-    MAX_JET_ENERGY: 10
+    MAX_JET_ENERGY: 20
     TAU: 0.01  # Timestep used for jet propagation
     RECORD: False  # Save xarray jet record?
 global_constants:  # Physical constants to be set by the user.
     G: 2  # Coupling constant for strong interaction
-    KAPPA: 254.9  # Coupling constant for BBMG energy loss - Current default 250 ???
+    KAPPA: 206  # Coupling constant for BBMG energy loss - Current default 250 ???

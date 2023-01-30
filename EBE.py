@@ -126,7 +126,7 @@ def run_event(eventNo):
         # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-        for case in ['db', 'd', 'b', 'd/2b', '2db']:
+        for case in ['db', 'b', 'd/2b', '2db']:
             logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
             # Create the jet object
             jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,

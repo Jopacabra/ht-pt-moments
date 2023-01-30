@@ -10,7 +10,7 @@ import logging
 
 class jet:
     # Instantiation statement. All parameters optional.
-    def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, part=None, tag=None, no=None):
+    def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, part=None, tag=None, no=None, weight=1):
         logging.info('Creating new jet...')
 
         # Initialize basic parameters
@@ -19,6 +19,7 @@ class jet:
         self.x_0 = x_0
         self.y_0 = y_0
         self.part = part
+        self.weight = weight
 
         # If no particle type supplied, particle is a gluon (most common case).
         if self.part is None:

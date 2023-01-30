@@ -215,6 +215,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
             "eventNo": [event.name],
             "jetNo": [jet.no],
             "jet_tag": [jet.tag],
+            "jet_weight": [jet.weight],
             "jet_particle": [jet.part],
             "jet_mass": [jet.m],
             "jet_pT": [jet.p_T0],

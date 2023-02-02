@@ -1,4 +1,4 @@
-# ht-pt-moments
+# jma
 Integration of asymmetric transverse momentum moments in hydrodynamic QGP grids.
 
 ### Python modules required:

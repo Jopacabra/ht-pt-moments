@@ -1,0 +1,6 @@
+[submodule "trento"]
+	path = trento
+	url = https://github.com/Jopacabra/trento.git
+[submodule "osu-hydro"]
+	path = osu-hydro
+	url = https://github.com/Jopacabra/osu-hydro.git

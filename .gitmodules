@@ -4,3 +4,9 @@
 [submodule "osu-hydro"]
 	path = osu-hydro
 	url = https://github.com/Jopacabra/osu-hydro.git
+[submodule "freestream"]
+	path = freestream
+	url = https://github.com/Duke-QCD/freestream.git
+[submodule "frzout"]
+	path = frzout
+	url = https://github.com/Duke-QCD/frzout.git

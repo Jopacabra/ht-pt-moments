@@ -11,7 +11,7 @@ relative_error = percent_error*0.01
 
 # Function to return total cross section at a particular point
 # Total GW cross section, as per Sievert, Yoon, et. al.
-def sigma(event, jet, point, coupling_factor=1):
+def sigma(event, jet, point):
     """
     In the future, we can put in an if statement that determines if we're in a plasma state or hadron gas state.
     We can then return the appropriate cross section. This would require that this plasma object one day becomes
@@ -20,7 +20,7 @@ def sigma(event, jet, point, coupling_factor=1):
     """
     current_point = point
     jet_parton = jet.part
-    coupling = config.constants.G * coupling_factor
+    coupling = config.constants.G
 
     if jet_parton == 'g':
         cross_section = (9/32) * np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)

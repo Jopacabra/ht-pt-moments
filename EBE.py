@@ -126,6 +126,9 @@ def run_event(eventNo):
         # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
+        # Get the OG coupling
+        OG_coupling = config.constants.G
+
         for case in ['db', 'b', 'd/2b', '2db']:
             logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
             # Create the jet object
@@ -133,33 +136,34 @@ def run_event(eventNo):
                            weight=chosen_weight)
 
             if case == 'db':
-                g_drift = 1
+                config.constants.G = 1 * OG_coupling
                 drift = True
                 bbmg = True
             elif case == 'd':
-                g_drift = 1
+                config.constants.G = 1 * OG_coupling
                 drift = True
                 bbmg = False
             elif case == 'b':
-                g_drift = 0
+                config.constants.G = 0 * OG_coupling
                 drift = False
                 bbmg = True
             elif case == '2db':
-                g_drift = 2
+                config.constants.G = 2 * OG_coupling
                 drift = True
                 bbmg = True
             elif case == 'd/2b':
-                g_drift = 1/2
+                config.constants.G = (1/2) * OG_coupling
                 drift = True
                 bbmg = True
             else:
-                g_drift = 0
-                g_BBMG = 0
-                drift = False
-                bbmg = False
+                config.constants.G = 1 * OG_coupling
+                drift = True
+                bbmg = True
             # Run the time loop
-            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
-                                                             g_drift=g_drift)
+            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg)
+
+            # Reset jet drift coupling
+            config.constants.G = OG_coupling
 
             # Save the xarray trajectory file
             # Note we are currently in a temp directory... Save record in directory above.

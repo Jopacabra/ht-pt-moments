@@ -111,10 +111,10 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
                 # Calculate energy loss due to gluon exchange with the medium
                 q_bbmg = float(jet.beta() * tau * int_bbmg)
                 # Calculate jet drift momentum transferred to jet
-                q_drift = g_drift * float(jet.beta() * tau * int_drift)
+                q_drift = float(jet.beta() * tau * int_drift)
             elif drift and not bbmg:
                 q_bbmg = 0
-                q_drift = g_drift * float(jet.beta() * tau * int_drift)
+                q_drift = float(jet.beta() * tau * int_drift)
             elif not drift and bbmg:
                 q_bbmg = float(jet.beta() * tau * int_bbmg)
                 q_drift = 0
@@ -244,7 +244,7 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
             "Tmax_event": [event.max_temp()],
             "drift": [drift],
             "bbmg": [bbmg],
-            "g_drift": [g_drift]
+            "g_drift": [config.constants.G]
         }
     )
 

@@ -9,6 +9,31 @@ import logging
 percent_error = 0.01
 relative_error = percent_error*0.01
 
+# Function to return total cross section at a particular point
+# Total GW cross section, as per Sievert, Yoon, et. al.
+def sigma(event, jet, point, coupling_factor=1):
+    """
+    In the future, we can put in an if statement that determines if we're in a plasma state or hadron gas state.
+    We can then return the appropriate cross section. This would require that this plasma object one day becomes
+    simply an event object. This might make the object too heavy weight, but it would give us some very interesting
+    powers.
+    """
+    current_point = point
+    jet_parton = jet.part
+    coupling = config.constants.G * coupling_factor
+
+    if jet_parton == 'g':
+        # Unknown gg->gg scattering cs... Using incorrect qg->qg scattering cross section
+        cross_section = np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+    elif jet_parton == 'u' or jet_parton == 'ubar' or jet_parton == 'd' \
+            or jet_parton == 'dbar' or jet_parton == 's' or jet_parton == 'sbar':
+        cross_section = np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+    else:
+        # Unknown parton scattering cs... Using qg->qg scattering cross section
+        cross_section = np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+
+    return cross_section
+
 # Define integrand - ONLY CORRECT FOR k=0 !!!!!!!!!!!
 def jet_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
@@ -19,7 +44,7 @@ def jet_drift_integrand(event, jet, time):
                                                       (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
                                                    * (event.mu(point=jet_point)**2)
                                                    * event.rho(point=jet_point)
-                                                   * event.sigma(point=jet_point))
+                                                   * sigma(event=event, jet=jet, point=jet_point))
 
 
 # Function to sample ebe fluctuation zeta parameter for energy loss integral

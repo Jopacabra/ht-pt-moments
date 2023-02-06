@@ -285,21 +285,6 @@ class plasma_event:
         debye_mass = config.constants.G * self.temp(point)
         return debye_mass
 
-    # Method to return total cross section at a particular point
-    # Total GW cross section, as per Sievert, Yoon, et. al.
-    def sigma(self, point):
-        """
-        In the future, we can put in an if statement that determines if we're in a plasma state or hadron gas state.
-        We can then return the appropriate cross section. This would require that this plasma object one day becomes
-        simply an event object. This might make the object too heavy weight, but it would give us some very interesting
-        powers.
-        """
-        current_point = point
-
-        cross_section = np.pi * config.constants.G ** 4 / (self.mu(point=current_point) ** 2)
-
-        return cross_section
-
     def i_int_factor(self, point, k=0, jet_pT=10):
         current_point = point
         jetEnergy = jet_pT

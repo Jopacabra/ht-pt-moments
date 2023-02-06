@@ -23,14 +23,13 @@ def sigma(event, jet, point, coupling_factor=1):
     coupling = config.constants.G * coupling_factor
 
     if jet_parton == 'g':
-        # Unknown gg->gg scattering cs... Using incorrect qg->qg scattering cross section
-        cross_section = np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+        cross_section = (9/32) * np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
     elif jet_parton == 'u' or jet_parton == 'ubar' or jet_parton == 'd' \
             or jet_parton == 'dbar' or jet_parton == 's' or jet_parton == 'sbar':
-        cross_section = np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+        cross_section = (1/8) * np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
     else:
-        # Unknown parton scattering cs... Using qg->qg scattering cross section
-        cross_section = np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+        logging.debug('Unknown parton scattering cs... Using gg->gg scattering cross section')
+        cross_section = (9/32) * np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
 
     return cross_section
 

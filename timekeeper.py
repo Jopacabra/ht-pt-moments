@@ -104,24 +104,32 @@ def time_loop(event, jet, drift=True, bbmg=True, g_drift=1):
         # Perform jet calculations #
         ############################
 
-        int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
-        int_bbmg = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
         if phase == 'qgp':
             if drift and bbmg:
-                # Calculate energy loss due to gluon exchange with the medium
+                int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
+                int_bbmg = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
+                # Energy loss due to gluon exchange with the medium
                 q_bbmg = float(jet.beta() * tau * int_bbmg)
-                # Calculate jet drift momentum transferred to jet
+                # Jet drift momentum transferred to jet
                 q_drift = float(jet.beta() * tau * int_drift)
             elif drift and not bbmg:
+                int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
+                int_bbmg = 0
                 q_bbmg = 0
                 q_drift = float(jet.beta() * tau * int_drift)
             elif not drift and bbmg:
+                int_drift = 0
+                int_bbmg = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
                 q_bbmg = float(jet.beta() * tau * int_bbmg)
                 q_drift = 0
             else:
+                int_drift = 0
+                int_bbmg = 0
                 q_bbmg = 0
                 q_drift = 0
         else:
+            int_drift = 0
+            int_bbmg = 0
             q_bbmg = 0
             q_drift = 0
 

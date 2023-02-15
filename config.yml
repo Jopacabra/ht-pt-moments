@@ -32,4 +32,4 @@ jet:  # Parameters for the jets to be run
     RECORD: False  # Save xarray jet record?
 global_constants:  # Physical constants to be set by the user.
     G: 2  # Coupling constant for strong interaction
-    KAPPA: 206  # Coupling constant for BBMG energy loss - Current default 250 ???
+    KAPPA: 250  # Coupling constant for BBMG energy loss - Current default 250 ???

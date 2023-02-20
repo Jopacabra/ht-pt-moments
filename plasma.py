@@ -286,9 +286,10 @@ class plasma_event:
         return density
 
     # Method to return DeBye mass at a particular point
-    # Chosen to be simple approximation. Ref - ???
+    # Chosen to be simple approximation. Ref - https://inspirehep.net/literature/1725162
     def mu(self, point):
-        debye_mass = config.constants.G * self.temp(point)
+        Nf = 2  # Number of light quark flavors
+        debye_mass = config.constants.G_MU * self.temp(point) * np.sqrt(1 + Nf /6)
         return debye_mass
 
     def i_int_factor(self, point, k=0, jet_pT=10):

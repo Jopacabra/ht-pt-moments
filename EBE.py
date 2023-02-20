@@ -223,9 +223,10 @@ try:
         # Create and move to temporary directory
         temp_dir = tempDir(location=os.getcwd() + '/results/{}'.format(identifierString))
 
-        # Generate a new HIC event and samples config.NUM_SAMPLES jets in it
+        # Generate a new HIC event and sample config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe
-        results = results.append(run_event(eventNo=int(identifierString)))
+        event_results = run_event(eventNo=int(identifierString))
+        results = pd.concat([results, event_results], axis=0)
 
         # Exits directory, saves all current data, and dumps temporary files.
         safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,

@@ -166,9 +166,6 @@ def run_event(eventNo):
             jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
                                                              scale_drift=scale_drift, scale_bbmg=scale_bbmg)
 
-            # Reset jet drift coupling
-            config.constants.G = OG_coupling
-
             # Save the xarray trajectory file
             # Note we are currently in a temp directory... Save record in directory above.
             if config.jet.RECORD:

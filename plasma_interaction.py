@@ -9,41 +9,68 @@ import logging
 percent_error = 0.01
 relative_error = percent_error*0.01
 
-# Function to return total cross section at a particular point
+# Function to return total cross section at a particular point for jet parton and *gluon* in medium
 # Total GW cross section, as per Sievert, Yoon, et. al.
-def sigma(event, jet, point):
+# Specify med_parton either 'g' for medium gluon or 'q' for generic light (?) quark in medium
+# https://inspirehep.net/literature/1725162
+def sigma(event, jet, point, med_parton='g'):
     """
-    In the future, we can put in an if statement that determines if we're in a plasma state or hadron gas state.
-    We can then return the appropriate cross section. This would require that this plasma object one day becomes
-    simply an event object. This might make the object too heavy weight, but it would give us some very interesting
-    powers.
+    We select the appropriate cross-section for a known jet parton and known medium parton specified when called
     """
     current_point = point
-    jet_parton = jet.part
     coupling = config.constants.G
 
-    if jet_parton == 'g':
-        cross_section = (9/32) * np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
-    elif jet_parton == 'u' or jet_parton == 'ubar' or jet_parton == 'd' \
-            or jet_parton == 'dbar' or jet_parton == 's' or jet_parton == 'sbar':
-        cross_section = (1/8) * np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+    if (jet.part == 'u' or jet.part == 'ubar' or jet.part == 'd' or jet.part == 'dbar' or jet.part == 's'
+            or jet.part == 'sbar'):
+        jet_parton = 'q'
+    elif jet.part == 'g':
+        jet_parton = 'g'
+    else:
+        jet_parton = None
+
+    sigma_gg_gg = (9/(32 * np.pi)) * coupling ** 4 / (event.mu(point=current_point) ** 2)
+    sigma_qg_qg = (1/(8 * np.pi)) * coupling ** 4 / (event.mu(point=current_point) ** 2)
+    sigma_qq_qq = (1/(18 * np.pi)) * coupling ** 4 / (event.mu(point=current_point) ** 2)
+
+    if jet_parton == 'g' and med_parton == 'g':
+        # gg -> gg cross-section
+        cross_section = sigma_gg_gg
+    elif jet_parton == 'q' and med_parton == 'g':
+        # qg -> qg cross-section
+        cross_section = sigma_qg_qg
+    elif jet_parton == 'g' and med_parton == 'q':
+        # qg -> qg cross-section
+        cross_section = sigma_qg_qg
+    elif jet_parton == 'q' and med_parton == 'q':
+        # qq -> qq cross-section
+        cross_section = sigma_qq_qq
     else:
         logging.debug('Unknown parton scattering cs... Using gg->gg scattering cross section')
-        cross_section = (9/32) * np.pi * coupling ** 4 / (event.mu(point=current_point) ** 2)
+        cross_section = sigma_gg_gg
 
     return cross_section
 
-# Define integrand - ONLY CORRECT FOR k=0 !!!!!!!!!!!
+# Function to return inverse QGP drift mean free path in units of GeV^{-1}
+# Total GW cross section, as per Sievert, Yoon, et. al.
+def inv_lambda(event, jet, point):
+    """
+    We apply a reciprocal summation between the cross-section times density for a medium gluon and for a medium quark
+    to get the mean free path as in https://inspirehep.net/literature/1725162
+    """
+
+    return (sigma(event, jet, point, med_parton='g') * event.rho(point, med_parton='g')
+              + sigma(event, jet, point, med_parton='q') * event.rho(point, med_parton='q'))
+
+# Define integrand for mean q_drift (k=0 moment)
 def jet_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
-    FERMItoGeV = (1 / 0.19732687)
+    FERMItoGeV = (1 / 0.19732687)  # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
     return FERMItoGeV * (1 / jet.p_T()) * ((event.i_int_factor(point=jet_point, jet_pT=jet.p_T()))
                                                    * (event.u_perp(point=jet_point, phi=jet_p_phi) /
                                                       (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
                                                    * (event.mu(point=jet_point)**2)
-                                                   * event.rho(point=jet_point)
-                                                   * sigma(event=event, jet=jet, point=jet_point))
+                                                   * inv_lambda(event=event, jet=jet, point=jet_point))
 
 
 # Function to sample ebe fluctuation zeta parameter for energy loss integral

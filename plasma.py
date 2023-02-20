@@ -273,10 +273,16 @@ class plasma_event:
         return self.x_vel(point) * np.cos(phi) \
                + self.y_vel(np.array(point)) * np.sin(phi)
 
-    # Method to return density at a particular point
+    # Method to return partial density at a particular point for given medium partons
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
-    def rho(self, point):
-        density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * self.temp(point) ** 3
+    def rho(self, point, med_parton='g'):
+        if med_parton == 'g':
+            density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * self.temp(point) ** 3
+        elif med_parton == 'q':
+            density = 1.202056903159594 * (3/4) * 24 * (1 / (np.pi ** 2)) * self.temp(point) ** 3
+        else:
+            # Return 0
+            density = 0
         return density
 
     # Method to return DeBye mass at a particular point

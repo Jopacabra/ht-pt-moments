@@ -34,3 +34,4 @@ global_constants:  # Physical constants to be set by the user.
     G: 2  # Coupling constant for IN-MEDIUM strong interaction
     G_MU: 2  # Coupling constant for debye mass strong interaction
     KAPPA: 250  # Coupling constant for BBMG energy loss - Current default 250 ???
+    K_DRIFT: 1  # Scale factor for drift effect - default 1

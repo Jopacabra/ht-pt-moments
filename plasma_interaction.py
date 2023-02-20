@@ -66,11 +66,11 @@ def jet_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
     FERMItoGeV = (1 / 0.19732687)  # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return FERMItoGeV * (1 / jet.p_T()) * ((event.i_int_factor(point=jet_point, jet_pT=jet.p_T()))
-                                                   * (event.u_perp(point=jet_point, phi=jet_p_phi) /
-                                                      (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
-                                                   * (event.mu(point=jet_point)**2)
-                                                   * inv_lambda(event=event, jet=jet, point=jet_point))
+    return (FERMItoGeV * (1 / jet.p_T()) * config.constants.K_DRIFT
+           * ((event.i_int_factor(point=jet_point, jet_pT=jet.p_T()))
+              * (event.u_perp(point=jet_point, phi=jet_p_phi) / (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
+              * (event.mu(point=jet_point)**2)
+              * inv_lambda(event=event, jet=jet, point=jet_point)))
 
 
 # Function to sample ebe fluctuation zeta parameter for energy loss integral

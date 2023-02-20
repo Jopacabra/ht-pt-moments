@@ -126,9 +126,6 @@ def run_event(eventNo):
         # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-        # Get the OG coupling
-        OG_coupling = config.constants.G
-
         for case in ['db', 'b', 'd/2b', '2db']:
             logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
             # Create the jet object
@@ -136,31 +133,38 @@ def run_event(eventNo):
                            weight=chosen_weight)
 
             if case == 'db':
-                config.constants.G = 1 * OG_coupling
+                scale_drift = 1
+                scale_bbmg = 1
                 drift = True
                 bbmg = True
             elif case == 'd':
-                config.constants.G = 1 * OG_coupling
+                scale_drift = 1
+                scale_bbmg = 0
                 drift = True
                 bbmg = False
             elif case == 'b':
-                config.constants.G = 0 * OG_coupling
+                scale_drift = 0
+                scale_bbmg = 1
                 drift = False
                 bbmg = True
             elif case == '2db':
-                config.constants.G = 2 * OG_coupling
+                scale_drift = 2
+                scale_bbmg = 1
                 drift = True
                 bbmg = True
             elif case == 'd/2b':
-                config.constants.G = (1/2) * OG_coupling
+                scale_drift = 1/2
+                scale_bbmg = 1
                 drift = True
                 bbmg = True
             else:
-                config.constants.G = 1 * OG_coupling
+                scale_drift = 1
+                scale_bbmg = 1
                 drift = True
                 bbmg = True
             # Run the time loop
-            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg)
+            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
+                                                             scale_drift=scale_drift, scale_bbmg=scale_bbmg)
 
             # Reset jet drift coupling
             config.constants.G = OG_coupling

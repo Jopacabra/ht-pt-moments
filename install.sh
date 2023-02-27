@@ -63,5 +63,5 @@ make install
 cd ..
 cd ..
 
-# install the event runner script into bin
-# install -v EBE.py "$prefix/bin"
+# Add the trento and osu-hydro install locations to the path.
+export PATH="/root/.local/bin:$PATH"

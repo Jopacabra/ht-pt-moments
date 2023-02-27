@@ -39,6 +39,7 @@ cd osu-hydro
 # Remove the build, if present
 if [[ -d build ]]; then
       rm -rf build
+fi
 # Create and enter build directory
 mkdir build && cd build
 # Generate cmake business

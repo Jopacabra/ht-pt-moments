@@ -14,7 +14,7 @@ python3 -m venv $VIRTUAL_ENV
 # Activate environment
 source $VIRTUAL_ENV/bin/activate
 # Install python dependencies - Excludes tkinter for plasma inspector
-pip install numpy scipy cython h5py pandas xarray matplotlib py-yaml
+pip install numpy scipy cython h5py pandas xarray matplotlib pyyaml
 
 # Install freestream - required before installing osu-hydro
 # subshell allows temporary environment modification

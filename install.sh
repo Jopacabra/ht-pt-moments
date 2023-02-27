@@ -5,6 +5,15 @@
 # cd "$(dirname "${BASH_SOURCE[0]}")"/..
 # ALREADY IN PROPER PATH
 
+# Create python virtual environment
+export pkgname='jma-osg'
+export VIRTUAL_ENV=$tmpdir/$pkgname
+
+# create python virtual environment to install into
+python3 -m venv $VIRTUAL_ENV
+# Activate environment
+source $VIRTUAL_ENV/bin/activate
+
 # Build trento
 cd trento
 # Remove the build, if present
@@ -20,7 +29,7 @@ make install
 cd ..
 cd ..
 
-# Install freestream
+# Install freestream - required before installing osu-hydro
 # subshell allows temporary environment modification
 cd freestream
 (
@@ -29,7 +38,7 @@ cd freestream
 ) || exit 1
 cd ..
 
-# Install frzout
+# Install frzout - required before installing osu-hydro
 cd frzout
 (
   [[ $PY_FLAGS ]] && export CFLAGS=$PY_FLAGS CXXFLAGS=$PY_FLAGS

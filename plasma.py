@@ -1,7 +1,10 @@
 import numpy as np
 import pandas as pd
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.colors as colors
+    import matplotlib.pyplot as plt
+except:
+    print('NO MATPLOTLIB')
 from scipy.interpolate import RegularGridInterpolator
 import config
 import logging

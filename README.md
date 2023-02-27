@@ -5,6 +5,7 @@ Integration of asymmetric transverse momentum moments in hydrodynamic QGP grids.
 
 * scipy
 * numpy
+* cython
 * h5py
 * tkinter
 * pandas

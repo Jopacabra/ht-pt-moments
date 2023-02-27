@@ -54,7 +54,7 @@ cd ..
 cd freestream
 (
   [[ $PY_FLAGS ]] && export CFLAGS=$PY_FLAGS CXXFLAGS=$PY_FLAGS
-  exec python setup.py install
+  exec python3 setup.py install
 ) || exit 1
 cd ..
 
@@ -62,7 +62,7 @@ cd ..
 cd frzout
 (
   [[ $PY_FLAGS ]] && export CFLAGS=$PY_FLAGS CXXFLAGS=$PY_FLAGS
-  exec python setup.py install
+  exec python3 setup.py install
 ) || exit 1
 cd ..
 

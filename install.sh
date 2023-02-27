@@ -66,4 +66,4 @@ cd ..
 
 
 # install the event runner script into bin
-install -v EBE.py "$prefix/bin"
+# install -v EBE.py "$prefix/bin"

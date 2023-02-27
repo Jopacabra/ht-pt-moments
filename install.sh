@@ -18,7 +18,8 @@ fi
 
 # go to project root (directory above this script)
 # https://stackoverflow.com/a/246128
-cd "$(dirname "${BASH_SOURCE[0]}")"/..
+# cd "$(dirname "${BASH_SOURCE[0]}")"/..
+# ALREADY IN PROPER PATH
 
 # Build trento
 cd trento

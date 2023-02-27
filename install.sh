@@ -7,7 +7,7 @@
 
 # Create python virtual environment
 export pkgname='jma'
-export VIRTUAL_ENV=$tmpdir/$pkgname
+export VIRTUAL_ENV=$pkgname
 
 # create python virtual environment to install into
 python3 -m venv $VIRTUAL_ENV

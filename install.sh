@@ -13,21 +13,8 @@ export VIRTUAL_ENV=$pkgname
 python3 -m venv $VIRTUAL_ENV
 # Activate environment
 source $VIRTUAL_ENV/bin/activate
-
-# Build trento
-cd trento
-# Remove the build, if present
-if [[ -d build ]]; then
-      rm -rf build
-fi
-# Create and enter build directory
-mkdir build && cd build
-# Generate cmake business
-cmake3 .. 
-# Install the module
-make install
-cd ..
-cd ..
+# Install python dependencies - Excludes tkinter for plasma inspector
+pip install numpy scipy cython h5py pandas xarray matplotlib py-yaml
 
 # Install freestream - required before installing osu-hydro
 # subshell allows temporary environment modification
@@ -44,6 +31,21 @@ cd frzout
   [[ $PY_FLAGS ]] && export CFLAGS=$PY_FLAGS CXXFLAGS=$PY_FLAGS
   exec python3 setup.py install
 ) || exit 1
+cd ..
+
+# Build trento
+cd trento
+# Remove the build, if present
+if [[ -d build ]]; then
+      rm -rf build
+fi
+# Create and enter build directory
+mkdir build && cd build
+# Generate cmake business
+cmake3 ..
+# Install the module
+make install
+cd ..
 cd ..
 
 # Build osu-hydro

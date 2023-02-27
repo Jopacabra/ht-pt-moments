@@ -34,6 +34,7 @@ cmake3 ..
 # Install the module
 make install
 cd ..
+cd ..
 
 # Build osu-hydro
 cd osu-hydro
@@ -47,6 +48,7 @@ mkdir build && cd build
 cmake3 .. 
 # Install the module
 make install
+cd ..
 cd ..
 
 # Install freestream

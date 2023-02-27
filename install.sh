@@ -6,7 +6,7 @@
 # ALREADY IN PROPER PATH
 
 # Create python virtual environment
-export pkgname='jma-osg'
+export pkgname='jma'
 export VIRTUAL_ENV=$tmpdir/$pkgname
 
 # create python virtual environment to install into

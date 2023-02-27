@@ -20,21 +20,6 @@ make install
 cd ..
 cd ..
 
-# Build osu-hydro
-cd osu-hydro
-# Remove the build, if present
-if [[ -d build ]]; then
-      rm -rf build
-fi
-# Create and enter build directory
-mkdir build && cd build
-# Generate cmake business
-cmake3 .. 
-# Install the module
-make install
-cd ..
-cd ..
-
 # Install freestream
 # subshell allows temporary environment modification
 cd freestream
@@ -52,6 +37,20 @@ cd frzout
 ) || exit 1
 cd ..
 
+# Build osu-hydro
+cd osu-hydro
+# Remove the build, if present
+if [[ -d build ]]; then
+      rm -rf build
+fi
+# Create and enter build directory
+mkdir build && cd build
+# Generate cmake business
+cmake3 .. 
+# Install the module
+make install
+cd ..
+cd ..
 
 # install the event runner script into bin
 # install -v EBE.py "$prefix/bin"

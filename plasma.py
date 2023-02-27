@@ -295,9 +295,9 @@ class plasma_event:
         debye_mass = config.constants.G_MU * self.temp(point) * np.sqrt(1 + Nf /6)
         return debye_mass
 
-    def i_int_factor(self, point, k=0, jet_pT=10):
+    def i_int_factor(self, jet, point, k=0):
         current_point = point
-        jetEnergy = jet_pT
+        jetEnergy = jet.p_T()
 
         if k == 0:
             Ik = 3 * np.log(jetEnergy / self.mu(point=current_point))  # No idea what the error should be here

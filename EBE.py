@@ -188,7 +188,7 @@ def run_event(eventNo):
 ################
 
 # Add trento and osu-hydro install locations to path
-utilities.run_cmd(*['export PATH=\"/root/.local/bin:$PATH\"'], quiet=True)
+utilities.run_cmd('export PATH=\"/root/.local/bin:$PATH\"', quiet=True)
 
 
 # Instantiate counters

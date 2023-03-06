@@ -16,6 +16,9 @@ source $VIRTUAL_ENV/bin/activate
 # Install python dependencies - Excludes tkinter and matplotlib for plasma inspector
 pip install numpy scipy cython h5py pandas xarray pyyaml
 
+# Debug print of working directory
+pwd
+
 # Install freestream - required before installing osu-hydro
 # subshell allows temporary environment modification
 cd freestream
@@ -64,4 +67,5 @@ cd ..
 cd ..
 
 # Add the trento and osu-hydro install locations to the path.
-export PATH="/root/.local/bin:$PATH"
+echo 'export PATH="/root/.local/bin:$PATH"' >> ~/.bashrc
+

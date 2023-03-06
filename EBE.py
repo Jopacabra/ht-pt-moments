@@ -126,7 +126,7 @@ def run_event(eventNo):
         # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-        for case in ['db', 'b', 'd/2b', '2db']:
+        for case in ['db', 'b', '10db', '50db', '100db', '1000db']:
             logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
             # Create the jet object
             jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
@@ -147,13 +147,23 @@ def run_event(eventNo):
                 scale_bbmg = 1
                 drift = False
                 bbmg = True
-            elif case == '2db':
-                scale_drift = 2
+            elif case == '10db':
+                scale_drift = 10
                 scale_bbmg = 1
                 drift = True
                 bbmg = True
-            elif case == 'd/2b':
-                scale_drift = 1/2
+            elif case == '50db':
+                scale_drift = 50
+                scale_bbmg = 1
+                drift = True
+                bbmg = True
+            elif case == '100db':
+                scale_drift = 100
+                scale_bbmg = 1
+                drift = True
+                bbmg = True
+            elif case == '1000db':
+                scale_drift = 1000
                 scale_bbmg = 1
                 drift = True
                 bbmg = True

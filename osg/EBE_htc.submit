@@ -1,0 +1,19 @@
+# We want to use the custom jopacabra/jma2 container image
++SingularityImage = "stash:///osgconnect/protected/jopacabra/jma2.sif"
+
+# We need the job to run the bash script that will update and call the EBE.py script
+# We'll specify unique filenames for each job by using
+# the job's 'cluster' value.
+executable = /jm-analysis/osg/EBE.sh
+transfer_output_files = /jm-analysis/results
+
+error = log/job.$(Cluster).$(Process)error
+output = log/job.$(Cluster).$(Process).output
+log = log/job.$(Cluster).$(Process).log
+
+request_cpus = 1
+request_memory = 10 GB
+request_disk = 10 GB
+
+# Number of jobs with the above specifications to queue
+queue 1

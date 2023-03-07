@@ -15,7 +15,7 @@ cd /usr/jm-analysis || exit
 # git pull
 # Test osu-hydro and trento
 echo "Testing osu-hydro and trento..."
-trento --help
+trento
 osu-hydro --help
 # Run the script
 # python3 EBE.py

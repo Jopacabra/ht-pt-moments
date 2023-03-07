@@ -12,11 +12,7 @@ source /usr/jma/bin/activate
 # Change directory to the project root
 cd /usr/jm-analysis || exit
 # Pull any changes from the git
-# git pull
-# Test osu-hydro and trento
-echo "Testing osu-hydro and trento..."
-trento
-osu-hydro --help
+git pull
 # Run the script
-# python3 EBE.py
+python3 EBE.py
 echo "Testing complete!"

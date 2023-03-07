@@ -10,9 +10,9 @@ export pkgname='jma'
 export VIRTUAL_ENV=$pkgname
 
 # create python virtual environment to install into
-python3 -m venv $VIRTUAL_ENV
+python3 -m venv /usr/$VIRTUAL_ENV
 # Activate environment
-source $VIRTUAL_ENV/bin/activate
+source /usr/$VIRTUAL_ENV/bin/activate
 # Install python dependencies - Excludes tkinter and matplotlib for plasma inspector
 pip install numpy scipy cython h5py pandas xarray pyyaml
 
@@ -65,7 +65,4 @@ cmake3 ..
 make install
 cd ..
 cd ..
-
-# Add the trento and osu-hydro install locations to the path.
-echo 'export PATH="/root/.local/bin:$PATH"' >> ~/.bashrc
 

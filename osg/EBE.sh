@@ -6,14 +6,17 @@ printf "Job running as user: "; /usr/bin/id
 printf "Job is running in directory: "; /bin/pwd
 echo
 echo "Working hard..."
-# Start a new bash terminal session to refresh the path
-bash
 # Activate the python virtual environment
-source jma/bin/activate
+export PATH=/usr/bin:$PATH
+source /usr/jma/bin/activate
 # Change directory to the project root
-cd /jm-analysis || exit
+cd /usr/jm-analysis || exit
 # Pull any changes from the git
-git pull
+# git pull
+# Test osu-hydro and trento
+echo "Testing osu-hydro and trento..."
+trento --help
+osu-hydro --help
 # Run the script
-python3 EBE.py
-echo "Science complete!"
+# python3 EBE.py
+echo "Testing complete!"

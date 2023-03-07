@@ -45,7 +45,7 @@ fi
 # Create and enter build directory
 mkdir build && cd build
 # Generate cmake business
-cmake3 ..
+cmake3 -DCMAKE_INSTALL_PREFIX=/usr ..
 # Install the module
 make install
 cd ..
@@ -60,7 +60,7 @@ fi
 # Create and enter build directory
 mkdir build && cd build
 # Generate cmake business
-cmake3 .. 
+cmake3 -DCMAKE_INSTALL_PREFIX=/usr ..
 # Install the module
 make install
 cd ..

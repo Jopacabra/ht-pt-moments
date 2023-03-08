@@ -788,20 +788,18 @@ def jet_sample_LHC(cent=None):
     # Load proper file
 
     # Load file directly if in project root directory
+    project_path = os.path.dirname(os.path.realpath(__file__))
     if cent is None:
-        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+        file_path = project_path + '/jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
     else:
-        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+        file_path = project_path + '/jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
     while True:
         try:
             cs_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
-                                        names=['pT', 'g', 'd', 'dbar', 'u', 'ubar', 's', 'sbar'], skiprows=1)
+                                    names=['pT', 'g', 'd', 'dbar', 'u', 'ubar', 's', 'sbar'], skiprows=1)
             logging.info('Found and read cross-section file...')
         except FileNotFoundError:
-            # Load file from directory above if in temporary directory
-            file_path = '../' + file_path
             logging.info('Failed to find cross-section file...')
-            continue
         break
 
     # Cast to numpy arrays for interpolation
@@ -876,20 +874,18 @@ def jet_IS_LHC(cent=None, num_samples=1):
     # Load proper file
 
     # Load file directly if in project root directory
+    project_path = os.path.dirname(os.path.realpath(__file__))
     if cent is None:
-        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+        file_path = project_path + '/jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
     else:
-        file_path = 'jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
+        file_path = project_path + '/jet_cross_sections/rhic_calc.aa_cen_cron1.5_eloss0.5100GeV.out'
     while True:
         try:
             cs_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
                                     names=['pT', 'g', 'd', 'dbar', 'u', 'ubar', 's', 'sbar'], skiprows=1)
             logging.info('Found and read cross-section file...')
         except FileNotFoundError:
-            # Load file from directory above if in temporary directory
-            file_path = '../' + file_path
             logging.info('Failed to find cross-section file...')
-            continue
         break
 
     # Cast to numpy arrays for interpolation

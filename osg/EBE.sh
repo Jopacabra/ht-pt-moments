@@ -14,7 +14,7 @@ cd /usr/jm-analysis || exit
 # Pull any changes from the git
 git pull
 # Go to working directory we have write access to
-cd /srv/results || exit
+cd /srv || exit
 # Run the script
 python3 /usr/jm-analysis/EBE.py
 echo "Testing complete!"

@@ -208,11 +208,8 @@ home_path = os.getcwd()  # Gets working directory when script was run - results 
 results_path = home_path + '/results/{}'.format(identifierString)  # Absolute path of dir where results files will live
 
 # Make results directory
-if os.path.exists(results_path):
-    pass
-else:
-    print('Making results directory...')
-    os.mkdir(results_path)
+logging.info('Making results directory...')
+os.makedirs(results_path, exist_ok=True )
 
 # Create log file & configure logging to be handled into the file AND stdout
 logging.basicConfig(

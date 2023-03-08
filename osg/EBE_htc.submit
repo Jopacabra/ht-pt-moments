@@ -8,7 +8,7 @@ requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
 # We'll specify unique filenames for each job by using
 # the job's 'cluster' value.
 executable = EBE.sh
-transfer_output_files = results
+transfer_output_files = /srv/results
 
 error = log/job.$(Cluster).$(Process).error
 output = log/job.$(Cluster).$(Process).output

@@ -9,12 +9,8 @@ echo "Working hard..."
 # Activate the python virtual environment
 export PATH=/usr/bin:$PATH
 source /usr/jma/bin/activate
-# Change directory to the project root
-cd /usr/jm-analysis || exit
-# Pull any changes from the git
-git pull
 # Go to working directory we have write access to
 cd /srv || exit
 # Run the script
 python3 /usr/jm-analysis/EBE.py
-echo "Testing complete!"
+echo "Event complete!"

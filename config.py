@@ -1,11 +1,14 @@
 import yaml
+import os
 
 ############################################################
 # See config.yml for descriptions of configuration options #
 ############################################################
+# Get location of config.py and config.yml
+project_path = os.path.dirname(os.path.realpath(__file__))
 
 # Read config file and parse settings
-with open('config.yml', 'r') as ymlfile:
+with open(project_path + '/config.yml', 'r') as ymlfile:
     # Note the usage of yaml.safe_load()
     # Using yaml.load() exposes the system to running any Python commands in the config file.
     # That is unnecessary risk!!!

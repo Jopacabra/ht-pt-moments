@@ -19,18 +19,14 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
     if keep_event:
         logging.info('Saving event hydro data...')
         # Copy config file to results directory, tagged with identifier
-        utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat',
-                            '../hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=False)
-
-    # Note that we exit the directory first in order to retain a valid current working directory when cleaned up.
-    # This prevents os.get_cwd() from throwing an error.
-
-    os.chdir('..')
+        utilities.run_cmd(*['mv', str(temp_dir.name) + '/viscous_14_moments_evo.dat',
+                            results_path + '/hydro_grid_{}.dat'.format(identifierString, identifierString)],
+                          quiet=False)
 
     # Save the dataframe into the identified results folder
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
-    resultsDataFrame.to_pickle(os.getcwd() + '/{}.pkl'.format(filename))  # Save dataframe to pickle
+    resultsDataFrame.to_pickle(results_path + '/{}.pkl'.format(filename))  # Save dataframe to pickle
 
     if keep_event:
         logging.info('Saving event hydro data...')
@@ -38,9 +34,8 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
         utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat', os.getcwd()
                             + '/hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=True)
 
-    # Return to the project root.
-    os.chdir('..')
-    os.chdir('..')
+    # Return to the directory in which we ran the script.
+    os.chdir(home_path)
 
     # Clear everything in the temporary directory and delete it, thereby deleting all event files.
     logging.info('Cleaning temporary directory...')
@@ -207,31 +202,36 @@ results = pd.DataFrame({})
 identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
+# Set running location as current directory - whatever the pwd was when running the script
+project_path = os.path.dirname(os.path.realpath(__file__))  # Gets directory the EBE.py script is located in
+home_path = os.getcwd()  # Gets working directory when script was run - results directory will be placed here
+results_path = home_path + '/results/{}'.format(identifierString)  # Absolute path of dir where results files will live
+
 # Make results directory
-if os.path.exists(os.getcwd() + '/results/{}'.format(identifierString)):
+if os.path.exists(results_path):
     pass
 else:
     print('Making results directory...')
-    os.mkdir(os.getcwd() + '/results/{}'.format(identifierString))
+    os.mkdir(results_path)
 
 # Create log file & configure logging to be handled into the file AND stdout
 logging.basicConfig(
     level=logging.DEBUG,
     handlers=[
-        logging.FileHandler(os.getcwd() + '/results/{}/log_{}.log'.format(identifierString, identifierString)),
+        logging.FileHandler(results_path + '/log_{}.log'.format(identifierString)),
         logging.StreamHandler()
     ]
 )
 
 # Copy config file to results directory, tagged with identifier
-utilities.run_cmd(*['cp', 'config.yml', os.getcwd()
-                    + '/results/{}/config_{}.yml'.format(identifierString, identifierString)], quiet=True)
+utilities.run_cmd(*['cp', project_path + 'config.yml', results_path + '/config_{}.yml'.format(identifierString)],
+                  quiet=True)
 
 # Run event loop
 try:
     while config.EBE.NUM_EVENTS == 0 or eventNo < config.EBE.NUM_EVENTS:
         # Create and move to temporary directory
-        temp_dir = tempDir(location=os.getcwd() + '/results/{}'.format(identifierString))
+        temp_dir = tempDir(location=results_path)
 
         # Generate a new HIC event and sample config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe

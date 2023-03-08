@@ -364,7 +364,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 # Function to generate a new HIC event and dump the files in the current working directory.
 def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=config.transport.GRID_STEP,
                    time_step=config.transport.TIME_STEP, tau_fs=config.transport.hydro.TAU_FS,
-                   t_end=config.transport.hydro.T_END, seed=None, get_rmax=False):
+                   t_end=config.transport.hydro.T_END, seed=None, get_rmax=False, working_dir=None):
 
     # the "target" grid max: the grid shall be at least as large as the target
     # By defualt grid_max_target = config.transport.GRID_MAX_TARGET
@@ -386,14 +386,20 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         seed = int(np.random.uniform(0, 10000000000000000))
     logging.info('Random seed selected: {}'.format(seed))
 
+    # Decide where to locate the initial conditions file
+    if working_dir is not None:
+        trento_ic_path = working_dir + '/initial.hdf'
+    else:
+        trento_ic_path = 'initial.hdf'
+
     # Generate trento event
     trentoDataframe, trentoOutputFile, trentoSubprocess = runTrento(outputFile=True, randomSeed=seed,
                                                                     quiet=False,
-                                                                    filename='initial.hdf')
+                                                                    filename=trento_ic_path)
 
     # Format trento data into initial conditions for freestream
     logging.info('Packaging trento initial conditions into array...')
-    ic = toFsIc(initial_file='initial.hdf', quiet=False)
+    ic = toFsIc(initial_file=trento_ic_path, quiet=False)
 
     #################
     # Freestreaming #

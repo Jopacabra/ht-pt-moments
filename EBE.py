@@ -59,7 +59,8 @@ def run_event(eventNo):
     logging.info('Generating new event...')
 
     # Run event generation using config setttings
-    event_dataframe, rmax = hic.generate_event(get_rmax=True)
+    # Note that we need write permissions in the working directory
+    event_dataframe, rmax = hic.generate_event(get_rmax=True, working_dir=temp_dir.name)
 
     # Record seed selected
     seed = event_dataframe.iloc[0]['seed']

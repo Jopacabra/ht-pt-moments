@@ -13,6 +13,8 @@ source /usr/jma/bin/activate
 cd /usr/jm-analysis || exit
 # Pull any changes from the git
 git pull
+# Go to working directory we have write access to
+cd /srv/results || exit
 # Run the script
-python3 EBE.py
+python3 /usr/jm-analysis/EBE.py
 echo "Testing complete!"

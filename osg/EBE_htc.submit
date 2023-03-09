@@ -1,22 +1,22 @@
 # We want to use the custom jopacabra/jma2 container image
-+SingularityImage = "stash:///osgconnect/protected/jopacabra/jma2.07.sif"
++SingularityImage = "stash:///osgconnect/protected/jopacabra/jma2.09.sif"
 # Requirements omit one resource location and require hardware to match newness of
 # hardware where we compiled osu-hydro and trento (on the login node)
-requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
+Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
 
 # We need the job to run the bash script that will update and call the EBE.py script
 # We'll specify unique filenames for each job by using
 # the job's 'cluster' value.
 executable = EBE.sh
-transfer_output_files = /srv/results
+transfer_output_files = /srv
 
 error = log/job.$(Cluster).$(Process).error
 output = log/job.$(Cluster).$(Process).output
 log = log/job.$(Cluster).$(Process).log
 
 request_cpus = 1
-request_memory = 10 GB
-request_disk = 10 GB
+request_memory = 1 GB
+request_disk = 1 GB
 
 # Number of jobs with the above specifications to queue
 queue 1

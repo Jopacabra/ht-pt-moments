@@ -392,10 +392,18 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     else:
         trento_ic_path = 'initial.hdf'
 
+    # Debug pwd
+    print('Running trento in...')
+    print(os.getcwd())
+
     # Generate trento event
     trentoDataframe, trentoOutputFile, trentoSubprocess = runTrento(outputFile=True, randomSeed=seed,
                                                                     quiet=False,
                                                                     filename=trento_ic_path)
+
+    # Debug pwd
+    print('Running freestream in...')
+    print(os.getcwd())
 
     # Format trento data into initial conditions for freestream
     logging.info('Packaging trento initial conditions into array...')
@@ -441,6 +449,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     maxTime = 2*rmax  # in fm --- equal to length to traverse in fm for c = 1 - 2x largest width of plasma
     logging.info('maxTime = %.3f fm', maxTime)
 
+    # Debug pwd
+    print('Running hydro in...')
+    print(os.getcwd())
     # Fine run
     logging.info('Running fine hydro...')
     run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,

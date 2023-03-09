@@ -224,6 +224,7 @@ try:
     while config.EBE.NUM_EVENTS == 0 or eventNo < config.EBE.NUM_EVENTS:
         # Create and move to temporary directory
         temp_dir = tempDir(location=results_path)
+        print(os.getcwd())
 
         # Generate a new HIC event and sample config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe

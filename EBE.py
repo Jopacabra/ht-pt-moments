@@ -19,7 +19,7 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
     if keep_event:
         logging.info('Saving event hydro data...')
         # Copy config file to results directory, tagged with identifier
-        utilities.run_cmd(*['mv', str(temp_dir.name) + '/viscous_14_moments_evo.dat',
+        utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat',
                             results_path + '/hydro_grid_{}.dat'.format(identifierString, identifierString)],
                           quiet=False)
 
@@ -27,12 +27,6 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
     resultsDataFrame.to_pickle(results_path + '/{}.pkl'.format(filename))  # Save dataframe to pickle
-
-    if keep_event:
-        logging.info('Saving event hydro data...')
-        # Copy config file to results directory, tagged with identifier
-        utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat', os.getcwd()
-                            + '/hydro_grid_{}.dat'.format(identifierString, identifierString)], quiet=True)
 
     # Return to the directory in which we ran the script.
     os.chdir(home_path)
@@ -60,7 +54,7 @@ def run_event(eventNo):
 
     # Run event generation using config setttings
     # Note that we need write permissions in the working directory
-    event_dataframe, rmax = hic.generate_event(get_rmax=True, working_dir=temp_dir.name)
+    event_dataframe, rmax = hic.generate_event(get_rmax=True, working_dir=None)
 
     # Record seed selected
     seed = event_dataframe.iloc[0]['seed']

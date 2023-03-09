@@ -10,5 +10,5 @@ echo "Working hard..."
 export PATH=/usr/bin:$PATH
 source /usr/jma/bin/activate
 # Run the script
-trento Pb Pb --number-events 1 --output initial.hdf
+python3 /usr/jm-analysis/EBE.py
 echo "Event complete!"

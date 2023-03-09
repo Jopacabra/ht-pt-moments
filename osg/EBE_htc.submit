@@ -15,8 +15,8 @@ output = log/job.$(Cluster).$(Process).output
 log = log/job.$(Cluster).$(Process).log
 
 request_cpus = 1
-request_memory = 1 GB
-request_disk = 1 GB
+request_memory = 10 GB
+request_disk = 10 GB
 
 # Number of jobs with the above specifications to queue
 queue 1

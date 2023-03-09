@@ -209,7 +209,6 @@ home_path = os.getcwd()  # Gets working directory when script was run - results 
 results_path = home_path + '/results/{}'.format(identifierString)  # Absolute path of dir where results files will live
 
 # Make results directory
-logging.info('Making results directory...')
 os.makedirs(results_path, exist_ok=True)
 
 # Create log file & configure logging to be handled into the file AND stdout
@@ -222,6 +221,7 @@ logging.basicConfig(
 )
 
 # Copy config file to results directory, tagged with identifier
+logging.info('Copying config.yml to results...')
 utilities.run_cmd(*['cp', project_path + 'config.yml', results_path + '/config_{}.yml'.format(identifierString)],
                   quiet=True)
 

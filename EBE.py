@@ -210,7 +210,7 @@ results_path = home_path + '/results/{}'.format(identifierString)  # Absolute pa
 
 # Make results directory
 logging.info('Making results directory...')
-os.makedirs(results_path, exist_ok=True )
+os.makedirs(results_path, exist_ok=True)
 
 # Create log file & configure logging to be handled into the file AND stdout
 logging.basicConfig(

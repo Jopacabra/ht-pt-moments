@@ -4,11 +4,15 @@
 # hardware where we compiled osu-hydro and trento (on the login node)
 Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
 
+# Send me an email if a job has some errors
+notify_user = jbahder@nmsu.edu
+notification = Error
+
 # We need the job to run the bash script that will update and call the EBE.py script
 # We'll specify unique filenames for each job by using
 # the job's 'cluster' value.
 executable = EBE.sh
-transfer_output_files = /srv
+transfer_output_files = /srv/*.pkl
 
 error = log/job.$(Cluster).$(Process).error
 output = log/job.$(Cluster).$(Process).output

@@ -20,7 +20,7 @@ log = log/job.$(Cluster).$(Process).log
 
 request_cpus = 1
 request_memory = 15 GB
-request_disk = 15 GB
+request_disk = 20 GB
 
 # Number of jobs with the above specifications to queue
-queue 1
+queue 7600

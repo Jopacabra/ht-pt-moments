@@ -12,7 +12,7 @@ notification = Error
 # We'll specify unique filenames for each job by using
 # the job's 'cluster' value.
 executable = EBE.sh
-transfer_output_files = /srv/*.pkl
+# transfer_output_files = /srv/*.pkl
 
 error = log/job.$(Cluster).$(Process).error
 output = log/job.$(Cluster).$(Process).output

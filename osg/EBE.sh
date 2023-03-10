@@ -20,6 +20,6 @@ echo "Event complete!"
 
 # Transfer relevant output files to /srv
 echo "Moving results pkl to /srv..."
-mv /usr/jm-analysis/results/*/*.pkl /srv
+mv /srv/results/*/*.pkl /srv
 
 echo "Job complete! Have a great day! :)"

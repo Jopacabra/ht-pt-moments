@@ -2,7 +2,7 @@
 +SingularityImage = "stash:///osgconnect/protected/jopacabra/jma2.10.sif"
 # Requirements omit one resource location and require hardware to match newness of
 # hardware where we compiled osu-hydro and trento (on the login node)
-Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
+Requirements = HAS_AVX2 == True && GLIDEIN_ResourceName =!= "UW-IT"
 
 # We need the job to run the bash script that will update and call the EBE.py script
 # We'll specify unique filenames for each job by using

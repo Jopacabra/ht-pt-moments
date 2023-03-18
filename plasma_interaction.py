@@ -116,7 +116,7 @@ def energy_loss_integrand(event, jet, time, tau):
     FERMItoGeV = (1 / 0.19732687)  # Note that we apply this twice... Once for the t factor, once for the (int dt).
     return (config.constants.KAPPA * (-1) * FERMItoGeV**2 * tau * event.temp(jet_point)**3
                       * zeta(q=-1) * (1 / np.sqrt(1 - event.vel(point=jet_point)**2))
-                      * (1 - event.vel(point=jet_point)))
+                      * (1))
 
 
 

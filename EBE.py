@@ -116,66 +116,39 @@ def run_event(eventNo):
         # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-        for case in ['b', 'db', '10db', '50db', '100db', '1000db']:
-            logging.info('Running Jet {}, Case {}'.format(str(jetNo), case))
-            # Create the jet object
-            jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
-                           weight=chosen_weight)
+        for k_drift_val in [0, 1, 10, 100, 1000, 10000]:
+            for k_BBMG_val in [0, 1, 10, 100, 1000, 10000]:
+                logging.info('Running Jet {}, k_drift = {}, k_BBMG = {}'.format(str(jetNo), k_drift_val, k_BBMG_val))
+                # Create the jet object
+                jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
+                               weight=chosen_weight)
 
-            if case == 'db':
-                scale_drift = 1
-                scale_bbmg = 1
-                drift = True
-                bbmg = True
-            elif case == 'd':
-                scale_drift = 1
-                scale_bbmg = 0
-                drift = True
-                bbmg = False
-            elif case == 'b':
-                scale_drift = 0
-                scale_bbmg = 1
-                drift = False
-                bbmg = True
-            elif case == '10db':
-                scale_drift = 10
-                scale_bbmg = 1
-                drift = True
-                bbmg = True
-            elif case == '50db':
-                scale_drift = 50
-                scale_bbmg = 1
-                drift = True
-                bbmg = True
-            elif case == '100db':
-                scale_drift = 100
-                scale_bbmg = 1
-                drift = True
-                bbmg = True
-            elif case == '1000db':
-                scale_drift = 1000
-                scale_bbmg = 1
-                drift = True
-                bbmg = True
-            else:
-                scale_drift = 1
-                scale_bbmg = 1
-                drift = True
-                bbmg = True
-            # Run the time loop
-            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
-                                                             scale_drift=scale_drift, scale_bbmg=scale_bbmg)
+                # Set drift and BBMG couplings
+                scale_drift = k_drift_val
+                scale_bbmg = k_BBMG_val
+                if scale_drift > 0:
+                    drift = True
+                else:
+                    drift = False
+                if scale_bbmg > 0:
+                    bbmg = True
+                else:
+                    bbmg = False
 
-            # Save the xarray trajectory file
-            # Note we are currently in a temp directory... Save record in directory above.
-            if config.jet.RECORD:
-                jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
+                # Run the time loop
+                jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
+                                                                 scale_drift=scale_drift, scale_bbmg=scale_bbmg)
 
-            # Merge the event and jet dataframe lines
-            current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+                # Save the xarray trajectory file
+                # Note we are currently in a temp directory... Save record in directory above.
+                if config.jet.RECORD:
+                    jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
 
-            # Append the total dataframe to the results dataframe
-            results = pd.concat([results, current_result_dataframe], axis=0)
+                # Merge the event and jet dataframe lines
+                current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+
+                # Append the total dataframe to the results dataframe
+                results = pd.concat([results, current_result_dataframe], axis=0)
 
         # Declare jet complete
         logging.info('- Jet ' + str(jetNo) + ' Complete -')

@@ -253,7 +253,7 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
             "drift": [drift],
             "bbmg": [bbmg],
             "k_drift": [scale_drift],
-            "k_BBMG": [config.constants.KAPPA]
+            "k_BBMG": [config.constants.K_BBMG]
         }
     )
 

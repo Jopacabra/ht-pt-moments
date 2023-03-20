@@ -69,14 +69,16 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
         # Set Current Step Data #
         #########################
         # Decide if we're in bounds of the grid
-        if jet.x > event.xmax or jet.y > event.ymax:
+        if jet.x > event.xmax or jet.y > event.ymax or jet.x < event.xmin or jet.y < event.ymin:
             logging.info('Jet escaped event space...')
-            break
-        elif jet.x < event.xmin or jet.y < event.ymin:
-            logging.info('Jet escaped event space...')
+            exit_code = 0
             break
         elif t > event.tf:
             logging.info('Jet escaped event time...')
+            if phase == 'qgp':
+                exit_code = 3
+            else:
+                exit_code = 2
             break
 
         # Record p_T at beginning of step for extinction check
@@ -204,6 +206,7 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
             jet.p_x = 0
             jet.p_y = 0
             extinguished = True
+            exit_code = 1
             break
 
         ###############
@@ -252,8 +255,9 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
             "Tmax_event": [event.max_temp()],
             "drift": [drift],
             "bbmg": [bbmg],
-            "k_drift": [scale_drift],
-            "k_BBMG": [config.constants.K_BBMG]
+            "k_drift": [scale_drift*config.constants.K_DRIFT],
+            "k_BBMG": [scale_bbmg*config.constants.K_BBMG],
+            "exit_code": [exit_code]
         }
     )
 

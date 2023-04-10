@@ -115,7 +115,7 @@ def run_event(eventNo):
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
         k_drift_val = 1
-        k_el_val = 250
+        k_el_val = 1
         for el_model in ['BBMG', 'Vitev_hack', 'GLV_hack']:
             logging.info('Running Jet {}, k_drift = {}, k_BBMG = {}'.format(str(jetNo), k_drift_val, k_el_val))
             # Create the jet object
@@ -124,19 +124,19 @@ def run_event(eventNo):
 
             # Set drift and BBMG couplings
             scale_drift = k_drift_val
-            scale_bbmg = k_el_val
+            scale_el = k_el_val
             if scale_drift > 0:
                 drift = True
             else:
                 drift = False
-            if scale_bbmg > 0:
+            if scale_el > 0:
                 el = True
             else:
                 el = False
 
             # Run the time loop
             jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el,
-                                                             scale_drift=scale_drift, scale_el=scale_bbmg,
+                                                             scale_drift=scale_drift, scale_el=scale_el,
                                                              el_model=el_model)
 
             # Save the xarray trajectory file

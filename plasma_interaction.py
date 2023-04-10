@@ -150,7 +150,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
         alphas = 0.3
 
         # Calculate and return energy loss of this step.
-        return (CR * alphas / 2) * ((-1) * config.constants.K_BBMG
+        return (CR * alphas / 2) * ((-1)
                                     * (FERMItoGeV ** 2)
                                     * (tau - event.t0)
                                     * (event.mu(point=jet_point)**2)

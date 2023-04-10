@@ -5,6 +5,7 @@ import plasma_interaction as pi
 import config
 import xarray as xr
 from scipy import interpolate
+import os
 
 
 def mean_eloss_rate(pT):
@@ -15,10 +16,12 @@ def mean_eloss_rate(pT):
         return 0.375 * pT / mpl
 
     else:
+        # Get project directory
+        project_path = os.path.dirname(os.path.realpath(__file__))
 
         # Load deltaE / E curve data
-        tester_x = np.loadtxt('eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=0, delimiter=',')
-        tester_y = np.loadtxt('eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=1, delimiter=',')
+        tester_x = np.loadtxt(project_path + '/eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=0, delimiter=',')
+        tester_y = np.loadtxt('../../eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=1, delimiter=',')
 
         # Interpolate data
         # This is the delta E / E curve

@@ -798,8 +798,8 @@ class MainPage(tk.Frame):
             print('Calculating jet trajectory...')
             # Run the time loop
             self.jet_dataframe, self.jet_xarray = timekeeper.time_loop(event=self.current_event,
-                                                             jet=self.current_jet,
-                                                             drift=self.drift.get(), bbmg=self.bbmg.get())
+                                                                       jet=self.current_jet,
+                                                                       drift=self.drift.get(), el=self.bbmg.get())
 
             print('Jet trajectory complete.')
             self.calculated.set(True)

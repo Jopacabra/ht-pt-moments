@@ -1,12 +1,10 @@
 import os
 import numpy as np
 import pandas as pd
-import xarray as xr
 import logging
 import hic
 import plasma
 import jets
-import plasma_interaction as pi
 import config
 import utilities
 from utilities import tempDir
@@ -116,39 +114,41 @@ def run_event(eventNo):
         # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-        for k_drift_val in [0, 1, 10, 100, 1000, 10000]:
-            for k_BBMG_val in [0, 1, 10, 100, 1000, 10000]:
-                logging.info('Running Jet {}, k_drift = {}, k_BBMG = {}'.format(str(jetNo), k_drift_val, k_BBMG_val))
-                # Create the jet object
-                jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
-                               weight=chosen_weight)
+        k_drift_val = 1
+        k_el_val = 250
+        for el_model in ['BBMG', 'Vitev_hack', 'GLV_hack']:
+            logging.info('Running Jet {}, k_drift = {}, k_BBMG = {}'.format(str(jetNo), k_drift_val, k_el_val))
+            # Create the jet object
+            jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
+                           weight=chosen_weight)
 
-                # Set drift and BBMG couplings
-                scale_drift = k_drift_val
-                scale_bbmg = k_BBMG_val
-                if scale_drift > 0:
-                    drift = True
-                else:
-                    drift = False
-                if scale_bbmg > 0:
-                    bbmg = True
-                else:
-                    bbmg = False
+            # Set drift and BBMG couplings
+            scale_drift = k_drift_val
+            scale_bbmg = k_el_val
+            if scale_drift > 0:
+                drift = True
+            else:
+                drift = False
+            if scale_bbmg > 0:
+                el = True
+            else:
+                el = False
 
-                # Run the time loop
-                jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, bbmg=bbmg,
-                                                                 scale_drift=scale_drift, scale_bbmg=scale_bbmg)
+            # Run the time loop
+            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el,
+                                                             scale_drift=scale_drift, scale_el=scale_bbmg,
+                                                             el_model=el_model)
 
-                # Save the xarray trajectory file
-                # Note we are currently in a temp directory... Save record in directory above.
-                if config.jet.RECORD:
-                    jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
+            # Save the xarray trajectory file
+            # Note we are currently in a temp directory... Save record in directory above.
+            if config.jet.RECORD:
+                jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
 
-                # Merge the event and jet dataframe lines
-                current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+            # Merge the event and jet dataframe lines
+            current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
-                # Append the total dataframe to the results dataframe
-                results = pd.concat([results, current_result_dataframe], axis=0)
+            # Append the total dataframe to the results dataframe
+            results = pd.concat([results, current_result_dataframe], axis=0)
 
         # Declare jet complete
         logging.info('- Jet ' + str(jetNo) + ' Complete -')

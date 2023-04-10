@@ -4,9 +4,33 @@ import logging
 import plasma_interaction as pi
 import config
 import xarray as xr
+from scipy import interpolate
 
 
-def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
+def mean_eloss_rate(pT):
+    # Set constants
+    mpl = 2.27  # Ballpark value for mean jet path length in QGP
+
+    if pT < 2 or pT > 190:
+        return 0.375 * pT / mpl
+
+    else:
+
+        # Load deltaE / E curve data
+        tester_x = np.loadtxt('eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=0, delimiter=',')
+        tester_y = np.loadtxt('eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=1, delimiter=',')
+
+        # Interpolate data
+        # This is the delta E / E curve
+        interp_func = interpolate.interp1d(x=tester_x, y=tester_y, fill_value="extrapolate")
+
+        # Compute mean energy loss per unit pathlength
+        # We take delta E / E, multiply by E, then divide by the mean path length
+        mean_eloss_rate_val = interp_func(pT) * pT / mpl
+
+        return mean_eloss_rate_val
+
+def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_model='BBMG'):
     #############
     # Time Loop #
     #############
@@ -22,7 +46,7 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
     hrg_time_total = 0
     unhydro_time_total = 0
     maxT = 0
-    q_bbmg_total = 0
+    q_el_total = 0
     q_drift_total = 0
     q_drift_abs_total = 0
 
@@ -39,9 +63,9 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
     xpos_array = np.array([])
     ypos_array = np.array([])
     q_drift_array = np.array([])
-    q_BBMG_array = np.array([])
+    q_el_array = np.array([])
     int_drift_array = np.array([])
-    int_BBMG_array = np.array([])
+    int_el_array = np.array([])
     pT_array = np.array([])
     temp_seen_array = np.array([])
     u_perp_array = np.array([])
@@ -53,6 +77,9 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
     rho_final = 0
     phi_final = 0
     pT_final = 0
+
+    # Set mean energy loss rate for Vitev hack
+    mean_el_rate = mean_eloss_rate(jet.p_T())
 
     # Initiate loop
     logging.info('Initiating time loop...')
@@ -107,39 +134,41 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
         ############################
 
         if phase == 'qgp':
-            if drift and bbmg:
+            if drift and el:
                 int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
-                int_bbmg = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
+                int_el = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau,
+                                                    model=el_model, mean_el_rate=mean_el_rate)
                 # Energy loss due to gluon exchange with the medium
-                q_bbmg = float(jet.beta() * tau * int_bbmg * scale_bbmg)
+                q_el = float(jet.beta() * tau * int_el * scale_el)
                 # Jet drift momentum transferred to jet
                 q_drift = float(jet.beta() * tau * int_drift * scale_drift)
-            elif drift and not bbmg:
+            elif drift and not el:
                 int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
-                int_bbmg = 0
-                q_bbmg = 0
+                int_el = 0
+                q_el = 0
                 q_drift = float(jet.beta() * tau * int_drift * scale_drift)
-            elif not drift and bbmg:
+            elif not drift and el:
                 int_drift = 0
-                int_bbmg = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau)
-                q_bbmg = float(jet.beta() * tau * int_bbmg * scale_bbmg)
+                int_el = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau,
+                                                    model=el_model, mean_el_rate=mean_el_rate)
+                q_el = float(jet.beta() * tau * int_el * scale_el)
                 q_drift = 0
             else:
                 int_drift = 0
-                int_bbmg = 0
-                q_bbmg = 0
+                int_el = 0
+                q_el = 0
                 q_drift = 0
         else:
             int_drift = 0
-            int_bbmg = 0
-            q_bbmg = 0
+            int_el = 0
+            q_el = 0
             q_drift = 0
 
         ###################
         # Data Accounting #
         ###################
         # Log momentum transfers
-        q_bbmg_total += q_bbmg
+        q_el_total += q_el
         q_drift_total += q_drift
         q_drift_abs_total += np.abs(q_drift)
 
@@ -175,9 +204,9 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
         xpos_array = np.append(xpos_array, jet.x)
         ypos_array = np.append(ypos_array, jet.y)
         q_drift_array = np.append(q_drift_array, q_drift)
-        q_BBMG_array = np.append(q_BBMG_array, q_bbmg)
+        q_el_array = np.append(q_el_array, q_el)
         int_drift_array = np.append(int_drift_array, int_drift)
-        int_BBMG_array = np.append(int_BBMG_array, int_bbmg)
+        int_el_array = np.append(int_el_array, int_el)
         pT_array = np.append(pT_array, jet.p_T())
         temp_seen_array = np.append(temp_seen_array, temp)
         u_perp_array = np.append(u_perp_array, u_perp)
@@ -191,17 +220,17 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
         # Propagate jet position
         jet.prop(tau=tau)
 
-        # Change jet momentum to reflect BBMG energy loss
-        jet.add_q_par(q_par=q_bbmg)
+        # Change jet momentum to reflect energy loss
+        jet.add_q_par(q_par=q_el)
 
         # Change jet momentum to reflect drift effects
         jet.add_q_perp(q_perp=q_drift)
 
         # Check if the jet would be extinguished (prevents flipping directions
-        # when T >> p_T, since q_bbmg has no p_T dependence):
-        # If the jet lost more energy to BBMG this step than it had
+        # when T >> p_T, since q_el has no p_T dependence):
+        # If the jet lost more energy this step than it had
         # at the beginning of the step, we extinguish the jet and end things
-        if np.abs(q_bbmg) >= jet_og_p_T:
+        if np.abs(q_el) >= jet_og_p_T:
             logging.info('Jet extinguished')
             jet.p_x = 0
             jet.p_y = 0
@@ -231,7 +260,7 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
             "jet_mass": [jet.m],
             "jet_pT": [jet.p_T0],
             "jet_pT_f": [pT_final],
-            "q_BBMG": [float(q_bbmg_total)],
+            "q_el": [float(q_el_total)],
             "q_drift": [float(q_drift_total)],
             "q_drift_abs": [float(q_drift_abs_total)],
             "extinguished": [extinguished],
@@ -254,9 +283,10 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
             "rmax": [event.rmax],
             "Tmax_event": [event.max_temp()],
             "drift": [drift],
-            "bbmg": [bbmg],
+            "bbmg": [el],
+            "el_model": [el_model],
             "k_drift": [scale_drift*config.constants.K_DRIFT],
-            "k_BBMG": [scale_bbmg*config.constants.K_BBMG],
+            "k_BBMG": [scale_el * config.constants.K_BBMG],
             "exit_code": [exit_code]
         }
     )
@@ -274,13 +304,13 @@ def time_loop(event, jet, drift=True, bbmg=True, scale_drift=1, scale_bbmg=1):
                  'q_drift': (['time'], q_drift_array,
                              {'units': 'GeV',
                               'long_name': 'Momentum obtained by the jet at this timestep due to jet drift'}),
-                 'q_BBMG': (['time'], q_BBMG_array,
+                 'q_EL': (['time'], q_el_array,
                             {'units': 'GeV',
                              'long_name': 'Momentum obtained by the jet at this timestep due to BBMG energy loss'}),
                  'int_drift': (['time'], int_drift_array,
                              {'units': 'GeV/fm',
                               'long_name': 'Drift integrand seen by the jet at this timestep due to jet drift'}),
-                 'int_BBMG': (['time'], int_BBMG_array,
+                 'int_EL': (['time'], int_el_array,
                             {'units': 'GeV',
                              'long_name': 'BBMG integrand seen by the jet at this timestep due to BBMG energy loss'}),
                  'pT': (['time'], pT_array,

@@ -21,7 +21,7 @@ def mean_eloss_rate(pT):
 
         # Load deltaE / E curve data
         tester_x = np.loadtxt(project_path + '/eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=0, delimiter=',')
-        tester_y = np.loadtxt('../../eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=1, delimiter=',')
+        tester_y = np.loadtxt(project_path + '/eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=1, delimiter=',')
 
         # Interpolate data
         # This is the delta E / E curve

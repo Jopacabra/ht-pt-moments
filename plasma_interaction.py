@@ -26,7 +26,8 @@ def sample_eloss_rate(mean_rate, num_samples=None):
 # https://inspirehep.net/literature/1725162
 def sigma(event, jet, point, med_parton='g'):
     """
-    We select the appropriate cross-section for a known jet parton and known medium parton specified when called
+    We select the appropriate cross-section for a known jet parton and
+    known medium parton specified when called
     """
     current_point = point
     coupling = config.constants.G

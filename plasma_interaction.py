@@ -155,7 +155,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
                                     * (tau - event.t0)
                                     * (event.mu(point=jet_point)**2)
                                     * inv_lambda(event=event, jet=jet, point=jet_point)
-                                    * np.log(jet.p_T0/event.mu(point=jet_point)))
+                                    * np.log(jet.p_T()/event.mu(point=jet_point)))
     else:
         return 0
 

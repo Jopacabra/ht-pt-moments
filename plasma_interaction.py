@@ -77,8 +77,8 @@ def inv_lambda(event, jet, point):
 def jet_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
-    FERMItoGeV = (1 / 0.19732687)  # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return (FERMItoGeV * (1 / jet.p_T()) * config.constants.K_DRIFT
+    #FERMItoGeV = (1 / 0.19732687)  # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
+    return ((1 / jet.p_T()) * config.constants.K_DRIFT
            * ((event.i_int_factor(jet=jet, point=jet_point))
               * (event.u_perp(point=jet_point, phi=jet_p_phi) / (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
               * (event.mu(point=jet_point)**2)
@@ -151,7 +151,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
         alphas = 0.3
 
         # Calculate and return energy loss of this step.
-        return (CR * alphas / 2) * ((FERMItoGeV ** 2)
+        return (CR * alphas / 2) * ((FERMItoGeV)
                                     * (tau - event.t0)
                                     * (event.mu(point=jet_point)**2)
                                     * inv_lambda(event=event, jet=jet, point=jet_point)

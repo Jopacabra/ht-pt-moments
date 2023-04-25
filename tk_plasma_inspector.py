@@ -107,8 +107,8 @@ class MainPage(tk.Frame):
         self.calculated.set(False)
         self.drift = tk.BooleanVar()
         self.drift.set(True)
-        self.bbmg = tk.BooleanVar()
-        self.bbmg.set(True)
+        self.el = tk.BooleanVar()
+        self.el.set(True)
 
         # Integration options
         self.tempHRG = tk.DoubleVar()
@@ -143,8 +143,8 @@ class MainPage(tk.Frame):
         self.momentDisplay = tk.StringVar()
         self.momentDisplay.set(moment_label(moment=None, angleDeflection=None,
                                             k=self.K, label='Total'))
-        self.BBMGDisplay = tk.StringVar()
-        self.BBMGDisplay.set('...')
+        self.ELDisplay = tk.StringVar()
+        self.ELDisplay.set('...')
         self.momentHRGDisplay = tk.StringVar()
         self.momentHRGDisplay.set('...')
         self.momentUnhydroDisplay = tk.StringVar()
@@ -182,7 +182,7 @@ class MainPage(tk.Frame):
 
         # Set up the moment display
         self.momentLabel = tk.Label(self, textvariable=self.momentDisplay, font=LARGE_FONT)
-        self.momentPlasmaLabel = tk.Label(self, textvariable=self.BBMGDisplay, font=LARGE_FONT)
+        self.momentPlasmaLabel = tk.Label(self, textvariable=self.ELDisplay, font=LARGE_FONT)
         self.momentHRGLabel = tk.Label(self, textvariable=self.momentHRGDisplay, font=LARGE_FONT)
         self.momentUnhydroLabel = tk.Label(self, textvariable=self.momentUnhydroDisplay, font=LARGE_FONT)
 
@@ -270,13 +270,13 @@ class MainPage(tk.Frame):
                                 command=self.not_calculated)
         driftMenu.add_radiobutton(label='Off', variable=self.drift, value=False,
                                   command=self.not_calculated)
-        # bbmg submenu
-        bbmgMenu = tk.Menu(physicsMenu, tearoff=0)
-        physicsMenu.add_cascade(label='BBMG', menu=bbmgMenu)
-        bbmgMenu.add_radiobutton(label='On', variable=self.bbmg, value=True,
-                                  command=self.not_calculated)
-        bbmgMenu.add_radiobutton(label='Off', variable=self.bbmg, value=False,
-                                  command=self.not_calculated)
+        # EL submenu
+        elMenu = tk.Menu(physicsMenu, tearoff=0)
+        physicsMenu.add_cascade(label='Energy Loss', menu=elMenu)
+        elMenu.add_radiobutton(label='On', variable=self.el, value=True,
+                                 command=self.not_calculated)
+        elMenu.add_radiobutton(label='Off', variable=self.el, value=False,
+                                 command=self.not_calculated)
         parent.menubar.add_cascade(label='Physics', menu=physicsMenu)
 
         # Create plasma plot menu cascade
@@ -605,7 +605,7 @@ class MainPage(tk.Frame):
             # Set moment display
             # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!
             self.momentDisplay.set('...')
-            self.BBMGDisplay.set('...')
+            self.ELDisplay.set('...')
             self.momentHRGDisplay.set('...')
             self.momentUnhydroDisplay.set('...')
 
@@ -637,9 +637,9 @@ class MainPage(tk.Frame):
                 xpos_array = self.jet_xarray['x'].to_numpy()
                 ypos_array = self.jet_xarray['y'].to_numpy()
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
-                q_BBMG_array = self.jet_xarray['q_BBMG'].to_numpy()
+                q_EL_array = self.jet_xarray['q_EL'].to_numpy()
                 int_drift_array = self.jet_xarray['int_drift'].to_numpy()
-                int_BBMG_array = self.jet_xarray['int_BBMG'].to_numpy()
+                int_EL_array = self.jet_xarray['int_EL'].to_numpy()
                 pT_array = self.jet_xarray['pT'].to_numpy()
                 temp_seen_array = self.jet_xarray['temp'].to_numpy()
                 u_perp_array = self.jet_xarray['u_perp'].to_numpy()
@@ -653,7 +653,7 @@ class MainPage(tk.Frame):
 
                 # Set moment display
                 self.momentDisplay.set('Total Drift: {} GeV'.format(np.sum(q_drift_array)))
-                self.BBMGDisplay.set('Total BBMG: {} GeV'.format(np.sum(q_BBMG_array)))
+                self.ELDisplay.set('Total EL: {} GeV'.format(np.sum(q_EL_array)))
                 self.momentHRGDisplay.set('...')
                 self.momentUnhydroDisplay.set('...')
 
@@ -665,13 +665,13 @@ class MainPage(tk.Frame):
                 self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 0].plot(time_array, temp_seen_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 1].plot(time_array, u_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 0].plot(time_array, q_BBMG_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 0].plot(time_array, q_EL_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 1].plot(time_array, pT_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 2].plot(time_array, 4 * temp_seen_array ** 2, ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 2].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
                 self.propertyAxes[0, 3].plot(time_array, rpos_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 3].plot(time_array, int_BBMG_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 3].plot(time_array, int_EL_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 3].plot(time_array, int_drift_array, ls=connectorLineStyle)
 
                 if self.plotColors.get():
@@ -693,13 +693,13 @@ class MainPage(tk.Frame):
                         self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 0].plot(time_array[i], temp_seen_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 1].plot(time_array[i], u_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 0].plot(time_array[i], q_BBMG_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 0].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 1].plot(time_array[i], pT_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 2].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 3].plot(time_array[i], rpos_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 3].plot(time_array[i], int_BBMG_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 3].plot(time_array[i], int_EL_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 3].plot(time_array[i], int_drift_array[i], 'o', color=color_array[i], markersize=markSize)
 
                         # # PERFORMANCE ISSUES:
@@ -724,24 +724,24 @@ class MainPage(tk.Frame):
                         #     where=(phase_array == 'unh'),
                         #     color='g',
                         #     alpha=0.2)
-                        # # Fill under the bbmg integrand curve for qgp phase
+                        # # Fill under the EL integrand curve for qgp phase
                         # self.propertyAxes[1, 3].fill_between(
                         #     x=time_array,
-                        #     y1=int_BBMG_array,
+                        #     y1=int_EL_array,
                         #     where=(phase_array == 'qgp'),
                         #     color='b',
                         #     alpha=0.2)
-                        # # Fill under the bbmg integrand curve for hydrodynamic hadron gas phase
+                        # # Fill under the EL integrand curve for hydrodynamic hadron gas phase
                         # self.propertyAxes[1, 3].fill_between(
                         #     x=time_array,
-                        #     y1=int_BBMG_array,
+                        #     y1=int_EL_array,
                         #     where=(phase_array == 'hrg'),
                         #     color='g',
                         #     alpha=0.1)
-                        # # Fill under the bbmg integrand curve for unhydrodynamic phase
+                        # # Fill under the EL integrand curve for unhydrodynamic phase
                         # self.propertyAxes[1, 3].fill_between(
                         #     x=time_array,
-                        #     y1=int_BBMG_array,
+                        #     y1=int_EL_array,
                         #     where=(phase_array == 'unh'),
                         #     color='g',
                         #     alpha=0.2)
@@ -768,13 +768,13 @@ class MainPage(tk.Frame):
             self.propertyAxes[0, 1].set_title(r"$u_\parallel$", fontsize=plotFontSize)
             self.propertyAxes[1, 0].set_title(r"$T$ (GeV)", fontsize=plotFontSize)
             self.propertyAxes[1, 1].set_title(r"$|u|$", fontsize=plotFontSize)
-            self.propertyAxes[2, 0].set_title(r"$q_{BBMG}$", fontsize=plotFontSize)
+            self.propertyAxes[2, 0].set_title(r"$q_{EL}$", fontsize=plotFontSize)
             self.propertyAxes[2, 1].set_title(r"$p_T$", fontsize=plotFontSize)
             self.propertyAxes[1, 2].set_title(r"$\mu^2$ (GeV$\,^2$)", fontsize=plotFontSize)
             self.propertyAxes[2, 2].set_title(r"$q_{drift}$", fontsize=plotFontSize)
             self.propertyAxes[0, 2].set_title(r"$u_\perp / (1-u_\parallel)$", fontsize=plotFontSize)
             self.propertyAxes[0, 3].set_title(r"$r$ Position", fontsize=plotFontSize)
-            self.propertyAxes[1, 3].set_title(r"BBMG Integrand", fontsize=plotFontSize)
+            self.propertyAxes[1, 3].set_title(r"EL Integrand", fontsize=plotFontSize)
             self.propertyAxes[2, 3].set_title(r"Drift Integrand", fontsize=plotFontSize)
 
 
@@ -799,7 +799,7 @@ class MainPage(tk.Frame):
             # Run the time loop
             self.jet_dataframe, self.jet_xarray = timekeeper.time_loop(event=self.current_event,
                                                                        jet=self.current_jet,
-                                                                       drift=self.drift.get(), el=self.bbmg.get())
+                                                                       drift=self.drift.get(), el=self.el.get())
 
             print('Jet trajectory complete.')
             self.calculated.set(True)

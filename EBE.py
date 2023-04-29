@@ -116,8 +116,9 @@ def run_event(eventNo):
 
         k_drift_val = 1
         k_el_val = 1
-        for el_model in ['BBMG', 'Vitev_hack', 'GLV_hack']:
-            logging.info('Running Jet {}, k_drift = {}, k_BBMG = {}'.format(str(jetNo), k_drift_val, k_el_val))
+        for el_model in ['SGLV']:
+            logging.info('Running Jet {}, k_drift = {}, k_BBMG = {}, el_model = {}'.format(str(jetNo), k_drift_val,
+                                                                                           k_el_val, el_model))
             # Create the jet object
             jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
                            weight=chosen_weight)

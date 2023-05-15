@@ -79,3 +79,4 @@ class constants:
     G_MU = float(cfg['global_constants']['G_MU'])
     K_BBMG = float(cfg['global_constants']['K_BBMG'])
     K_DRIFT = float(cfg['global_constants']['K_DRIFT'])
+    ROOT_S = float(cfg['global_constants']['ROOT_S'])

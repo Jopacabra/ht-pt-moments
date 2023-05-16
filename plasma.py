@@ -48,6 +48,10 @@ class osu_hydro_file:
         # the first two timesteps are labeled with the same absolute time.
         self.timestep = self.tlist[-1] - self.tlist[-1 - int(self.n_grid_spaces)]
 
+        # Difference in absolute space between grid positions
+        # Note that we want a real, positive value for this
+        self.gridstep = np.abs(self.xlist[-1] - self.xlist[-2])
+
         # Domains of physical times and positions
         """
         Absolute time for the first two steps from osu-hydro are the same.
@@ -86,6 +90,28 @@ class osu_hydro_file:
 
         return temp_data
 
+    # Method to get raw temp x-direction gradient data
+    def temp_grad_x_array(self):
+        # Get the temp data as an array organized to be [time, x, y]-ish
+        temp_data = self.temp_array()
+
+        # Compute temperature gradient in the x-direction
+        temp_grad_x = np.gradient(temp_data, self.gridstep, axis=1)
+
+        # Spit out the array, organized the same as the temp_data array
+        return temp_grad_x
+
+    # Method to get raw temp x-direction gradient data
+    def temp_grad_y_array(self):
+        # Get the temp data as an array organized to be [time, x, y]-ish
+        temp_data = self.temp_array()
+
+        # Compute temperature gradient in the y-direction
+        temp_grad_y = np.gradient(temp_data, self.gridstep, axis=2)
+
+        # Spit out the array, organized the same as the temp_data array
+        return temp_grad_y
+
     # Method to get raw x velocity data
     def x_vel_array(self):
         # Cut x velocity data out and convert to numpy array
@@ -121,7 +147,7 @@ class osu_hydro_file:
         return plt.contourf(temp_data[time, :, :])
 
     # Method to return interpolated function object from data
-    # Function to interpolate a grid file
+    # Function to interpolate the temperature grid from the hydro file
     # Returns interpolating callable function
     def interpolate_temp_grid(self):
         print('Interpolating temp grid data for event: ' + str(self.name))
@@ -134,6 +160,36 @@ class osu_hydro_file:
         interp_temps = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), temp_data)
 
         return interp_temps
+
+    # Method to return interpolated function object from data
+    # Function to interpolate the temperature gradient grid from the hydro file
+    # Returns interpolating callable function
+    def interpolate_temp_grad_x_grid(self):
+        print('Interpolating temp x-gradient grid data for event: ' + str(self.name))
+
+        # Cut temp data out and convert to numpy array
+        temp_grad_x_data = self.temp_grad_x_array()
+
+        # Interpolate data!
+        # The final temperatures have been confirmed directly against absolute coordinates in data.
+        interp_temp_grad_x = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), temp_grad_x_data)
+
+        return interp_temp_grad_x
+
+    # Method to return interpolated function object from data
+    # Function to interpolate the temperature gradient grid from the hydro file
+    # Returns interpolating callable function
+    def interpolate_temp_grad_y_grid(self):
+        print('Interpolating temp y-gradient grid data for event: ' + str(self.name))
+
+        # Cut temp data out and convert to numpy array
+        temp_grad_y_data = self.temp_grad_y_array()
+
+        # Interpolate data!
+        # The final temperatures have been confirmed directly against absolute coordinates in data.
+        interp_temp_grad_y = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), temp_grad_y_data)
+
+        return interp_temp_grad_y
 
     # Method to interpolate the x velocities from a grid file
     # Returns interpolating callable function
@@ -194,12 +250,14 @@ class osu_hydro_file:
 
 # Plasma object as used for integration and muckery
 class plasma_event:
-    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, event=None, name=None, rmax=None):
+    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, grad_x_func=None, grad_y_func=None, event=None, name=None, rmax=None):
         # Initialize all the ordinary plasma parameters
         if event is not None:
             self.temp = event.interpolate_temp_grid()
             self.x_vel = event.interpolate_x_vel_grid()
             self.y_vel = event.interpolate_y_vel_grid()
+            self.temp_grad_x = event.interpolate_temp_grad_x_grid()
+            self.temp_grad_y = event.interpolate_temp_grad_y_grid()
             self.name = event.name
             self.timestep = event.timestep
             self.t0 = np.amin(self.temp.grid[0])
@@ -208,10 +266,13 @@ class plasma_event:
             self.xmax = np.amax(self.temp.grid[1])
             self.ymin = np.amin(self.temp.grid[2])
             self.ymax = np.amax(self.temp.grid[2])
+            self.gridstep = event.gridstep
         elif temp_func is not None and x_vel_func is not None and y_vel_func is not None:
             self.temp = temp_func
             self.x_vel = x_vel_func
             self.y_vel = y_vel_func
+            self.temp_grad_x = grad_x_func
+            self.temp_grad_y = grad_y_func
             self.name = name
             try:
                 # Attempt to get timestep as if the functions are regular interpolator objects.
@@ -287,6 +348,31 @@ class plasma_event:
             # Return 0
             density = 0
         return density
+
+    # Method to return gradient of the partial density for given medium partons
+    # at a particular point perpendicular to a given angle phi.
+    # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
+    def grad_perp_rho(self, point, phi, med_parton='g'):
+        # Compute x and y temperature gradient at given point
+        grad_x = self.temp_grad_x(point)
+        grad_y = self.temp_grad_y(point)
+
+        # Compute unit vector perpendicular to given phi
+        e_perp = np.array([np.cos(phi + (np.pi / 2)), np.sin(phi + (np.pi / 2))])
+
+        # Compute temperature gradient perp to given phi
+        grad_perp = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
+
+        if med_parton == 'g':
+            grad_perp_density = (1.202056903159594 * 16 * (1 / (np.pi ** 2))
+                                 * 3 * (self.temp(point) ** 2) * grad_perp)
+        elif med_parton == 'q':
+            grad_perp_density = (1.202056903159594 * (3 / 4) * 24 * (1 / (np.pi ** 2))
+                                * 3 * (self.temp(point) ** 2) * grad_perp)
+        else:
+            # Return 0
+            grad_perp_density = 0
+        return grad_perp_density
 
     # Method to return DeBye mass at a particular point
     # Chosen to be simple approximation. Ref - https://inspirehep.net/literature/1725162
@@ -371,12 +457,64 @@ class plasma_event:
 
         return minTemp
 
+    # Method to find the maximum temperature of a plasma object
+    def ext_vec_mag(self, vec='vel', ext='max', resolution=100, time='i'):
+        if time == 'i':
+            time = self.t0
+        elif time == 'f':
+            time = self.tf
+        else:
+            pass
+
+        # Adapted from grid_reader.qgp_plot()
+        #
+        # Domains of physical positions to plot at (in fm)
+        # These limits of the linear space obtain the largest and smallest input value for
+        # the interpolating function's position inputs.
+        x_sample_space = self.xspace(resolution=resolution)
+
+        # Create arrays of each coordinate
+        # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+        # We necessarily must set time equal to a constant to plot in 2D.
+        x_coords, y_coords = np.meshgrid(x_sample_space, x_sample_space, indexing='ij')
+        # t_coords set to be an array matching the length of x_coords full of constant time
+        # Note that we select "initial time" as 0.5 fs by default
+        t_coords = np.full_like(x_coords, time)
+
+        # Put coordinates together into ordered pairs.
+        points = np.transpose(np.array([t_coords, x_coords, y_coords]), (2, 1, 0))
+
+        # Compute vectors at sample points
+        if vec == 'vel':
+            x_vec_mags = self.x_vel(points)
+            y_vec_mags = self.y_vel(points)
+        elif vec == 'grad':
+            x_vec_mags = self.temp_grad_x(points)
+            y_vec_mags = self.temp_grad_y(points)
+        else:
+            x_vec_mags = 0
+            y_vec_mags = 0
+
+        # Calculate magnitude
+        vec_mags = np.sqrt(x_vec_mags ** 2 + y_vec_mags ** 2)
+
+        # Determine extrema type and take extrema
+        if ext == 'max':
+            ext_vec_mag = np.amax(vec_mags)
+        elif ext == 'min':
+            ext_vec_mag = np.amin(vec_mags)
+        else:
+            ext_vec_mag = 0
+
+        return ext_vec_mag
+
     # Method to plot interpolated temperature function and / or velocity field
     # Can plot contour or density / colormesh for temps, stream or quiver for velocities
     # Other options can adjust the output.
     # Returns the plot object to make integration elsewhere nicer.
-    def plot(self, time, temp_resolution=100, vel_resolution=30,
-             temptype='contour', veltype='stream', plot_temp=True, plot_vel=True, numContours=15, zoom=1):
+    def plot(self, time, temp_resolution=100, vel_resolution=30, grad_resolution=30,
+             temptype='contour', veltype='stream', gradtype='stream', plot_temp=True, plot_vel=True, plot_grad=False,
+             numContours=15, zoom=1):
         tempMax = self.max_temp()
 
         # Domains of physical positions to plot at (in fm)
@@ -425,6 +563,34 @@ class plasma_event:
             x_vels = 0
             y_vels = 0
 
+        if plot_grad:
+
+            # Create arrays of each coordinate
+            # E.g. Here x_coords is a 2D array showing the x coordinates of each cell
+            # We necessarily must set time equal to a constant to plot in 2D.
+            x_space_grad = self.xspace(resolution=grad_resolution, fraction=zoom)
+            grad_x_coords, grad_y_coords = np.meshgrid(x_space_grad, x_space_grad, indexing='ij')
+
+            # t_coords set to be an array matching the length of x_coords full of constant time
+            grad_t_coords = np.full_like(grad_x_coords, time)
+
+            # t_coords set to be an array matching the length of x_coords full of constant time
+            grad_points = np.transpose(np.array([grad_t_coords, grad_x_coords, grad_y_coords]), transposeAxes)
+
+            # Calculate velocities
+            grad_x = self.temp_grad_x(grad_points)
+            grad_y = self.temp_grad_y(grad_points)
+
+            # Find max and min grads
+            grad_mags = np.sqrt(grad_x**2 + grad_y**2)
+            grad_max = np.amax(grad_mags)
+            grad_min = np.amin(grad_mags)
+
+        else:
+            grad_x = 0
+            grad_y = 0
+
+
         # Make temperature plot
         if temptype == 'density' and plot_temp:
             temps = plt.pcolormesh(x_space, x_space, temp_points, cmap='plasma', shading='auto',
@@ -466,18 +632,41 @@ class plasma_event:
             vels = 0
             velcb = 0
 
-        return temps, vels, tempcb, velcb
+        # Make gradient plot
+        if gradtype == 'stream' and plot_grad:
+            grads = plt.streamplot(x_space_grad, x_space_grad, grad_x, grad_y,
+                                   color=np.sqrt(grad_x ** 2 + grad_y ** 2),
+                                   linewidth=1, cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=grad_max))
+            plt.gca().set_aspect('equal')
+            plt.gca().set_xlabel('X Position [fm]')
+            plt.gca().set_ylabel('Y Position [fm]')
+            gradcb = plt.colorbar(grads.lines, label='Temp Grad (GeV / fm)')
+        elif gradtype == 'quiver' and plot_grad:
+            grads = plt.quiver(x_space_grad, x_space_grad, grad_x, grad_y, np.sqrt(grad_x ** 2 + grad_y ** 2),
+                              linewidth=1,
+                              cmap='rainbow', norm=colors.Normalize(vmin=0, vmax=grad_max))
+            plt.gca().set_aspect('equal')
+            plt.gca().set_xlabel('X Position [fm]')
+            plt.gca().set_ylabel('Y Position [fm]')
+            gradcb = plt.colorbar(grads, label='Temp Grad (GeV / fm)')
+        else:
+            grads = 0
+            gradcb = 0
+
+        return temps, vels, grads, tempcb, velcb, gradcb
 
 
-# Takes functions that take parameters (t, x, y) and makes plasma objects
+# Takes callable functions that take parameters (t, x, y) for the temperature and velocities
+# and returns plasma_event objects generated from them.
 def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=None,
-                      resolution=10, xmax=15, time=None, rmax=None):
+                      resolution=10, xmax=15, time=None, rmax=None, return_grids=False):
     # Define grid time and space domains
     if time is None:
         t_space = np.linspace(0, 2*xmax, int((xmax + xmax) * resolution))
     else:
         t_space = np.linspace(0, time, int((xmax + xmax) * resolution))
     x_space = np.linspace((0 - xmax), xmax, int((xmax + xmax) * resolution))
+    grid_step = (2*xmax)/int((xmax + xmax) * resolution)
 
     # Create meshgrid for function evaluation
     t_coords, x_coords, y_coords = np.meshgrid(t_space, x_space, x_space, indexing='ij')
@@ -487,14 +676,26 @@ def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=Non
     x_vel_values = x_vel_func(t_coords, x_coords, y_coords)
     y_vel_values = y_vel_func(t_coords, x_coords, y_coords)
 
+    # Compute gradients
+    temp_grad_x_values = np.gradient(temp_values, grid_step, axis=1)
+    temp_grad_y_values = np.gradient(temp_values, grid_step, axis=2)
+
     # Interpolate functions
     interped_temp_function = RegularGridInterpolator((t_space, x_space, x_space), temp_values)
     interped_x_vel_function = RegularGridInterpolator((t_space, x_space, x_space), x_vel_values)
     interped_y_vel_function = RegularGridInterpolator((t_space, x_space, x_space), y_vel_values)
+    interped_grad_x_function = RegularGridInterpolator((t_space, x_space, x_space), temp_grad_x_values)
+    interped_grad_y_function = RegularGridInterpolator((t_space, x_space, x_space), temp_grad_y_values)
 
     # Create and return plasma object
     plasma_object = plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
-                               y_vel_func=interped_y_vel_function, name=name, rmax=rmax)
-    return plasma_object
+                                 y_vel_func=interped_y_vel_function, grad_x_func=interped_grad_x_function,
+                                 grad_y_func=interped_grad_y_function, name=name, rmax=rmax)
+
+    # Return the grids of evaluated points, if requested.
+    if return_grids:
+        return plasma_object, temp_values, x_vel_values, y_vel_values,
+    else:
+        return plasma_object
 
 

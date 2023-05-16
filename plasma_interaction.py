@@ -64,21 +64,25 @@ def sigma(event, jet, point, med_parton='g'):
 
 # Function to return inverse QGP drift mean free path in units of GeV^{-1}
 # Total GW cross section, as per Sievert, Yoon, et. al.
-def inv_lambda(event, jet, point):
+def inv_lambda(event, jet, point, med_parton='all'):
     """
     We apply a reciprocal summation between the cross-section times density for a medium gluon and for a medium quark
     to get the mean free path as in https://inspirehep.net/literature/1725162
     """
 
-    return (sigma(event, jet, point, med_parton='g') * event.rho(point, med_parton='g')
+    if med_parton == 'all':
+        return (sigma(event, jet, point, med_parton='g') * event.rho(point, med_parton='g')
               + sigma(event, jet, point, med_parton='q') * event.rho(point, med_parton='q'))
+    else:
+        return sigma(event, jet, point, med_parton=med_parton) * event.rho(point, med_parton=med_parton)
 
 # Define integrand for mean q_drift (k=0 moment)
 def jet_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
-    FERMItoGeV = (1 / 0.19732687)  # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return (FERMItoGeV * (1 / jet.p_T()) * config.constants.K_DRIFT
+    FmGeV = 0.19732687
+    # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
+    return ((1 / FmGeV) * (1 / jet.p_T()) * config.constants.K_DRIFT
            * ((event.i_int_factor(jet=jet, point=jet_point))
               * (event.u_perp(point=jet_point, phi=jet_p_phi) / (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
               * (event.mu(point=jet_point)**2)
@@ -125,12 +129,12 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
     jet_point = jet.coords3(time=time)
     jet_p_phi = jet.polar_mom_coords()[1]
-    FERMItoGeV = (1 / 0.19732687)
+    FmGeV = 0.19732687
 
     # Select energy loss model and return appropriate energy loss
     if model == 'BBMG':
         # Note that we apply FERMItoGeV twice... Once for the t factor, once for the (int dt).
-        return (config.constants.K_BBMG * (-1) * FERMItoGeV ** 2 * tau * event.temp(jet_point) ** 3
+        return (config.constants.K_BBMG * (-1) * ((1 / FmGeV) ** 2) * tau * event.temp(jet_point) ** 3
                 * zeta(q=-1) * (1 / np.sqrt(1 - event.vel(point=jet_point)**2))
                 * (1))
     elif model == 'Vitev_hack':
@@ -151,7 +155,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
         alphas = 0.3
 
         # Calculate and return energy loss of this step.
-        return (CR * alphas / 2) * ((FERMItoGeV ** 2)
+        return (CR * alphas / 2) * (((1 / FmGeV) ** 2)
                                     * (tau - event.t0)
                                     * (event.mu(point=jet_point)**2)
                                     * inv_lambda(event=event, jet=jet, point=jet_point)
@@ -159,7 +163,55 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
     else:
         return 0
 
+# Integrand for gradient deflection to 2nd order in opacity
+# Note - first moment is zero. Essentially computing cuberoot(q_{grad}^3) as scale approx.
+def grad_integrand(event, jet, time, tau):
+    jet_point = jet.coords3(time=time)
+    jet_p_rho, jet_p_phi = jet.polar_mom_coords()
+    FmGeV = 0.19732687
 
+    '''
+    Omega here is the characteristic width of the gaussian approximating the jet width spectrum.
+    For a simple first investigation of the order of magnitude of the gradient effects, we 
+    assume that this is equivalent to the gluon saturation scale in a p-X collision system.
+    
+    We take the gluon saturation scale from the pocket equation in Eq. 3.6 here:
+    https://inspirehep.net/literature/1206324
+    fit by eye to the results in Fig. 3.9 left for Au at x = 0.0001, which roughly equates to 
+    the region of 1 GeV jets in Au Au collisions at sqrt(s) == 5.02 TeV
+    '''
+
+    # Select proper saturation scale from scaled pocket equation
+    if config.transport.trento.PROJ1 == 'Pb' and config.transport.trento.PROJ2 == 'Pb':
+        A = 208
+    else:
+        A = 197
+    x = jet.p_T() / config.constants.ROOT_S
+    omega = 0.01675 * ((A / x) ** (1 / 3))
+
+    first_order_q = FmGeV*(((2 * (omega**2) * tau * (event.mu(point=jet_point)**2)
+                       * event.grad_perp_rho(point=jet_point, phi=jet_p_phi, med_parton='q')
+                    * inv_lambda(event=event, jet=jet, point=jet_point, med_parton='q'))
+                   / (jet.p_T() * event.rho(jet_point, med_parton='q')))
+                   * np.log(jet.p_T()/event.mu(point=jet_point)))
+
+    first_order_g = FmGeV*(((2 * (omega**2) * tau * (event.mu(point=jet_point)**2)
+                       * event.grad_perp_rho(point=jet_point, phi=jet_p_phi, med_parton='g')
+                    * inv_lambda(event=event, jet=jet, point=jet_point, med_parton='g'))
+                   / (jet.p_T() * event.rho(jet_point, med_parton='g')))
+                   * np.log(jet.p_T()/event.mu(point=jet_point)))
+
+    second_order_q = (FmGeV**2) * ((tau**2) * (event.mu(point=jet_point)**4) * event.grad_perp_rho(point=jet_point, phi=jet_p_phi, med_parton='q')
+                      * (inv_lambda(event=event, jet=jet, point=jet_point, med_parton='q')**2)
+                      * (np.log(jet.p_T()/event.mu(point=jet_point))**2)
+                    / (2 * jet.p_T() * (event.rho(jet_point, med_parton='q'))))
+
+    second_order_g = (FmGeV**2) * ((tau ** 2) * (event.mu(point=jet_point) ** 4) * event.grad_perp_rho(point=jet_point, phi=jet_p_phi, med_parton='g')
+                * (inv_lambda(event=event, jet=jet, point=jet_point, med_parton='g') ** 2)
+                * (np.log(jet.p_T() / event.mu(point=jet_point)) ** 2)
+                / (2 * jet.p_T() * (event.rho(jet_point, med_parton='g'))))
+
+    return np.cbrt(first_order_q + first_order_g + second_order_q + second_order_g)
 
 
 

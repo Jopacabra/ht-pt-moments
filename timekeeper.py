@@ -33,7 +33,8 @@ def mean_eloss_rate(pT):
 
         return mean_eloss_rate_val
 
-def time_loop(event, jet, drift=True, grad=False, el=True, scale_drift=1, scale_grad=1, scale_el=1, el_model='BBMG'):
+def time_loop(event, jet, drift=True, grad=False, el=True, scale_drift=1, scale_grad=1, scale_el=1, el_model='BBMG',
+              temp_hrg=config.transport.hydro.T_HRG, temp_unh=config.transport.hydro.T_UNHYDRO):
     #############
     # Time Loop #
     #############
@@ -129,11 +130,11 @@ def time_loop(event, jet, drift=True, grad=False, el=True, scale_drift=1, scale_
         u = event.vel(jet_point)
 
         # Decide phase
-        if temp > config.transport.hydro.T_HRG:
+        if temp > temp_hrg:
             phase = 'qgp'
-        elif temp < config.transport.hydro.T_HRG and temp > config.transport.hydro.T_UNHYDRO:
+        elif temp < temp_hrg and temp > temp_unh:
             phase = 'hrg'
-        elif temp < config.transport.hydro.T_UNHYDRO and temp > config.transport.hydro.T_END:
+        elif temp < temp_unh and temp > config.transport.hydro.T_END:
             phase = 'unh'
         else:
             phase = 'vac'

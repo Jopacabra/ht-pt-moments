@@ -114,30 +114,40 @@ def run_event(eventNo):
         # Yell about your selected jet
         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-        k_drift_val = 1
-        k_el_val = 1
-        for el_model in ['SGLV']:
-            logging.info('Running Jet {}, k_drift = {}, k_BBMG = {}, el_model = {}'.format(str(jetNo), k_drift_val,
-                                                                                           k_el_val, el_model))
+        el_model = 'SGLV'
+        for case in [0, 1, 2, 3]:
+            # Determine case details
+            if case == 0:
+                drift = False
+                grad = False
+                el = True
+            elif case == 1:
+                drift = True
+                grad = False
+                el = True
+            elif case == 2:
+                drift = False
+                grad = True
+                el = True
+            elif case == 3:
+                drift = True
+                grad = True
+                el = True
+            else:
+                drift = True
+                grad = True
+                el = True
+
+            # Log jet number and case description
+            logging.info('Running Jet {}, case {}'.format(str(jetNo), case))
+            logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
+
             # Create the jet object
             jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
                            weight=chosen_weight)
 
-            # Set drift and BBMG couplings
-            scale_drift = k_drift_val
-            scale_el = k_el_val
-            if scale_drift > 0:
-                drift = True
-            else:
-                drift = False
-            if scale_el > 0:
-                el = True
-            else:
-                el = False
-
             # Run the time loop
             jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el,
-                                                             scale_drift=scale_drift, scale_el=scale_el,
                                                              el_model=el_model)
 
             # Save the xarray trajectory file

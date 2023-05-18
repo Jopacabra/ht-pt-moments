@@ -147,7 +147,7 @@ def run_event(eventNo):
                            weight=chosen_weight)
 
             # Run the time loop
-            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el,
+            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad,
                                                              el_model=el_model)
 
             # Save the xarray trajectory file

@@ -33,7 +33,7 @@ def mean_eloss_rate(pT):
 
         return mean_eloss_rate_val
 
-def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_model='BBMG'):
+def time_loop(event, jet, drift=True, grad=False, el=True, scale_drift=1, scale_grad=1, scale_el=1, el_model='BBMG'):
     #############
     # Time Loop #
     #############
@@ -52,6 +52,8 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
     q_el_total = 0
     q_drift_total = 0
     q_drift_abs_total = 0
+    q_grad_total = 0
+    q_grad_abs_total = 0
 
     # Initialize flags
     first = True
@@ -66,11 +68,14 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
     xpos_array = np.array([])
     ypos_array = np.array([])
     q_drift_array = np.array([])
+    q_grad_array = np.array([])
     q_el_array = np.array([])
     int_drift_array = np.array([])
+    int_grad_array = np.array([])
     int_el_array = np.array([])
     pT_array = np.array([])
     temp_seen_array = np.array([])
+    grad_perp_T_seen_array = np.array([])
     u_perp_array = np.array([])
     u_par_array = np.array([])
     u_array = np.array([])
@@ -118,6 +123,7 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
         jet_point = jet.coords3(time=t)
         jet_p_rho, jet_p_phi = jet.polar_mom_coords()
         temp = event.temp(jet_point)
+        grad_perp_T = event.grad_perp_T(point=jet_point, phi=jet_p_phi)
         u_perp = event.u_perp(point=jet_point, phi=jet_p_phi)
         u_par = event.u_par(point=jet_point, phi=jet_p_phi)
         u = event.vel(jet_point)
@@ -137,35 +143,51 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
         ############################
 
         if phase == 'qgp':
-            if drift and el:
+            # Compute drift, if enabled
+            if drift:
+                # Compute jet drift integrand in this timestep
                 int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
-                int_el = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau,
-                                                    model=el_model, mean_el_rate=mean_el_rate)
-                # Energy loss due to gluon exchange with the medium
-                q_el = float(jet.beta() * tau * int_el * scale_el)
-                # Jet drift momentum transferred to jet
+
+                # Compute Jet drift momentum transferred to jet
                 q_drift = float(jet.beta() * tau * int_drift * scale_drift)
-            elif drift and not el:
-                int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
-                int_el = 0
-                q_el = 0
-                q_drift = float(jet.beta() * tau * int_drift * scale_drift)
-            elif not drift and el:
-                int_drift = 0
-                int_el = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau,
-                                                    model=el_model, mean_el_rate=mean_el_rate)
-                q_el = float(jet.beta() * tau * int_el * scale_el)
-                q_drift = 0
             else:
+                # Set drift integral and momentum transfer to zero
                 int_drift = 0
+                q_drift = 0
+
+            # Compute gradient drift, if enabled
+            if grad:
+                # Compute gradient drift integrand in this timestep
+                int_grad = pi.grad_integrand(event=event, jet=jet, time=t, tau=tau)
+
+                # Compute Jet gradient drift momentum transferred to jet
+                q_grad = float(jet.beta() * tau * int_grad * scale_grad)
+            else:
+                # Set gradient drift integral and momentum transfer to zero
+                int_grad = 0
+                q_grad = 0
+
+            # Compute energy loss, if enabled
+            if el:
+                # Compute energy loss integrand in this timestep
+                int_el = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau,
+                                                  model=el_model, mean_el_rate=mean_el_rate)
+
+                # Compute energy loss due to gluon exchange with the medium
+                q_el = float(jet.beta() * tau * int_el * scale_el)
+            else:
+                # Set energy loss and el integral to zero
                 int_el = 0
                 q_el = 0
-                q_drift = 0
         else:
+            # If not in QGP, don't compute any jet-medium interactions
+            # If you wanted to add some effects in other phases, they should be computed here
             int_drift = 0
+            int_grad = 0
             int_el = 0
-            q_el = 0
             q_drift = 0
+            q_grad = 0
+            q_el = 0
 
         ###################
         # Data Accounting #
@@ -174,6 +196,8 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
         q_el_total += q_el
         q_drift_total += q_drift
         q_drift_abs_total += np.abs(q_drift)
+        q_grad_total += q_grad
+        q_grad_abs_total += np.abs(q_grad)
 
         # Check for max temperature
         if temp > maxT:
@@ -202,16 +226,19 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
 
             unhydro_time_total += tau
 
-        # Record jet record
+        # Record arrays of values from this step for the jet record
         time_array = np.append(time_array, t)
         xpos_array = np.append(xpos_array, jet.x)
         ypos_array = np.append(ypos_array, jet.y)
         q_drift_array = np.append(q_drift_array, q_drift)
+        q_grad_array = np.append(q_grad_array, q_grad)
         q_el_array = np.append(q_el_array, q_el)
         int_drift_array = np.append(int_drift_array, int_drift)
+        int_grad_array = np.append(int_grad_array, int_drift)
         int_el_array = np.append(int_el_array, int_el)
         pT_array = np.append(pT_array, jet.p_T())
         temp_seen_array = np.append(temp_seen_array, temp)
+        grad_perp_T_seen_array = np.append(grad_perp_T_seen_array, grad_perp_T)
         u_perp_array = np.append(u_perp_array, u_perp)
         u_par_array = np.append(u_par_array, u_par)
         u_array = np.append(u_array, u)
@@ -227,7 +254,9 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
         jet.add_q_par(q_par=q_el)
 
         # Change jet momentum to reflect drift effects
+        # If not computed, q values go to zero.
         jet.add_q_perp(q_perp=q_drift)
+        jet.add_q_perp(q_perp=q_grad)
 
         # Check if the jet would be extinguished (prevents flipping directions
         # when T >> p_T, since q_el has no p_T dependence):
@@ -266,6 +295,8 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
             "q_el": [float(q_el_total)],
             "q_drift": [float(q_drift_total)],
             "q_drift_abs": [float(q_drift_abs_total)],
+            "q_grad": [float(q_grad_total)],
+            "q_grad_abs": [float(q_grad_abs_total)],
             "extinguished": [extinguished],
             "X0": [jet.x_0],
             "Y0": [jet.y_0],
@@ -286,6 +317,7 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
             "rmax": [event.rmax],
             "Tmax_event": [event.max_temp()],
             "drift": [drift],
+            "grad": [grad],
             "bbmg": [el],
             "el_model": [el_model],
             "k_drift": [scale_drift*config.constants.K_DRIFT],
@@ -307,12 +339,18 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
                  'q_drift': (['time'], q_drift_array,
                              {'units': 'GeV',
                               'long_name': 'Momentum obtained by the jet at this timestep due to jet drift'}),
+                 'q_grad': (['time'], q_grad_array,
+                             {'units': 'GeV',
+                              'long_name': 'Momentum obtained by the jet at this timestep due to jet gradient drift'}),
                  'q_EL': (['time'], q_el_array,
                             {'units': 'GeV',
                              'long_name': 'Momentum obtained by the jet at this timestep due to BBMG energy loss'}),
                  'int_drift': (['time'], int_drift_array,
                              {'units': 'GeV/fm',
                               'long_name': 'Drift integrand seen by the jet at this timestep due to jet drift'}),
+                 'int_grad': (['time'], int_grad_array,
+                               {'units': 'GeV/fm',
+                                'long_name': 'Gradient drift integrand seen by the jet at this timestep due to jet drift'}),
                  'int_EL': (['time'], int_el_array,
                             {'units': 'GeV',
                              'long_name': 'BBMG integrand seen by the jet at this timestep due to BBMG energy loss'}),
@@ -322,6 +360,9 @@ def time_loop(event, jet, drift=True, el=True, scale_drift=1, scale_el=1, el_mod
                  'temp': (['time'], temp_seen_array,
                           {'units': 'GeV',
                            'long_name': 'Temperature seen by the jet at this timestep'}),
+                 'grad_perp_temp': (['time'], grad_perp_T_seen_array,
+                          {'units': 'GeV/fm',
+                           'long_name': 'Gradient of Temperature perp. to jet seen by the jet at this timestep'}),
                  'u_perp': (['time'], u_perp_array,
                             {'units': 'GeV',
                              'long_name': 'Temperature seen by the jet at this timestep'}),

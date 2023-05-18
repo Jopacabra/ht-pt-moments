@@ -349,10 +349,10 @@ class plasma_event:
             density = 0
         return density
 
-    # Method to return gradient of the partial density for given medium partons
+    # Method to return gradient of the Temperature
     # at a particular point perpendicular to a given angle phi.
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
-    def grad_perp_rho(self, point, phi, med_parton='g'):
+    def grad_perp_T(self, point, phi):
         # Compute x and y temperature gradient at given point
         grad_x = self.temp_grad_x(point)
         grad_y = self.temp_grad_y(point)
@@ -361,7 +361,16 @@ class plasma_event:
         e_perp = np.array([np.cos(phi + (np.pi / 2)), np.sin(phi + (np.pi / 2))])
 
         # Compute temperature gradient perp to given phi
-        grad_perp = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
+        grad_perp_T = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
+
+        return grad_perp_T
+
+    # Method to return gradient of the partial density for given medium partons
+    # at a particular point perpendicular to a given angle phi.
+    # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
+    def grad_perp_rho(self, point, phi, med_parton='g'):
+        # Compute temperature gradient perp to given phi
+        grad_perp = self.grad_perp_T(point=point, phi=phi)
 
         if med_parton == 'g':
             grad_perp_density = (1.202056903159594 * 16 * (1 / (np.pi ** 2))

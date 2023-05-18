@@ -100,15 +100,19 @@ class MainPage(tk.Frame):
         self.x0 = tk.DoubleVar()
         self.y0 = tk.DoubleVar()
         self.jetE = tk.DoubleVar()
-        self.jetE.set(5)
+        self.jetE.set(1)
         self.nth = tk.IntVar()
         self.nth.set(10)
         self.calculated = tk.BooleanVar()
         self.calculated.set(False)
         self.drift = tk.BooleanVar()
         self.drift.set(True)
+        self.grad = tk.BooleanVar()
+        self.grad.set(True)
         self.el = tk.BooleanVar()
         self.el.set(True)
+        self.el_model = tk.StringVar()
+        self.el_model.set('SGLV')
 
         # Integration options
         self.tempHRG = tk.DoubleVar()
@@ -117,8 +121,16 @@ class MainPage(tk.Frame):
         self.tempUnhydro.set(config.transport.hydro.T_UNHYDRO)
 
         # Plotting options
+        self.plot_temp = tk.BooleanVar()
+        self.plot_temp.set(True)
+        self.plot_vel = tk.BooleanVar()
+        self.plot_vel.set(True)
+        self.plot_grad = tk.BooleanVar()
+        self.plot_grad.set(False)
         self.velocityType = tk.StringVar()
         self.velocityType.set('stream')
+        self.gradientType = tk.StringVar()
+        self.gradientType.set('stream')
         self.contourNumber = tk.IntVar()
         self.contourNumber.set(15)
         self.tempType = tk.StringVar()
@@ -159,8 +171,9 @@ class MainPage(tk.Frame):
         self.plasmaAxis = self.plasmaFigure.add_subplot(1, 1, 1)
 
         # Define colorbar objects with "1" scalar mappable object so they can be manipulated.
-        self.tempcb = self.plasmaFigure.colorbar(plt.cm.ScalarMappable(norm=None, cmap='rainbow'), ax=self.plasmaAxis)
-        self.velcb = self.plasmaFigure.colorbar(plt.cm.ScalarMappable(norm=None, cmap='rainbow'), ax=self.plasmaAxis)
+        self.tempcb = 0
+        self.velcb = 0
+        self.gradcb = 0
 
         # Define plots
         self.tempPlot = None
@@ -220,7 +233,7 @@ class MainPage(tk.Frame):
                                      from_=0, to=2*np.pi, length=200, resolution=0.1, label='theta0 (rad)')
         # Create jetE slider
         self.jetESlider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.jetE,
-                                   from_=0.1, to=100, length=200, resolution=0.1, label='jetE (GeV)')
+                                   from_=0.1, to=20, length=200, resolution=0.1, label='jetE (GeV)')
         # Create tempHRG slider
         self.tempCutoffSlider = tk.Scale(self, orient=tk.HORIZONTAL,
                                          variable=self.tempHRG, from_=0, to=1, length=200, resolution=0.01,
@@ -270,13 +283,26 @@ class MainPage(tk.Frame):
                                 command=self.not_calculated)
         driftMenu.add_radiobutton(label='Off', variable=self.drift, value=False,
                                   command=self.not_calculated)
+        # Gradients submenu
+        gradMenu = tk.Menu(physicsMenu, tearoff=0)
+        physicsMenu.add_cascade(label='Gradients', menu=gradMenu)
+        gradMenu.add_radiobutton(label='On', variable=self.grad, value=True,
+                                  command=self.not_calculated)
+        gradMenu.add_radiobutton(label='Off', variable=self.grad, value=False,
+                                  command=self.not_calculated)
         # EL submenu
         elMenu = tk.Menu(physicsMenu, tearoff=0)
+        el_model_menu = tk.Menu(elMenu, tearoff=0)
+        elMenu.add_cascade(label='Model', menu=el_model_menu)
         physicsMenu.add_cascade(label='Energy Loss', menu=elMenu)
         elMenu.add_radiobutton(label='On', variable=self.el, value=True,
                                  command=self.not_calculated)
         elMenu.add_radiobutton(label='Off', variable=self.el, value=False,
                                  command=self.not_calculated)
+        el_model_menu.add_radiobutton(label='SGLV', variable=self.el_model, value='SGLV',
+                               command=self.not_calculated)
+        el_model_menu.add_radiobutton(label='BBMG', variable=self.el_model, value='BBMG',
+                               command=self.not_calculated)
         parent.menubar.add_cascade(label='Physics', menu=physicsMenu)
 
         # Create plasma plot menu cascade
@@ -317,11 +343,15 @@ class MainPage(tk.Frame):
         tempMenu.add_cascade(label='No. Contours', menu=contourMenu)
         # Plot type sub-submenu
         tempTypeMenu = tk.Menu(tempMenu, tearoff=0)
-        tempMenu.add_cascade(label='Plot Type', menu=tempTypeMenu)
+        tempMenu.add_cascade(label='Plot Style', menu=tempTypeMenu)
         tempTypeMenu.add_radiobutton(label='Contour', variable=self.tempType, value='contour',
                                     command=self.update_plots)
         tempTypeMenu.add_radiobutton(label='Density', variable=self.tempType, value='density',
                                     command=self.update_plots)
+        tempTypeMenu.add_radiobutton(label='Enabled', variable=self.plot_temp, value=True,
+                                     command=self.update_plots)
+        tempTypeMenu.add_radiobutton(label='Disabled', variable=self.plot_temp, value=False,
+                                     command=self.update_plots)
 
 
 
@@ -332,9 +362,27 @@ class MainPage(tk.Frame):
                               command=self.update_plots)
         velTypeMenu.add_radiobutton(label='Quiver Velocities', variable=self.velocityType, value='quiver',
                               command=self.update_plots)
-        velMenu.add_cascade(label='Plot Type', menu=velTypeMenu)
+        velTypeMenu.add_radiobutton(label='Enabled', variable=self.plot_vel, value=True,
+                                    command=self.update_plots)
+        velTypeMenu.add_radiobutton(label='Disabled', variable=self.plot_vel, value=False,
+                                    command=self.update_plots)
+        velMenu.add_cascade(label='Plot Style', menu=velTypeMenu)
         plasmaMenu.add_cascade(label='Velocities', menu=velMenu)
         parent.menubar.add_cascade(label='Plasma Plot', menu=plasmaMenu)
+
+        # Gradient submenu
+        gradMenu = tk.Menu(plasmaMenu, tearoff=0)
+        gradTypeMenu = tk.Menu(gradMenu)
+        gradTypeMenu.add_radiobutton(label='Stream Gradients', variable=self.gradientType, value='stream',
+                                    command=self.update_plots)
+        gradTypeMenu.add_radiobutton(label='Quiver Gradients', variable=self.gradientType, value='quiver',
+                                    command=self.update_plots)
+        gradTypeMenu.add_radiobutton(label='Enabled', variable=self.plot_grad, value=True,
+                                     command=self.update_plots)
+        gradTypeMenu.add_radiobutton(label='Disabled', variable=self.plot_grad, value=False,
+                                     command=self.update_plots)
+        gradMenu.add_cascade(label='Plot Style', menu=gradTypeMenu)
+        plasmaMenu.add_cascade(label='Gradients', menu=gradMenu)
 
         # Property plot menu
         propMenu = tk.Menu(parent.menubar, tearoff=0)
@@ -580,8 +628,18 @@ class MainPage(tk.Frame):
         if self.file_selected:
             # Clear all the plots and colorbars
             self.plasmaAxis.clear()
-            self.tempcb.remove()
-            self.velcb.remove()
+            try:
+                self.tempcb.remove()
+            except AttributeError:
+                pass
+            try:
+                self.velcb.remove()
+            except AttributeError:
+                pass
+            try:
+                self.gradcb.remove()
+            except AttributeError:
+                pass
 
             for axisList in self.propertyAxes:  # Medium property plots
                 for axis in axisList:
@@ -594,13 +652,18 @@ class MainPage(tk.Frame):
             # plt.sca(self.plasmaAxis)
 
             # Plot new temperatures & velocities
-            self.tempPlot, self.velPlot, self.tempcb, self.velcb = self.current_event.plot(self.time.get(),
-                                                                  temp_resolution=100,
-                                                                  vel_resolution=30,
-                                                                  veltype=self.velocityType.get(),
-                                                                  temptype=self.tempType.get(),
-                                                                  numContours=self.contourNumber.get(),
-                                                                  zoom=self.zoom.get())
+            self.tempPlot, self.velPlot, self.gradPlot, self.tempcb, self.velcb, self.gradcb\
+                = self.current_event.plot(self.time.get(),
+                                          plot_temp=self.plot_temp.get(),
+                                          plot_vel=self.plot_vel.get(),
+                                          plot_grad=self.plot_grad.get(),
+                                          temp_resolution=100,
+                                          vel_resolution=30,
+                                          gradtype=self.gradientType.get(),
+                                          veltype=self.velocityType.get(),
+                                          temptype=self.tempType.get(),
+                                          numContours=self.contourNumber.get(),
+                                          zoom=self.zoom.get())
 
             # Set moment display
             # !!!!!!!!!!!!! Currently Empty !!!!!!!!!!!!
@@ -638,10 +701,13 @@ class MainPage(tk.Frame):
                 ypos_array = self.jet_xarray['y'].to_numpy()
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
                 q_EL_array = self.jet_xarray['q_EL'].to_numpy()
+                q_grad_array = self.jet_xarray['q_grad'].to_numpy()
                 int_drift_array = self.jet_xarray['int_drift'].to_numpy()
                 int_EL_array = self.jet_xarray['int_EL'].to_numpy()
+                int_grad_array = self.jet_xarray['int_grad'].to_numpy()
                 pT_array = self.jet_xarray['pT'].to_numpy()
                 temp_seen_array = self.jet_xarray['temp'].to_numpy()
+                grad_perp_temp_array = self.jet_xarray['grad_perp_temp'].to_numpy()
                 u_perp_array = self.jet_xarray['u_perp'].to_numpy()
                 u_par_array = self.jet_xarray['u_par'].to_numpy()
                 u_array = self.jet_xarray['u'].to_numpy()
@@ -664,13 +730,13 @@ class MainPage(tk.Frame):
                 self.propertyAxes[0, 0].plot(time_array, u_perp_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 0].plot(time_array, temp_seen_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 1].plot(time_array, u_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 0].plot(time_array, q_EL_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 1].plot(time_array, grad_perp_temp_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 2].plot(time_array, q_EL_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 1].plot(time_array, pT_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 2].plot(time_array, 4 * temp_seen_array ** 2, ls=connectorLineStyle)
+                self.propertyAxes[0, 2].plot(time_array, q_grad_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
-                self.propertyAxes[0, 2].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
-                self.propertyAxes[0, 3].plot(time_array, rpos_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 0].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
+                self.propertyAxes[0, 3].plot(time_array, int_grad_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 3].plot(time_array, int_EL_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 3].plot(time_array, int_drift_array, ls=connectorLineStyle)
 
@@ -692,13 +758,13 @@ class MainPage(tk.Frame):
                         self.propertyAxes[0, 0].plot(time_array[i], u_perp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 0].plot(time_array[i], temp_seen_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 1].plot(time_array[i], u_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 0].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 1].plot(time_array[i], grad_perp_temp_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 2].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 1].plot(time_array[i], pT_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 2].plot(time_array[i], 4 * temp_seen_array[i] ** 2, 'o', color=color_array[i] , markersize=markSize)
+                        self.propertyAxes[0, 2].plot(time_array[i], q_grad_array[i], 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[0, 2].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[0, 3].plot(time_array[i], rpos_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 0].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 3].plot(time_array[i], int_grad_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 3].plot(time_array[i], int_EL_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 3].plot(time_array[i], int_drift_array[i], 'o', color=color_array[i], markersize=markSize)
 
@@ -767,13 +833,13 @@ class MainPage(tk.Frame):
             self.propertyAxes[0, 0].set_title(r"$u_\perp$", fontsize=plotFontSize)
             self.propertyAxes[0, 1].set_title(r"$u_\parallel$", fontsize=plotFontSize)
             self.propertyAxes[1, 0].set_title(r"$T$ (GeV)", fontsize=plotFontSize)
-            self.propertyAxes[1, 1].set_title(r"$|u|$", fontsize=plotFontSize)
-            self.propertyAxes[2, 0].set_title(r"$q_{EL}$", fontsize=plotFontSize)
+            self.propertyAxes[1, 1].set_title(r"$\nabla_{\perp} T$", fontsize=plotFontSize)
+            self.propertyAxes[1, 2].set_title(r"$q_{EL}$", fontsize=plotFontSize)
             self.propertyAxes[2, 1].set_title(r"$p_T$", fontsize=plotFontSize)
-            self.propertyAxes[1, 2].set_title(r"$\mu^2$ (GeV$\,^2$)", fontsize=plotFontSize)
+            self.propertyAxes[0, 2].set_title(r"$q_{grad}$", fontsize=plotFontSize)
             self.propertyAxes[2, 2].set_title(r"$q_{drift}$", fontsize=plotFontSize)
-            self.propertyAxes[0, 2].set_title(r"$u_\perp / (1-u_\parallel)$", fontsize=plotFontSize)
-            self.propertyAxes[0, 3].set_title(r"$r$ Position", fontsize=plotFontSize)
+            self.propertyAxes[2, 0].set_title(r"$u_\perp / (1-u_\parallel)$", fontsize=plotFontSize)
+            self.propertyAxes[0, 3].set_title(r"Gradient Integrand", fontsize=plotFontSize)
             self.propertyAxes[1, 3].set_title(r"EL Integrand", fontsize=plotFontSize)
             self.propertyAxes[2, 3].set_title(r"Drift Integrand", fontsize=plotFontSize)
 
@@ -799,7 +865,11 @@ class MainPage(tk.Frame):
             # Run the time loop
             self.jet_dataframe, self.jet_xarray = timekeeper.time_loop(event=self.current_event,
                                                                        jet=self.current_jet,
-                                                                       drift=self.drift.get(), el=self.el.get())
+                                                                       drift=self.drift.get(),
+                                                                       el=self.el.get(),
+                                                                       grad=self.grad.get(),
+                                                                       temp_hrg=self.tempHRG.get(),
+                                                                       temp_unh=self.tempUnhydro.get())
 
             print('Jet trajectory complete.')
             self.calculated.set(True)

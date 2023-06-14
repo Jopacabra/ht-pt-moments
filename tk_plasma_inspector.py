@@ -5,7 +5,7 @@ from tkinter.simpledialog import askfloat
 from tkinter import messagebox
 import numpy as np
 import plasma
-import hic
+import collision
 import jets
 import matplotlib
 from matplotlib import style

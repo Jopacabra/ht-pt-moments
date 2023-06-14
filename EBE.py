@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import logging
-import hic
+import collision
 import plasma
 import jets
 import config

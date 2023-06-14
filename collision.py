@@ -11,6 +11,7 @@ import os
 import logging
 import utilities
 import config
+from hic import flow
 from utilities import cube_random
 
 try:
@@ -397,7 +398,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     print(os.getcwd())
 
     # Generate trento event
-    trentoDataframe, trentoOutputFile, trentoSubprocess = runTrento(outputFile=True, randomSeed=seed,
+    event_dataframe, trento_output_file, trento_subprocess = runTrento(outputFile=True, randomSeed=seed,
                                                                     quiet=False,
                                                                     filename=trento_ic_path)
 
@@ -426,11 +427,12 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # This is where we control the end point of the hydro. The HRG object created here has an energy density param.
     # that we use as the cut-off energy density for the hydro evolution. Doing things through frzout.HRG allows us to
     # specify a minimum temperature that will be enforced with the energy density popped out here.
-    # create sampler HRG object (to be reused for all events)
+    # create frzout HRG object (to be reused for all events) representing a hadron resonance gas at given temperature
     hrg_kwargs = dict(species='urqmd', res_width=True)
     hrg = frzout.HRG(t_end, **hrg_kwargs)
 
     # append switching energy density to hydro arguments
+    # We use frzout's hrg class to compute an energy density based on the desired freezeout temperature
     eswitch = hrg.energy_density()
     hydro_args = ['edec={}'.format(eswitch)]
 
@@ -457,15 +459,58 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
 
     # Fine run
     logging.info('Running fine hydro...')
-    run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
+    hydro_dict = run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
               hydro_args=hydro_args, time_step=time_step, maxTime=maxTime)
 
     logging.info('Event generation complete')
+    logging.info('Analyzing event geometry...')
+
+    # Add rmax to event_dataframe
+    event_dataframe['rmax'] = rmax
+
+    # Compute trento ic eccentricities
+    event_dataframe['e2'] = np.sqrt(event_dataframe['e2_re'] ** 2 + event_dataframe['e2_im'] ** 2)
+    event_dataframe['e3'] = np.sqrt(event_dataframe['e3_re'] ** 2 + event_dataframe['e3_im'] ** 2)
+    event_dataframe['e4'] = np.sqrt(event_dataframe['e4_re'] ** 2 + event_dataframe['e4_im'] ** 2)
+    event_dataframe['e5'] = np.sqrt(event_dataframe['e5_re'] ** 2 + event_dataframe['e5_im'] ** 2)
+
+    # Compute flow coefficients v_n:
+    # Create event surface object from hydro surface file dictionary
+    event_surface = frzout.Surface(**hydro_dict, ymax=2)
+    logging.info('%d freeze-out cells', len(event_surface))
+
+    # Sample particle production with frzout
+    particles = frzout.sample(hydro_dict, hrg)
+
+    # compute particle angle array
+    particle_phi_array = np.array([])
+    for part in particles:
+        p = part['p']  # a single particle's position vector
+        phi = np.arctan(p[2], p[1])
+        particle_phi_array = np.append(particle_phi_array, phi)
+
+    # Compute flow vectors
+    q2 = flow.qn(particle_phi_array, 2)
+    q3 = flow.qn(particle_phi_array, 3)
+    q4 = flow.qn(particle_phi_array, 4)
+
+    # Compute cumulant
+    vnk = flow.Cumulant(len(particle_phi_array), q2=q2, q3=q3, q4=q4)
+
+    # Compute flow coefficients v_2{2} and v_3{2}
+    v_2 = vnk.flow(2, 2, imaginary='negative')
+    v_3 = vnk.flow(3, 2, imaginary='negative')
+
+    event_dataframe['v_2'] = v_2
+    event_dataframe['v_3'] = v_3
+
+    logging.info('Event geometry analysis complete')
+
 
     if get_rmax is True:
-        return trentoDataframe, rmax
+        return event_dataframe, rmax
     else:
-        return trentoDataframe
+        return event_dataframe
 
 
 # Function that defines a normalized 2D PDF array for a given interpolated temperature

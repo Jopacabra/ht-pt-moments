@@ -315,7 +315,6 @@ def time_loop(event, jet, drift=True, grad=False, el=True, scale_drift=1, scale_
             "dx": [config.transport.GRID_STEP],
             "dt": [config.transport.TIME_STEP],
             "tau": [config.jet.TAU],
-            "rmax": [event.rmax],
             "Tmax_event": [event.max_temp()],
             "drift": [drift],
             "grad": [grad],

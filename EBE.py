@@ -62,7 +62,8 @@ def run_event(eventNo):
 
     # Run event generation using config setttings
     # Note that we need write permissions in the working directory
-    event_dataframe, rmax = collision.generate_event(get_rmax=True, working_dir=None)
+    event_dataframe = collision.generate_event(working_dir=None)
+    rmax = event_dataframe['rmax']
 
     # Record seed selected
     seed = event_dataframe.iloc[0]['seed']

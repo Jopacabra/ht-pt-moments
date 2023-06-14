@@ -62,7 +62,7 @@ def run_event(eventNo):
 
     # Run event generation using config setttings
     # Note that we need write permissions in the working directory
-    event_dataframe, rmax = hic.generate_event(get_rmax=True, working_dir=None)
+    event_dataframe, rmax = collision.generate_event(get_rmax=True, working_dir=None)
 
     # Record seed selected
     seed = event_dataframe.iloc[0]['seed']
@@ -82,7 +82,7 @@ def run_event(eventNo):
     # Select jet energy
     if config.jet.E_FLUCT:
         if config.jet.E_IS:
-            chosen_pilot_array, chosen_e_array, chosen_weight_array = hic.jet_IS_LHC(cent=None, num_samples=config.EBE.NUM_SAMPLES)
+            chosen_pilot_array, chosen_e_array, chosen_weight_array = collision.jet_IS_LHC(cent=None, num_samples=config.EBE.NUM_SAMPLES)
         else:
             ##################
             # BROKENNNNNNNNN #
@@ -115,7 +115,7 @@ def run_event(eventNo):
             x0 = 0
             y0 = 0
         else:
-            newPoint = hic.generate_jet_point(event)
+            newPoint = collision.generate_jet_point(event)
             x0, y0 = newPoint[0], newPoint[1]
 
         # Select jet production angle
@@ -244,7 +244,7 @@ except KeyboardInterrupt as error:
     safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
               keep_event=config.mode.KEEP_EVENT)
 
-except hic.StopEvent as error:
+except collision.StopEvent as error:
     logging.exception('HIC event error: {}'.format(str(error)))
     logging.info('Cleaning up...')
 

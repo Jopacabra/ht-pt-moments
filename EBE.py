@@ -17,9 +17,19 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
     if keep_event:
         logging.info('Saving event hydro data...')
         # Copy config file to results directory, tagged with identifier
-        utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat',
-                            results_path + '/hydro_grid_{}.dat'.format(identifierString, identifierString)],
-                          quiet=False)
+        try:
+            utilities.run_cmd(*['mv', 'viscous_14_moments_evo.dat',
+                                results_path + '/hydro_grid_{}.dat'.format(identifierString, identifierString)],
+                              quiet=False)
+        except FileNotFoundError:
+            logging.error('Failed to copy grid file -- file not found')
+
+        try:
+            utilities.run_cmd(*['mv', 'surface.dat',
+                                results_path + '/hydro_surface_{}.dat'.format(identifierString, identifierString)],
+                              quiet=False)
+        except FileNotFoundError:
+            logging.error('Failed to copy surface file -- file not found')
 
     # Save the dataframe into the identified results folder
     logging.info('Saving progress...')

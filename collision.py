@@ -480,7 +480,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     logging.info('%d freeze-out cells', len(event_surface))
 
     # Sample particle production with frzout
-    particles = frzout.sample(hydro_dict, hrg)
+    particles = frzout.sample(event_surface, hrg)
 
     # compute particle angle array
     particle_phi_array = np.array([])

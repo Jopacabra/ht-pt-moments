@@ -21,5 +21,6 @@ echo "Event complete!"
 # Transfer relevant output files to /srv
 echo "Moving results pkl to /srv..."
 mv /srv/results/*/*.pkl /srv
+mv /srv/results/*/*.dat /srv
 
 echo "Job complete! Have a great day! :)"

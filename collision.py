@@ -486,7 +486,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     particle_phi_array = np.array([])
     for part in particles:
         p = part['p']  # a single particle's position vector
-        phi = np.arctan(p[2], p[1])
+        phi = np.arctan(x1=float(p[2]), x2=float(p[1]))  # angle in xy-plane
         particle_phi_array = np.append(particle_phi_array, phi)
 
     # Compute flow vectors

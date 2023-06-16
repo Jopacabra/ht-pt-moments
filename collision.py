@@ -479,27 +479,46 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     event_surface = frzout.Surface(**hydro_dict, ymax=2)
     logging.info('%d freeze-out cells', len(event_surface))
 
-    # Sample particle production with frzout
-    particles = frzout.sample(event_surface, hrg)
+    # Perform 1000 samples of frzout surface and take mean of computed v_2 and v_3
+    logging.info('Sampling freezeout surface to compute v_n')
+    v_2_array = np.array([])
+    v_3_array = np.array([])
+    num_frzout_samples = 1000
+    for sample in np.arange(0, num_frzout_samples):
+        
+        # Sample particle production with frzout
+        particles = frzout.sample(event_surface, hrg)
+        
+        # compute particle angle array
+        particle_phi_array = np.array([])
+        for part in particles:
+            p = part['p']  # a single particle's position vector
+            px = float(p[1])
+            py = float(p[2])
+            phi = np.arctan2(py, px)  # angle in xy-plane
+            particle_phi_array = np.append(particle_phi_array, phi)
+        
+        # Compute flow vectors
+        q2 = flow.qn(particle_phi_array, 2)
+        q3 = flow.qn(particle_phi_array, 3)
+        q4 = flow.qn(particle_phi_array, 4)
+        
+        # Compute cumulant
+        vnk = flow.Cumulant(len(particle_phi_array), q2=q2, q3=q3, q4=q4)
+        
+        # Compute flow coefficients v_2{2} and v_3{2}
+        v_2 = vnk.flow(2, 2, imaginary='negative')
+        v_3 = vnk.flow(3, 2, imaginary='negative')
+    
+        v_2_array = np.append(v_2_array, v_2)
+        v_3_array = np.append(v_3_array, v_3)
+    
+    v_2 = np.mean(v_2_array)
+    v_3 = np.mean(v_3_array)
 
-    # compute particle angle array
-    particle_phi_array = np.array([])
-    for part in particles:
-        p = part['p']  # a single particle's position vector
-        phi = np.arctan(x1=float(p[2]), x2=float(p[1]))  # angle in xy-plane
-        particle_phi_array = np.append(particle_phi_array, phi)
-
-    # Compute flow vectors
-    q2 = flow.qn(particle_phi_array, 2)
-    q3 = flow.qn(particle_phi_array, 3)
-    q4 = flow.qn(particle_phi_array, 4)
-
-    # Compute cumulant
-    vnk = flow.Cumulant(len(particle_phi_array), q2=q2, q3=q3, q4=q4)
-
-    # Compute flow coefficients v_2{2} and v_3{2}
-    v_2 = vnk.flow(2, 2, imaginary='negative')
-    v_3 = vnk.flow(3, 2, imaginary='negative')
+    logging.info('Flow coefficients computed using {} samples of frzout surface'.format(num_frzout_samples))
+    logging.info('v_2 = {}'.format(v_2))
+    logging.info('v_3 = {}'.format(v_3))
 
     event_dataframe['v_2'] = v_2
     event_dataframe['v_3'] = v_3

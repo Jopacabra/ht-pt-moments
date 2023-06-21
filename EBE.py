@@ -81,9 +81,10 @@ def run_event(eventNo):
     ################
     # Oversample the background with jets
     # Select jet energy
+    event_npart = event_dataframe['npart']
     if config.jet.E_FLUCT:
         if config.jet.E_IS:
-            chosen_pilot_array, chosen_e_array, chosen_weight_array = collision.jet_IS_LHC(cent=None, num_samples=config.EBE.NUM_SAMPLES)
+            chosen_pilot_array, chosen_e_array, chosen_weight_array = collision.jet_IS_LHC(npart=event_npart, num_samples=config.EBE.NUM_SAMPLES)
         else:
             ##################
             # BROKENNNNNNNNN #

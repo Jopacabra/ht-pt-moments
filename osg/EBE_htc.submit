@@ -1,5 +1,5 @@
 # We want to use the custom jopacabra/jma2 container image
-+SingularityImage = "stash:///osgconnect/protected/jopacabra/jma2.31.sif"
++SingularityImage = "stash:///osgconnect/protected/jopacabra/jma2.32.sif"
 # Requirements omit one resource location and require hardware to match newness of
 # hardware where we compiled osu-hydro and trento (on the login node)
 Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
@@ -23,4 +23,4 @@ request_memory = 15 GB
 request_disk = 24 GB
 
 # Number of jobs with the above specifications to queue
-queue 1
+queue 10000

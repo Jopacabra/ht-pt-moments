@@ -63,7 +63,7 @@ def run_event(eventNo):
     # Run event generation using config setttings
     # Note that we need write permissions in the working directory
     event_dataframe = collision.generate_event(working_dir=None)
-    rmax = event_dataframe['rmax']
+    rmax = event_dataframe.iloc[0]['rmax']
 
     # Record seed selected
     seed = event_dataframe.iloc[0]['seed']
@@ -81,7 +81,7 @@ def run_event(eventNo):
     ################
     # Oversample the background with jets
     # Select jet energy
-    event_npart = event_dataframe['npart']
+    event_npart = event_dataframe.iloc[0]['npart']
     if config.jet.E_FLUCT:
         if config.jet.E_IS:
             chosen_pilot_array, chosen_e_array, chosen_weight_array = collision.jet_IS_LHC(npart=event_npart, num_samples=config.EBE.NUM_SAMPLES)

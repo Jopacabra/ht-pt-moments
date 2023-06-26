@@ -12,6 +12,7 @@ Integration of asymmetric transverse momentum moments in hydrodynamic QGP grids.
 * xarray
 * matplotlib
 * py-yaml
+* hic
 * seaborn (Future?)
 
 ### Trento & OSU-Hydro dependencies

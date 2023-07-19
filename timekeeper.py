@@ -202,7 +202,7 @@ def time_loop(event, jet, drift=True, grad=False, el=True, scale_drift=1, scale_
 
         # Check for max temperature
         if temp > maxT:
-            maxT = temp
+            maxT = temp[0]
 
         # Decide phase for categorization & timekeeping
         if phase == 'qgp':

@@ -12,6 +12,7 @@ Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
 # We'll specify unique filenames for each job by using
 # the job's 'cluster' value.
 executable = ../EBE.sh
+# We don't feed any particular files to transfer, so all files in the /srv directory are transferred
 # transfer_output_files = /srv/*.pkl
 
 error = log/job.$(Cluster).$(Process).error

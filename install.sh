@@ -14,7 +14,8 @@ python3 -m venv /usr/$VIRTUAL_ENV
 # Activate environment
 source /usr/$VIRTUAL_ENV/bin/activate
 # Install python dependencies - Excludes tkinter and matplotlib for plasma inspector
-pip install numpy scipy cython h5py pandas xarray pyyaml hic
+# Note that for some reason pyyaml 6.0.1 broke the install.
+pip install numpy scipy cython h5py pandas xarray PyYAML==6.0 hic
 
 # Debug print of working directory
 pwd

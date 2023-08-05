@@ -481,6 +481,8 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
 
     # Perform 1000 samples of frzout surface and take mean of computed v_2 and v_3
     logging.info('Sampling freezeout surface to compute v_n')
+    q_2_array = np.array([])
+    q_3_array = np.array([])
     v_2_array = np.array([])
     v_3_array = np.array([])
     num_frzout_samples = 1000
@@ -499,12 +501,15 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
             particle_phi_array = np.append(particle_phi_array, phi)
         
         # Compute flow vectors
-        q2 = flow.qn(particle_phi_array, 2)
-        q3 = flow.qn(particle_phi_array, 3)
-        q4 = flow.qn(particle_phi_array, 4)
+        q_2 = flow.qn(particle_phi_array, 2)
+        q_3 = flow.qn(particle_phi_array, 3)
+        q_4 = flow.qn(particle_phi_array, 4)
+        
+        q_2_array = np.append(q_2_array, q_2)
+        q_3_array = np.append(q_3_array, q_3)        
         
         # Compute cumulant
-        vnk = flow.Cumulant(len(particle_phi_array), q2=q2, q3=q3, q4=q4)
+        vnk = flow.Cumulant(len(particle_phi_array), q2=q_2, q3=q_3, q4=q_4)
         
         # Compute flow coefficients v_2{2} and v_3{2}
         v_2 = vnk.flow(2, 2, imaginary='negative')
@@ -513,13 +518,19 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         v_2_array = np.append(v_2_array, v_2)
         v_3_array = np.append(v_3_array, v_3)
     
+    q_2 = np.mean(q_2_array)
+    q_3 = np.mean(q_3_array)
     v_2 = np.mean(v_2_array)
     v_3 = np.mean(v_3_array)
 
     logging.info('Flow coefficients computed using {} samples of frzout surface'.format(num_frzout_samples))
+    logging.info('q_2 = {}'.format(q_2))
+    logging.info('q_3 = {}'.format(q_3))
     logging.info('v_2 = {}'.format(v_2))
     logging.info('v_3 = {}'.format(v_3))
 
+    event_dataframe['q_2'] = q_2
+    event_dataframe['q_3'] = q_3
     event_dataframe['v_2'] = v_2
     event_dataframe['v_3'] = v_3
 

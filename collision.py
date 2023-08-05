@@ -50,16 +50,16 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
             "mult": [],
             "e2_re": [],
             "e2_im": [],
-            "psi_2": [],
+            "psi_e2": [],
             "e3_re": [],
             "e3_im": [],
-            "psi_3": [],
+            "psi_e3": [],
             "e4_re": [],
             "e4_im": [],
-            "psi_4": [],
+            "psi_e4": [],
             "e5_re": [],
             "e5_im": [],
-            "psi_5": [],
+            "psi_e5": [],
             "seed": [],
             "cmd": [],
         }
@@ -119,16 +119,16 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
                     "mult": [float(trentoOutput[3])],
                     "e2_re": [float(trentoOutput[4])],
                     "e2_im": [float(trentoOutput[5])],
-                    "psi_2": [float((1/2) * np.arctan2(float(trentoOutput[5]), float(trentoOutput[4])))],
+                    "psi_e2": [float((1/2) * np.arctan2(float(trentoOutput[5]), float(trentoOutput[4])))],
                     "e3_re": [float(trentoOutput[6])],
                     "e3_im": [float(trentoOutput[7])],
-                    "psi_3": [float((1/3) * np.arctan2(float(trentoOutput[7]), float(trentoOutput[6])))],
+                    "psi_e3": [float((1/3) * np.arctan2(float(trentoOutput[7]), float(trentoOutput[6])))],
                     "e4_re": [float(trentoOutput[8])],
                     "e4_im": [float(trentoOutput[9])],
-                    "psi_4": [float((1/4) * np.arctan2(float(trentoOutput[9]), float(trentoOutput[8])))],
+                    "psi_e4": [float((1/4) * np.arctan2(float(trentoOutput[9]), float(trentoOutput[8])))],
                     "e5_re": [float(trentoOutput[10])],
                     "e5_im": [float(trentoOutput[11])],
-                    "psi_5": [float((1/5) * np.arctan2(float(trentoOutput[11]), float(trentoOutput[10])))],
+                    "psi_e5": [float((1/5) * np.arctan2(float(trentoOutput[11]), float(trentoOutput[10])))],
                     "seed": [randomSeed],
                     "cmd": [trentoCmd],
                 }
@@ -161,16 +161,16 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
             "mult": [],
             "e2_re": [],
             "e2_im": [],
-            "psi_2": [],
+            "psi_e2": [],
             "e3_re": [],
             "e3_im": [],
-            "psi_3": [],
+            "psi_e3": [],
             "e4_re": [],
             "e4_im": [],
-            "psi_4": [],
+            "psi_e4": [],
             "e5_re": [],
             "e5_im": [],
-            "psi_5": [],
+            "psi_e5": [],
             "seed": [],
             "cmd": [],
         }
@@ -235,16 +235,16 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
                     "mult": [float(trentoOutput[3])],
                     "e2_re": [float(trentoOutput[4])],
                     "e2_im": [float(trentoOutput[5])],
-                    "psi_2": [float((1 / 2) * np.arctan2(float(trentoOutput[5]), float(trentoOutput[4])))],
+                    "psi_e2": [float((1 / 2) * np.arctan2(float(trentoOutput[5]), float(trentoOutput[4])))],
                     "e3_re": [float(trentoOutput[6])],
                     "e3_im": [float(trentoOutput[7])],
-                    "psi_3": [float((1 / 3) * np.arctan2(float(trentoOutput[7]), float(trentoOutput[6])))],
+                    "psi_e3": [float((1 / 3) * np.arctan2(float(trentoOutput[7]), float(trentoOutput[6])))],
                     "e4_re": [float(trentoOutput[8])],
                     "e4_im": [float(trentoOutput[9])],
-                    "psi_4": [float((1 / 4) * np.arctan2(float(trentoOutput[9]), float(trentoOutput[8])))],
+                    "psi_e4": [float((1 / 4) * np.arctan2(float(trentoOutput[9]), float(trentoOutput[8])))],
                     "e5_re": [float(trentoOutput[10])],
                     "e5_im": [float(trentoOutput[11])],
-                    "psi_5": [float((1 / 5) * np.arctan2(float(trentoOutput[11]), float(trentoOutput[10])))],
+                    "psi_e5": [float((1 / 5) * np.arctan2(float(trentoOutput[11]), float(trentoOutput[10])))],
                     "seed": [randomSeed],
                     "cmd": [trentoCmd],
                 }
@@ -519,7 +519,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         v_3_array = np.append(v_3_array, v_3)
     
     q_2 = np.mean(q_2_array)
+    psi_2 = np.angle(q_2)
     q_3 = np.mean(q_3_array)
+    psi_3 = np.angle(q_3)
     v_2 = np.mean(v_2_array)
     v_3 = np.mean(v_3_array)
 
@@ -530,7 +532,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     logging.info('v_3 = {}'.format(v_3))
 
     event_dataframe['q_2'] = q_2
+    event_dataframe['psi_2'] = psi_2
     event_dataframe['q_3'] = q_3
+    event_dataframe['psi_3'] = psi_3
     event_dataframe['v_2'] = v_2
     event_dataframe['v_3'] = v_3
 

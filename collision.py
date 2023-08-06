@@ -485,7 +485,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     q_3_array = np.array([])
     v_2_array = np.array([])
     v_3_array = np.array([])
-    num_frzout_samples = 1000
+    num_frzout_samples = 10000
     for sample in np.arange(0, num_frzout_samples):
         
         # Sample particle production with frzout

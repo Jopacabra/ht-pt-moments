@@ -519,9 +519,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         v_3_array = np.append(v_3_array, v_3)
     
     q_2 = np.mean(q_2_array)
-    psi_2 = np.angle(q_2) + np.pi/2
+    psi_2 = np.angle(q_2)
     q_3 = np.mean(q_3_array)
-    psi_3 = np.angle(q_3) + np.pi/2
+    psi_3 = np.angle(q_3)
     v_2 = np.mean(v_2_array)
     v_3 = np.mean(v_3_array)
 

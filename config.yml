@@ -4,7 +4,7 @@ mode:  # Operation mode flags
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
     WEIGHT_POINT: True  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
     NUM_EVENTS: 1  # Number of events to generate -- 0 runs events until interrupt.
-    NUM_SAMPLES: 10000  # Number of jets to run in each event
+    NUM_SAMPLES: 1000000  # Number of jets to run in each event
     KEEP_EVENT: False  # Keep plasma data for future analysis
 transport:  # Parameters for the jets to be run
     TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
@@ -20,14 +20,14 @@ trento:
     PROJ2: 'Pb'  # Collisions species 2
     NUCLEON_WIDTH: 0.5  # Gaussian nucleon width in fm. Default 0.5 fm from DukeQCD BA
     CROSS_SECTION: 7.0  # Inelastic nucleon-nucleon cross section sigma_{NN} in fm^2
-    BMIN: None  # Minimum impact parameter. For no limits, set None.
-    BMAX: None  # Maximum impact parameter. For no limits, set None.
+    BMIN: 8.5  # Minimum impact parameter. For no limits, set None.
+    BMAX: 9  # Maximum impact parameter. For no limits, set None.
 jet:  # Parameters for the jets to be run
     JET_ENERGY: 22.5  # Jet energy in GeV - corresponds to TOTAL jet E, not just charged particle E
     E_FLUCT: True  # Vary jet energy EBE? - If True, JET_ENERGY does nothing.
     E_IS: True  # Importance sample jet energy - uses uniform approximate distribution
     MIN_JET_ENERGY: 1  # Minimum jet energy in GeV to use if jet energy fluctuates. - Min 1.25 if RHIC sampling
-    MAX_JET_ENERGY: 120
+    MAX_JET_ENERGY: 50
     TAU: 0.01  # Timestep used for jet propagation
     RECORD: False  # Save xarray jet record?
 global_constants:  # Physical constants to be set by the user.

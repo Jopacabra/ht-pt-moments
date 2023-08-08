@@ -89,9 +89,9 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     trentoCmd.append('--projectile {}'.format(config.transport.trento.PROJ1))
     trentoCmd.append('--projectile {}'.format(config.transport.trento.PROJ2))
     if config.transport.trento.BMIN is not None:
-        trentoCmd.append('--bmin {}'.format(config.transport.trento.BMIN))  # Minimum impact parameter (in fm ???)
+        trentoCmd.append('--b-min {}'.format(config.transport.trento.BMIN))  # Minimum impact parameter (in fm ???)
     if config.transport.trento.BMAX is not None:
-        trentoCmd.append('--bmax {}'.format(config.transport.trento.BMIN))  # Maximum impact parameter (in fm ???)
+        trentoCmd.append('--b-max {}'.format(config.transport.trento.BMIN))  # Maximum impact parameter (in fm ???)
     if outputFile:
         trentoCmd.append('--output {}'.format(filename))  # Output file name
     if randomSeed is not None:
@@ -202,9 +202,9 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
     if projectile2 is not None:
         trentoCmd.append('--projectile {}'.format(projectile2))
     if bmin is not None:
-        trentoCmd.append('--bmin {}'.format(bmin))  # Minimum impact parameter (in fm ???)
+        trentoCmd.append('--b-min {}'.format(bmin))  # Minimum impact parameter (in fm ???)
     if bmax is not None:
-        trentoCmd.append('--bmax {}'.format(bmax))  # Maximum impact parameter (in fm ???)
+        trentoCmd.append('--b-max {}'.format(bmax))  # Maximum impact parameter (in fm ???)
     if outputFile:
         trentoCmd.append('--output {}'.format(filename))  # Output file name
     if randomSeed is not None:

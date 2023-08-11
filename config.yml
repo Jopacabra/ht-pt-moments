@@ -4,7 +4,7 @@ mode:  # Operation mode flags
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
     WEIGHT_POINT: True  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
     NUM_EVENTS: 1  # Number of events to generate -- 0 runs events until interrupt.
-    NUM_SAMPLES: 1000000  # Number of jets to run in each event
+    NUM_SAMPLES: 100  # Number of jets to run in each event
     KEEP_EVENT: False  # Keep plasma data for future analysis
 transport:  # Parameters for the jets to be run
     TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
@@ -31,8 +31,8 @@ jet:  # Parameters for the jets to be run
     TAU: 0.01  # Timestep used for jet propagation
     RECORD: False  # Save xarray jet record?
 global_constants:  # Physical constants to be set by the user.
-    G: 2  # Coupling constant for IN-MEDIUM strong interaction
-    G_MU: 2  # Coupling constant for debye mass strong interaction
+    G: 2.5  # Coupling constant for IN-MEDIUM strong interaction
+    G_MU: 2.5  # Coupling constant for debye mass strong interaction
     K_BBMG: 250  # Coupling constant for BBMG energy loss - Current default 250 ???
     K_DRIFT: 1  # Scale factor for drift effect - default realistic estimate is 1
     ROOT_S: 5020  # sqrt(s) in GeV of collision system - used for scale running calculations

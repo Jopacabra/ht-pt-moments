@@ -152,7 +152,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
 
         # Set alpha_s
         # "For alpha_s the scale runs, but ballpark you can guess 0.3" - Dr. Sievert
-        alphas = 0.3
+        alphas = (config.constants.G**2) / (4*np.pi)
 
         # Calculate and return energy loss of this step.
         return (CR * alphas / 2) * (((1 / FmGeV) ** 2)

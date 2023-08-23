@@ -31,8 +31,8 @@ jet:  # Parameters for the jets to be run
     TAU: 0.01  # Timestep used for jet propagation
     RECORD: False  # Save xarray jet record?
 global_constants:  # Physical constants to be set by the user.
-    G: 4  # Coupling constant for IN-MEDIUM strong interaction
-    G_MU: 4  # Coupling constant for debye mass strong interaction
+    G: 2  # Coupling constant for IN-MEDIUM strong interaction
+    G_MU: 2  # Coupling constant for debye mass strong interaction
     K_BBMG: 250  # Coupling constant for BBMG energy loss - Current default 250 ???
     K_DRIFT: 1  # Scale factor for drift effect - default realistic estimate is 1
     ROOT_S: 5020  # sqrt(s) in GeV of collision system - used for scale running calculations

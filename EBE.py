@@ -131,23 +131,28 @@ def run_event(eventNo):
             # Determine case details
             if case == 0:
                 drift = False
+                fg = False
                 grad = False
                 el = True
             elif case == 1:
                 drift = True
+                fg = False
                 grad = False
                 el = True
             elif case == 2:
-                drift = False
-                grad = True
+                drift = True
+                fg = True
+                grad = False
                 el = True
             elif case == 3:
                 drift = True
+                fg = True
                 grad = True
                 el = True
             else:
                 drift = True
-                grad = True
+                fg = True
+                grad = False
                 el = True
 
             # Log jet number and case description
@@ -159,7 +164,7 @@ def run_event(eventNo):
                            weight=chosen_weight)
 
             # Run the time loop
-            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad,
+            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
                                                              el_model=el_model)
 
             # Save the xarray trajectory file

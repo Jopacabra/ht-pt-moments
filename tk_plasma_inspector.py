@@ -487,7 +487,7 @@ class MainPage(tk.Frame):
         print('Selected optical glauber:\nR = {}, b = {}, phi = {}, T0 = {}, V0 = {}'.format(R, b, phi, T0, V0))
 
         # Generate optical glauber
-        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber(R=R, b=b, phi=phi, T0=T0, U0=V0)
+        analytic_t, analytic_ux, analytic_uy, mult, e2 = collision.optical_glauber(R=R, b=b, phi=phi, T0=T0, U0=V0)
 
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
@@ -528,7 +528,7 @@ class MainPage(tk.Frame):
         print('Selected lmt optical glauber:\nR = {}, b = {}, phi = {}, T0 = {}, V0 = {}'.format(R, b, phi, T0, V0))
 
         # Generate optical glauber
-        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi, T0=T0, U0=V0)
+        analytic_t, analytic_ux, analytic_uy, mult, e2 = collision.optical_glauber_logT(R=R, b=b, phi=phi, T0=T0, U0=V0)
 
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
@@ -569,7 +569,7 @@ class MainPage(tk.Frame):
         print('Selected "new" optical glauber:\nR = {}, b = {}, phi = {}, T0 = {}, V0 = {}'.format(R, b, phi, T0, V0))
 
         # Generate optical glauber
-        analytic_t, analytic_ux, analytic_uy, mult, e2 = hic.optical_glauber_logT(R=R, b=b, phi=phi, T0=T0, U0=V0)
+        analytic_t, analytic_ux, analytic_uy, mult, e2 = collision.optical_glauber_logT(R=R, b=b, phi=phi, T0=T0, U0=V0)
 
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
@@ -713,6 +713,7 @@ class MainPage(tk.Frame):
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
                 q_EL_array = self.jet_xarray['q_EL'].to_numpy()
                 q_grad_array = self.jet_xarray['q_grad'].to_numpy()
+                q_fg_array = self.jet_xarray['q_fg'].to_numpy()
                 int_drift_array = self.jet_xarray['int_drift'].to_numpy()
                 int_EL_array = self.jet_xarray['int_EL'].to_numpy()
                 int_grad_array = self.jet_xarray['int_grad'].to_numpy()
@@ -731,7 +732,7 @@ class MainPage(tk.Frame):
                 # Set moment display
                 self.momentDisplay.set('Total Drift: {} GeV'.format(np.sum(q_drift_array)))
                 self.ELDisplay.set('Total EL: {} GeV'.format(np.sum(q_EL_array)))
-                self.momentHRGDisplay.set('...')
+                self.momentHRGDisplay.set('Total Drift: {} GeV'.format(np.sum(q_fg_array)))
                 self.momentUnhydroDisplay.set('...')
 
                 # Select medium properties figure as current figure
@@ -895,7 +896,7 @@ class MainPage(tk.Frame):
     def sample_event(self):
         if self.file_selected:
             # Sample T^6 dist. and get point
-            sampledPoint = hic.generate_jet_point(self.current_event, 1)
+            sampledPoint = collision.generate_jet_point(self.current_event, 1)
 
             # Uniform sample an angle
             sampledAngle = float(np.random.uniform(0, 2*np.pi, 1))

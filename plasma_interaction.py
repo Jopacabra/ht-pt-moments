@@ -88,6 +88,28 @@ def jet_drift_integrand(event, jet, time):
               * (event.mu(point=jet_point)**2)
               * inv_lambda(event=event, jet=jet, point=jet_point)))
 
+# Define integrand for mean q_drift (k=0 moment)
+def flowgrad_drift_integrand(event, jet, time, tau):
+    jet_point = jet.coords3(time=time)
+    jet_p_rho, jet_p_phi = jet.polar_mom_coords()
+    FmGeV = 0.19732687
+    T = event.temp(jet_point)
+    uperp = event.u_perp(point=jet_point, phi=jet_p_phi)
+    upar = event.u_par(point=jet_point, phi=jet_p_phi)
+    ux = event.x_vel(jet_point)
+    uy = event.y_vel(jet_point)
+    grad_temp_x = event.temp_grad_x(jet_point)
+    grad_temp_y = event.temp_grad_y(jet_point)
+    grad_flow_par = event.grad_par_flow(point=jet_point, phi=jet_p_phi)
+    grad_flow_perp = event.grad_perp_flow(point=jet_point, phi=jet_p_phi)
+    g = config.constants.G
+    pt = jet.p_T()
+    # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
+    return - ((1 / FmGeV) * (g**2 / pt) * config.constants.K_FG_DRIFT * (3 / 2)  # * (((2*np.pi)**2)/2)  for new factor
+        * tau * inv_lambda(event=event, jet=jet, point=jet_point)
+        * ((grad_temp_x * ux + grad_temp_y * uy) * (uperp/((1 - upar)**2)) * (3 * T * np.log(pt / (g * T)) - T )
+        + grad_flow_par * ((1/((1 - upar)**2)) + (2 * uperp/((1 - upar)**3))) * uperp * (T**2) * np.log(pt / (g * T))
+        * grad_flow_perp * (2 * uperp/((1 - upar)**2)) * (T**2) * np.log(pt / (g * T))))
 
 # Function to sample ebe fluctuation zeta parameter for energy loss integral
 def zeta(q=0, maxAttempts=5, batch=1000):

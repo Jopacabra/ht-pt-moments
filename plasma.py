@@ -420,6 +420,36 @@ class plasma_event:
 
         return grad_perp_T
 
+    # Method to return gradient of the flow
+    # at a particular point perpendicular to a given angle phi.
+    def grad_perp_flow(self, point, phi):
+        # Compute x and y temperature gradient at given point
+        grad_x = self.flow_grad_x(point)
+        grad_y = self.flow_grad_y(point)
+
+        # Compute unit vector perpendicular to given phi
+        e_perp = np.array([np.cos(phi + (np.pi / 2)), np.sin(phi + (np.pi / 2))])
+
+        # Compute temperature gradient perp to given phi
+        grad_perp_flow = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
+
+        return grad_perp_flow
+
+    # Method to return gradient of the flow
+    # at a particular point parallel to a given angle phi.
+    def grad_par_flow(self, point, phi):
+        # Compute x and y temperature gradient at given point
+        grad_x = self.flow_grad_x(point)
+        grad_y = self.flow_grad_y(point)
+
+        # Compute unit vector parallel to given phi
+        e_perp = np.array([np.cos(phi), np.sin(phi)])
+
+        # Compute temperature gradient perp to given phi
+        grad_perp_flow = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
+
+        return grad_perp_flow
+
     # Method to return gradient of the partial density for given medium partons
     # at a particular point perpendicular to a given angle phi.
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.

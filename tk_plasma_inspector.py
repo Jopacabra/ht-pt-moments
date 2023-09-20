@@ -108,7 +108,9 @@ class MainPage(tk.Frame):
         self.drift = tk.BooleanVar()
         self.drift.set(True)
         self.grad = tk.BooleanVar()
-        self.grad.set(True)
+        self.grad.set(False)
+        self.fg = tk.BooleanVar()
+        self.fg.set(True)
         self.el = tk.BooleanVar()
         self.el.set(True)
         self.el_model = tk.StringVar()
@@ -290,6 +292,15 @@ class MainPage(tk.Frame):
                                   command=self.not_calculated)
         gradMenu.add_radiobutton(label='Off', variable=self.grad, value=False,
                                   command=self.not_calculated)
+
+        # Flow-Gradients submenu
+        flowgradMenu = tk.Menu(physicsMenu, tearoff=0)
+        physicsMenu.add_cascade(label='Flow-Gradient', menu=flowgradMenu)
+        flowgradMenu.add_radiobutton(label='On', variable=self.fg, value=True,
+                                 command=self.not_calculated)
+        flowgradMenu.add_radiobutton(label='Off', variable=self.fg, value=False,
+                                 command=self.not_calculated)
+
         # EL submenu
         elMenu = tk.Menu(physicsMenu, tearoff=0)
         el_model_menu = tk.Menu(elMenu, tearoff=0)
@@ -868,6 +879,7 @@ class MainPage(tk.Frame):
                                                                        drift=self.drift.get(),
                                                                        el=self.el.get(),
                                                                        grad=self.grad.get(),
+                                                                       fg=self.fg.get(),
                                                                        temp_hrg=self.tempHRG.get(),
                                                                        temp_unh=self.tempUnhydro.get())
 

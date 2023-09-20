@@ -101,7 +101,7 @@ class osu_hydro_file:
         # Spit out the array, organized the same as the temp_data array
         return temp_grad_x
 
-    # Method to get raw temp x-direction gradient data
+    # Method to get raw temp y-direction gradient data
     def temp_grad_y_array(self):
         # Get the temp data as an array organized to be [time, x, y]-ish
         temp_data = self.temp_array()
@@ -137,6 +137,28 @@ class osu_hydro_file:
         y_vel_data = np.transpose(np.reshape(y_vel_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
 
         return y_vel_data
+
+    # Method to get raw flow x-direction gradient data
+    def flow_grad_x_array(self):
+        # Get the temp data as an array organized to be [time, x, y]-ish
+        flow_x_data = self.x_vel_array()
+
+        # Compute temperature gradient in the x-direction
+        flow_grad_x = np.gradient(flow_x_data, self.gridstep, axis=1)
+
+        # Spit out the array, organized the same as the temp_data array
+        return flow_grad_x
+
+    # Method to get raw flow y-direction gradient data
+    def flow_grad_y_array(self):
+        # Get the temp data as an array organized to be [time, x, y]-ish
+        flow_y_data = self.y_vel_array()
+
+        # Compute temperature gradient in the y-direction
+        flow_grad_y = np.gradient(flow_y_data, self.gridstep, axis=2)
+
+        # Spit out the array, organized the same as the temp_data array
+        return flow_grad_y
 
     # Method to plot raw temp data
     def plot_temps(self, time):
@@ -219,6 +241,34 @@ class osu_hydro_file:
 
         return interp_y_vel
 
+    # Method to return interpolated function object from data
+    # Function to interpolate the x direction flow gradient grid from the hydro file
+    # Returns interpolating callable function
+    def interpolate_flow_grad_x_grid(self):
+        print('Interpolating flow x-gradient grid data for event: ' + str(self.name))
+
+        # Cut flow grad x data out and convert to numpy array
+        flow_grad_x_data = self.flow_grad_x_array()
+
+        # Interpolate data!
+        interp_flow_grad_x = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), flow_grad_x_data)
+
+        return interp_flow_grad_x
+
+    # Method to return interpolated function object from data
+    # Function to interpolate the temperature gradient grid from the hydro file
+    # Returns interpolating callable function
+    def interpolate_flow_grad_y_grid(self):
+        print('Interpolating flow y-gradient grid data for event: ' + str(self.name))
+
+        # Cut flow grad y data out and convert to numpy array
+        temp_grad_y_data = self.temp_grad_y_array()
+
+        # Interpolate data!
+        interp_flow_grad_y = RegularGridInterpolator((self.tspace, self.xspace, self.xspace), temp_grad_y_data)
+
+        return interp_flow_grad_y
+
     # Method to find the maximum temperature of a hydro file object
     def max_temp(self, time='i'):
         if time == 'i':
@@ -250,7 +300,8 @@ class osu_hydro_file:
 
 # Plasma object as used for integration and muckery
 class plasma_event:
-    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, grad_x_func=None, grad_y_func=None, event=None, name=None, rmax=None):
+    def __init__(self, temp_func=None, x_vel_func=None, y_vel_func=None, grad_x_func=None, grad_y_func=None,
+                 flow_grad_x_func=None, flow_grad_y_func=None, event=None, name=None, rmax=None):
         # Initialize all the ordinary plasma parameters
         if event is not None:
             self.temp = event.interpolate_temp_grid()
@@ -258,6 +309,8 @@ class plasma_event:
             self.y_vel = event.interpolate_y_vel_grid()
             self.temp_grad_x = event.interpolate_temp_grad_x_grid()
             self.temp_grad_y = event.interpolate_temp_grad_y_grid()
+            self.flow_grad_x = event.interpolate_flow_grad_x_grid()
+            self.flow_grad_y = event.interpolate_flow_grad_y_grid()
             self.name = event.name
             self.timestep = event.timestep
             self.t0 = np.amin(self.temp.grid[0])
@@ -273,6 +326,8 @@ class plasma_event:
             self.y_vel = y_vel_func
             self.temp_grad_x = grad_x_func
             self.temp_grad_y = grad_y_func
+            self.flow_grad_x = flow_grad_x_func
+            self.flow_grad_y = flow_grad_y_func
             self.name = name
             try:
                 # Attempt to get timestep as if the functions are regular interpolator objects.

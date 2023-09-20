@@ -730,9 +730,9 @@ class MainPage(tk.Frame):
                                      color='black', markersize=20)
 
                 # Set moment display
-                self.momentDisplay.set('Total Drift: {} GeV'.format(np.sum(q_drift_array)))
+                self.momentDisplay.set('Total F Drift: {} GeV'.format(np.sum(q_drift_array)))
                 self.ELDisplay.set('Total EL: {} GeV'.format(np.sum(q_EL_array)))
-                self.momentHRGDisplay.set('Total Drift: {} GeV'.format(np.sum(q_fg_array)))
+                self.momentHRGDisplay.set('Total FG Drift: {} GeV'.format(np.sum(q_fg_array)))
                 self.momentUnhydroDisplay.set('...')
 
                 # Select medium properties figure as current figure

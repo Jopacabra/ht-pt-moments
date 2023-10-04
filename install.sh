@@ -15,10 +15,19 @@ python3 -m venv /usr/$VIRTUAL_ENV
 source /usr/$VIRTUAL_ENV/bin/activate
 # Install python dependencies - Excludes tkinter and matplotlib for plasma inspector
 # Note that for some reason pyyaml 6.0.1 broke the install.
-pip install numpy scipy cython h5py pandas xarray PyYAML==6.0 hic
+pip install numpy scipy cython h5py pandas xarray PyYAML==6.0
 
 # Debug print of working directory
 pwd
+
+# Install hic - required for soft particle v2 analysis
+# subshell allows temporary environment modification
+cd hic
+(
+  [[ $PY_FLAGS ]] && export CFLAGS=$PY_FLAGS CXXFLAGS=$PY_FLAGS
+  exec python3 setup.py install
+) || exit 1
+cd ..
 
 # Install freestream - required before installing osu-hydro
 # subshell allows temporary environment modification

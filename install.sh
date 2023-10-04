@@ -9,13 +9,11 @@
 export pkgname='jma'
 export VIRTUAL_ENV=$pkgname
 
-# create python virtual environment to install into
-python3 -m venv /usr/$VIRTUAL_ENV
+# create conda virtual environment with dependencies
+conda env create -n jma numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8
+
 # Activate environment
-source /usr/$VIRTUAL_ENV/bin/activate
-# Install python dependencies - Excludes tkinter and matplotlib for plasma inspector
-# Note that for some reason pyyaml 6.0.1 broke the install.
-pip install numpy scipy cython h5py pandas xarray PyYAML==6.0
+conda activate jma
 
 # Debug print of working directory
 pwd

@@ -98,18 +98,25 @@ def flowgrad_drift_integrand(event, jet, time, tau):
     upar = event.u_par(point=jet_point, phi=jet_p_phi)
     ux = event.x_vel(jet_point)
     uy = event.y_vel(jet_point)
-    grad_temp_x = event.temp_grad_x(jet_point)
-    grad_temp_y = event.temp_grad_y(jet_point)
-    grad_flow_par = event.grad_par_flow(point=jet_point, phi=jet_p_phi)
-    grad_flow_perp = event.grad_perp_flow(point=jet_point, phi=jet_p_phi)
+    grad_x_temp = event.temp_grad_x(jet_point)
+    grad_y_temp = event.temp_grad_y(jet_point)
+    grad_perp_temp = np.cos(jet_p_phi + (np.pi/2))*grad_x_temp + np.sin(jet_p_phi + (np.pi/2))*grad_y_temp
+    grad_x_u_x = event.grad_x_u_x(jet_point)
+    grad_x_u_y = event.grad_x_u_y(jet_point)
+    grad_y_u_x = event.grad_y_u_x(jet_point)
+    grad_y_u_y = event.grad_y_u_y(jet_point)
+    grad_perp_u_tau = ( (np.cos(jet_p_phi + (np.pi/2))**2 )*grad_x_u_x + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_x_u_y
+                      + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_y_u_x + (np.sin(jet_p_phi + (np.pi/2))**2 )*grad_y_u_y)
+    grad_perp_u_perp = ( (np.cos(jet_p_phi + (np.pi/2))**2 )*grad_x_u_x + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_x_u_y
+                      + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_y_u_x + (np.sin(jet_p_phi + (np.pi/2))**2 )*grad_y_u_y)
     g = config.constants.G
     pt = jet.p_T()
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return - ((1 / FmGeV) * (g**2 / pt) * config.constants.K_FG_DRIFT * (3 / 2)  # * (((2*np.pi)**2)/2)  for new factor
+    return - ((1 / FmGeV) * (g**2 / pt) * config.constants.K_FG_DRIFT * (3 / 2)
         * tau * inv_lambda(event=event, jet=jet, point=jet_point)
-        * ((grad_temp_x * ux + grad_temp_y * uy) * (uperp/((1 - upar)**2)) * (3 * T * np.log(pt / (g * T)) - T )
-        + grad_flow_par * ((1/((1 - upar)**2)) + (2 * uperp/((1 - upar)**3))) * uperp * (T**2) * np.log(pt / (g * T))
-        * grad_flow_perp * (2 * uperp/((1 - upar)**2)) * (T**2) * np.log(pt / (g * T))))
+        * ((grad_perp_temp) * (uperp/((1 - upar)**2)) * (3 * T * np.log(pt / (g * T)) - T )
+        + grad_perp_u_tau * (2/((1 - upar)**3))  * uperp * (T**2) * np.log(pt / (g * T))
+        * grad_perp_u_perp * (2 * uperp/((1 - upar)**2)) * (T**2) * np.log(pt / (g * T))))
 
 # Function to sample ebe fluctuation zeta parameter for energy loss integral
 def zeta(q=0, maxAttempts=5, batch=1000):

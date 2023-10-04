@@ -9,9 +9,9 @@ echo
 # Export osu-hydro and trento binary location to path
 export PATH=/usr/bin:$PATH
 
-# Activate the python virtual environment
-echo "Activating python virtual environment..."
-source /usr/jma/bin/activate
+# Activate the conda environment
+echo "Activating conda environment..."
+conda activate jma
 
 # Run the script
 echo "Running event..."

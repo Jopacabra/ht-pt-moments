@@ -10,3 +10,6 @@
 [submodule "frzout"]
 	path = frzout
 	url = https://github.com/Duke-QCD/frzout.git
+[submodule "hic"]
+	path = hic
+	url = https://github.com/Duke-QCD/hic

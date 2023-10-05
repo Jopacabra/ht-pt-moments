@@ -19,8 +19,8 @@ python3 /usr/jm-analysis/EBE.py
 echo "Event complete!"
 
 # Transfer relevant output files to /srv
-echo "Moving results pkl to /srv..."
-mv /srv/results/*/*.pkl /srv
+echo "Moving results parquet to /srv..."
+mv /srv/results/*/*.parquet /srv
 mv /srv/results/*/*.dat /srv
 
 echo "Job complete! Have a great day! :)"

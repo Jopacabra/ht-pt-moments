@@ -11,6 +11,7 @@ export PATH=/usr/bin:$PATH
 
 # Activate the conda environment
 echo "Activating conda environment..."
+conda init
 source ~/.bash_profile
 source ~/.bashrc
 conda activate jma

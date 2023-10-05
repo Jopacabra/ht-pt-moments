@@ -9,10 +9,11 @@ import config
 import utilities
 from utilities import tempDir
 import timekeeper
+import pythia
 
 
-# Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
-def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False):
+# Exits temporary directory, saves dataframe to parquet, and dumps all temporary data.
+def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep_event=False):
     # Save hydro event file
     if keep_event:
         logging.info('Saving event hydro data...')
@@ -34,7 +35,8 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
     # Save the dataframe into the identified results folder
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
-    resultsDataFrame.to_pickle(results_path + '/{}.pkl'.format(filename))  # Save dataframe to pickle
+    resultsDataFrame.to_parquet(results_path + '/{}.parquet'.format(filename))  # Save dataframe to parquet
+    hadrons_df.to_parquet(results_path + '/{}_hadrons.parquet'.format(filename))
 
     # Return to the directory in which we ran the script.
     os.chdir(home_path)
@@ -53,6 +55,7 @@ def run_event(eventNo):
 
     # Generate empty results frame
     results = pd.DataFrame({})
+    hadrons = pd.DataFrame({})
 
     ###############################
     # Generate new event geometry #
@@ -80,108 +83,118 @@ def run_event(eventNo):
     # Jet Analysis #
     ################
     # Oversample the background with jets
-    # Select jet energy
-    event_npart = event_dataframe.iloc[0]['npart']
-    if config.jet.E_FLUCT:
-        if config.jet.E_IS:
-            chosen_pilot_array, chosen_e_array, chosen_weight_array = collision.jet_IS_LHC(npart=event_npart, num_samples=config.EBE.NUM_SAMPLES)
-        else:
-            ##################
-            # BROKENNNNNNNNN #
-            ##################
-            raise Exception("Non-importance sampling mode is broken!!!")
-            #chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
-            #chosen_weight = 1
-    else:
-        ##################
-        # BROKENNNNNNNNN #
-        ##################
-        raise Exception("Non-importance sampling mode is broken!!!")
-        # chosen_pilot, chosen_e = hic.jet_sample_LHC(cent=None)
-        # chosen_weight = 1
 
     for jetNo in range(0, config.EBE.NUM_SAMPLES):
         # Create unique jet tag
         jet_tag = str(int(np.random.uniform(0, 1000000000000)))
-        ##################
-        # Create new jet #
-        ##################
-        # Pull jet properties from sampled list
-        chosen_pilot = chosen_pilot_array[jetNo]
-        chosen_e = chosen_e_array[jetNo]
-        chosen_weight = chosen_weight_array[jetNo]
+        #########################
+        # Create new scattering #
+        #########################
+        particles, weight = pythia.scattering()
 
-        logging.info('- Jet {} -'.format(jetNo))
-        # Select jet production point
-        if not config.mode.VARY_POINT:
-            x0 = 0
-            y0 = 0
-        else:
-            newPoint = collision.generate_jet_point(event)
-            x0, y0 = newPoint[0], newPoint[1]
+        logging.info('- Scattering {} -'.format(jetNo))
 
-        # Select jet production angle
-        phi_0 = np.random.uniform(0, 2 * np.pi)
+        i = 0
+        for index, particle in particles.iterrows():
+            # Read jet properties
+            chosen_e = particle['pt']
+            chosen_weight = weight
+            particle_pid = particle['id']
+            if particle_pid == 21:
+                chosen_pilot = 'g'
+            elif particle_pid == 1:
+                chosen_pilot = 'd'
+            elif particle_pid == -1:
+                chosen_pilot = 'dbar'
+            elif particle_pid == 2:
+                chosen_pilot = 'u'
+            elif particle_pid == -2:
+                chosen_pilot = 'ubar'
+            elif particle_pid == 3:
+                chosen_pilot = 's'
+            elif particle_pid == -3:
+                chosen_pilot = 'sbar'
 
-        # Yell about your selected jet
-        logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
-
-        el_model = 'SGLV'
-        for case in [0, 1, 2, 3]:
-            # Determine case details
-            if case == 0:
-                drift = False
-                fg = False
-                grad = False
-                el = True
-            elif case == 1:
-                drift = True
-                fg = False
-                grad = False
-                el = True
-            elif case == 2:
-                drift = True
-                fg = True
-                grad = False
-                el = True
-            elif case == 3:
-                drift = True
-                fg = True
-                grad = True
-                el = True
+            # Select jet production point
+            if not config.mode.VARY_POINT:
+                x0 = 0
+                y0 = 0
             else:
-                drift = True
-                fg = True
-                grad = False
-                el = True
+                newPoint = collision.generate_jet_point(event)
+                x0, y0 = newPoint[0], newPoint[1]
 
-            # Log jet number and case description
-            logging.info('Running Jet {}, case {}'.format(str(jetNo), case))
-            logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
+            # Read jet production angle
+            phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
 
-            # Create the jet object
-            jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
-                           weight=chosen_weight)
+            # Yell about your selected jet
+            logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-            # Run the time loop
-            jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
-                                                             el_model=el_model)
+            el_model = 'SGLV'
+            for case in [1]:
+                # Determine case details
+                if case == 0:
+                    drift = False
+                    fg = False
+                    grad = False
+                    el = True
+                elif case == 1:
+                    drift = True
+                    fg = False
+                    grad = False
+                    el = True
+                elif case == 2:
+                    drift = True
+                    fg = True
+                    grad = False
+                    el = True
+                elif case == 3:
+                    drift = True
+                    fg = True
+                    grad = True
+                    el = True
+                else:
+                    drift = True
+                    fg = True
+                    grad = False
+                    el = True
 
-            # Save the xarray trajectory file
-            # Note we are currently in a temp directory... Save record in directory above.
-            if config.jet.RECORD:
-                jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
+                # Log jet number and case description
+                logging.info('Running Jet {}, case {}'.format(str(jetNo), case))
+                logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
 
-            # Merge the event and jet dataframe lines
-            current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+                # Create the jet object
+                jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
+                               weight=chosen_weight)
 
-            # Append the total dataframe to the results dataframe
-            results = pd.concat([results, current_result_dataframe], axis=0)
+                # Run the time loop
+                jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
+                                                                 el_model=el_model)
+
+                # Save the xarray trajectory file
+                # Note we are currently in a temp directory... Save record in directory above.
+                if config.jet.RECORD:
+                    jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
+
+                # Merge the event and jet dataframe lines
+                current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+
+                # Append the total dataframe to the results dataframe
+                results = pd.concat([results, current_result_dataframe], axis=0)
+
+                # Save jet pair
+                if i == 0:
+                    jet1 = jet
+                else:
+                    jet2 = jet
+
+        # Hadronize jet pair
+        current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles)
+        hadrons = pd.concat([hadrons, current_hadrons], axis=0)
 
         # Declare jet complete
         logging.info('- Jet ' + str(jetNo) + ' Complete -')
 
-    return results
+    return results, hadrons
 
 
 ################
@@ -195,6 +208,7 @@ eventNo = 0
 # Set up results frame and filename.
 temp_dir = None  # Instantiates object for interrupt before temp_dir created.
 results = pd.DataFrame({})
+hadrons = pd.DataFrame({})
 identifierString = str(int(np.random.uniform(0, 10000000)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
@@ -229,17 +243,20 @@ try:
 
         # Generate a new HIC event and sample config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe
-        event_results = run_event(eventNo=int(identifierString))
+        event_results, event_hadrons = run_event(eventNo=int(identifierString))
         results = pd.concat([results, event_results], axis=0)
+        hadrons = pd.concat([results, event_hadrons], axis=0)
 
         # Exits directory, saves all current data, and dumps temporary files.
-        safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+        safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
                   keep_event=config.mode.KEEP_EVENT)
 
         if len(results) > 10000:
             part += 1
             resultsFilename = 'results' + identifierString + 'p' + str(part)
             results = pd.DataFrame({})
+            hadronssFilename = 'results' + identifierString + 'p' + str(part)
+            hadronss = pd.DataFrame({})
 
         eventNo += 1
 
@@ -248,7 +265,7 @@ except KeyboardInterrupt as error:
     logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+    safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
               keep_event=config.mode.KEEP_EVENT)
 
 except collision.StopEvent as error:
@@ -256,7 +273,7 @@ except collision.StopEvent as error:
     logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+    safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
               keep_event=config.mode.KEEP_EVENT)
 
 except MemoryError as error:
@@ -264,7 +281,7 @@ except MemoryError as error:
     logging.info('Cleaning up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+    safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
               keep_event=config.mode.KEEP_EVENT)
 
 except BaseException as error:
@@ -272,7 +289,7 @@ except BaseException as error:
     logging.info('Attempting to clean up...')
 
     # Clean up and get everything sorted
-    safe_exit(resultsDataFrame=results, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+    safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
               keep_event=config.mode.KEEP_EVENT)
 
 logging.info('Results identifier: {}'.format(identifierString))

@@ -11,7 +11,7 @@ from utilities import tempDir
 import timekeeper
 
 
-# Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
+# Exits temporary directory, saves dataframe to parquet, and dumps all temporary data.
 def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False):
     # Save hydro event file
     if keep_event:
@@ -34,7 +34,7 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, keep_event=False
     # Save the dataframe into the identified results folder
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
-    resultsDataFrame.to_pickle(results_path + '/{}.pkl'.format(filename))  # Save dataframe to pickle
+    resultsDataFrame.to_parquet(results_path + '/{}.parquet'.format(filename))  # Save dataframe to parquet
 
     # Return to the directory in which we ran the script.
     os.chdir(home_path)

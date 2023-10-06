@@ -9,13 +9,14 @@
 export pkgname='jma'
 export VIRTUAL_ENV=$pkgname
 
+# init and source scripts so that conda will work
+conda init
+source ~/.bash_profile
+source ~/.bashrc
+
 # create conda virtual environment with dependencies
 conda config --add channels conda-forge
 conda create -n jma numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8
-
-# Source scripts so that "conda activate" will work
-source ~/.bash_profile
-source ~/.bashrc
 
 # Activate environment
 conda activate jma

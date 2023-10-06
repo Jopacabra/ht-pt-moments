@@ -65,7 +65,7 @@ mkdir build && cd build
 # This causes problems with many osg job sites.
 # We only call trento once, and it accounts for insignificant portion of compute time.
 # Better to be safe than save a few seconds.
-cmake3 -DCMAKE_INSTALL_PREFIX=/usr -DNATIVE=OFF ..
+cmake3 -DCMAKE_INSTALL_PREFIX=/usr -DNATIVE=OFF CMAKE_PREFIX_PATH=/usr/lib64 ..
 # Install the module
 make install
 cd ..

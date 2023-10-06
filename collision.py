@@ -42,30 +42,6 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     except FileNotFoundError:
         pass
 
-    resultsDataFrame = pd.DataFrame(
-        {
-            "event": [],
-            "b": [],
-            "npart": [],
-            "ncoll": [],
-            "mult": [],
-            "e2_re": [],
-            "e2_im": [],
-            "psi_e2": [],
-            "e3_re": [],
-            "e3_im": [],
-            "psi_e3": [],
-            "e4_re": [],
-            "e4_im": [],
-            "psi_e4": [],
-            "e5_re": [],
-            "e5_im": [],
-            "psi_e5": [],
-            "seed": [],
-            "cmd": [],
-        }
-        )
-
     # Create Trento command arguments
     # bmin and bmax control min and max impact parameter. Set to same value for specific b.
     # projectile1 and projectile2 control nucleon number and such for colliding nuclei.
@@ -139,7 +115,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
         except ValueError:
             pass
 
-        resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
+        resultsDataFrame = trentoDataFrame
 
     # Pass on result file name, trentoSubprocess data, and dataframe.
     return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess
@@ -155,30 +131,6 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
         os.remove(filename)
     except FileNotFoundError:
         pass
-
-    resultsDataFrame = pd.DataFrame(
-        {
-            "event": [],
-            "b": [],
-            "npart": [],
-            "ncoll": [],
-            "mult": [],
-            "e2_re": [],
-            "e2_im": [],
-            "psi_e2": [],
-            "e3_re": [],
-            "e3_im": [],
-            "psi_e3": [],
-            "e4_re": [],
-            "e4_im": [],
-            "psi_e4": [],
-            "e5_re": [],
-            "e5_im": [],
-            "psi_e5": [],
-            "seed": [],
-            "cmd": [],
-        }
-        )
 
     # Create Trento command arguments
     # bmin and bmax control min and max impact parameter. Set to same value for specific b.
@@ -258,7 +210,7 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
         except ValueError:
             pass
 
-        resultsDataFrame = resultsDataFrame.append(trentoDataFrame)
+        resultsDataFrame = trentoDataFrame
 
     # Pass on result file name, trentoSubprocess data, and dataframe.
     return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess

@@ -11,7 +11,7 @@ export PATH=/usr/bin:$PATH
 
 # Activate the conda environment
 echo "Activating conda environment..."
-conda activate jma
+conda activate conda activate /usr/conda/jma
 
 # Run the script
 echo "Running event..."

@@ -14,7 +14,7 @@ echo "Activating conda environment..."
 conda init
 source ~/.bash_profile
 source ~/.bashrc
-conda activate jma
+conda activate /usr/conda/jma
 
 # Run the script
 echo "Running event..."

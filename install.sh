@@ -16,7 +16,7 @@ source ~/.bashrc
 
 # create conda virtual environment with dependencies
 conda config --add channels conda-forge
-conda create --prefix /usr/conda -n jma numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8
+conda create --prefix /usr/conda/jma numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8
 
 # Activate environment
 conda activate jma

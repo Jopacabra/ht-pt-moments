@@ -161,6 +161,7 @@ def scattering():
                     'px': [particle.px()],
                     'py': [particle.py()],
                     'pz': [particle.pz()],
+                    'pt': [particle.pT()],
                     'e': [particle.e()],
                     'm': [particle.m()],
                     'scaleIn': [particle.scale()]

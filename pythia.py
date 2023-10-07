@@ -183,8 +183,8 @@ def fragment(jet1, jet2, process_dataframe):
     #########################
 
     # Get particle ids
-    id1 = jet1.pid
-    id2 = jet2.pid
+    id1 = jet1.id
+    id2 = jet2.id
 
     # Choose colors so as to get a color singlet
     if id1 == 21 and id2 == 21:

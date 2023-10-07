@@ -29,25 +29,25 @@ class jet:
         # Masses should be in GeV
         if self.part == 'u':
             self.m = 0.00216
-            self.id = 2
+            self.pid = 2
         elif self.part == 'ubar':
             self.m = 0.00216  # anti-quark masses must be same!!!
-            self.id = -2
+            self.pid = -2
         elif self.part == 'd':
             self.m = 0.00467
-            self.id = 1
+            self.pid = 1
         elif self.part == 'dbar':
             self.m = 0.00467  # anti-quark masses must be same!!!
-            self.id = -1
+            self.pid = -1
         elif self.part == 's':
             self.m = 0.0934
-            self.id = 3
+            self.pid = 3
         elif self.part == 'sbar':
             self.m = 0.0934  # anti-quark masses must be same!!!
-            self.id = -3
+            self.pid = -3
         elif self.part == 'g':
             self.m = 0  # Massless boson
-            self.id = 21
+            self.pid = 21
         else:
             self.m = 0  # Default to massless gluon properties
 

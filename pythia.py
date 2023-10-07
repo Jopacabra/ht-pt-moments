@@ -150,14 +150,14 @@ def scattering():
         if particle.id() != 90:
             properties = pd.DataFrame(
                 {
-                    'id': [particle.id()],
-                    'status': [particle.status()],
-                    'mother1': [particle.mother1()],
-                    'mother2': [particle.mother2()],
-                    'daughter1': [particle.daughter1()],
-                    'daughter2': [particle.daughter2()],
-                    'col': [particle.col()],
-                    'acol': [particle.acol()],
+                    'id': [int(particle.id())],
+                    'status': [int(particle.status())],
+                    'mother1': [int(particle.mother1())],
+                    'mother2': [int(particle.mother2())],
+                    'daughter1': [int(particle.daughter1())],
+                    'daughter2': [int(particle.daughter2())],
+                    'col': [int(particle.col())],
+                    'acol': [int(particle.acol())],
                     'px': [particle.px()],
                     'py': [particle.py()],
                     'pz': [particle.pz()],
@@ -209,7 +209,6 @@ def fragment(jet1, jet2, process_dataframe):
 
     col_array = np.array([col1, col2])
     acol_array = np.array([acol1, acol2])
-
 
     ############################################
     # Set up Pythia instance for hadronization #
@@ -269,32 +268,33 @@ def fragment(jet1, jet2, process_dataframe):
 
             # Add source particles in
             if particle['id'] != 90 and particle['status'] < 1:
-                pythia_had.event.append(id=particle['id'], status=particle['status'],
-                                        mother1=particle['mother1'], mother2=particle['mother2'],
-                                        daughter1=particle['daughter1'], daughter2=particle['daughter2'],
-                                        col=particle['col'], acol=particle['acol'],
-                                        px=particle['px'], py=particle['py'], pz=particle['pz'],
-                                        e=particle['e'], m=particle['m'],
-                                        scaleIn=particle['scaleIn'])
+                pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
+                                        mother1=int(particle['mother1']), mother2=int(particle['mother2']),
+                                        daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
+                                        col=int(particle['col']), acol=int(particle['acol']),
+                                        px=float(particle['px']), py=float(particle['py']), pz=float(particle['pz']),
+                                        e=float(particle['e']), m=float(particle['m']),
+                                        scaleIn=float(particle['scaleIn']))
             # Add jet seed particles back in, with momentum modifications
             elif particle.id() != 90 and particle.status() > 1:
                 if i == 0:
-                    pythia_had.event.append(id=particle['id'], status=particle['status'],
-                                            mother1=particle['mother1'], mother2=particle['mother2'],
-                                            daughter1=particle['daughter1'], daughter2=particle['daughter2'],
-                                            col=col_array[0], acol=acol_array[0],
-                                            px=jet1.p_x, py=jet1.p_y, pz=0,
-                                            e=np.sqrt(jet1.p_x**2 + jet1.p_y**2 + particle['m']**2), m=particle['m'],
-                                            scaleIn=particle['scaleIn'])
+                    pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
+                                            mother1=int(particle['mother1']), mother2=int(particle['mother2']),
+                                            daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
+                                            col=int(col_array[0]), acol=int(acol_array[0]),
+                                            px=float(jet1.p_x), py=float(jet1.p_y), pz=0,
+                                            e=float(np.sqrt(jet1.p_x**2 + jet1.p_y**2 + particle['m']**2)), m=float(particle['m']),
+                                            scaleIn=float(particle['scaleIn']))
                 else:
-                    pythia_had.event.append(id=particle['id'], status=particle['status'],
-                                            mother1=particle['mother1'], mother2=particle['mother2'],
-                                            daughter1=particle['daughter1'], daughter2=particle['daughter2'],
-                                            col=col_array[1], acol=acol_array[1],
-                                            px=jet2.p_x, py=jet2.p_y, pz=0,
-                                            e=np.sqrt(jet2.p_x**2 + jet2.p_y**2 + particle['m']**2), m=particle['m'],
-                                            scaleIn=particle['scaleIn'])
-                i += 1
+                    pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
+                                            mother1=int(particle['mother1']), mother2=int(particle['mother2']),
+                                            daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
+                                            col=int(col_array[0]), acol=int(acol_array[0]),
+                                            px=float(jet2.p_x), py=float(jet2.p_y), pz=0,
+                                            e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + particle['m'] ** 2)),
+                                            m=float(particle['m']),
+                                            scaleIn=float(particle['scaleIn']))
+            i += 1
 
         # part_i = -1
         # for particle in pythia_had.process:

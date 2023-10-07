@@ -276,7 +276,7 @@ def fragment(jet1, jet2, process_dataframe):
                                         e=float(particle['e']), m=float(particle['m']),
                                         scaleIn=float(particle['scaleIn']))
             # Add jet seed particles back in, with momentum modifications
-            elif particle.id() != 90 and particle.status() > 1:
+            elif particle['id'] != 90 and particle['status'] > 1:
                 if i == 0:
                     pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
                                             mother1=int(particle['mother1']), mother2=int(particle['mother2']),

@@ -96,6 +96,11 @@ def run_event(eventNo):
 
         i = 0
         for index, particle in particles.iterrows():
+            # Only do the things for the particle output
+            particle_status = particle['status']
+            if particle_status != 23:
+                i += 1
+                continue
             # Read jet properties
             chosen_e = particle['pt']
             chosen_weight = weight
@@ -182,10 +187,12 @@ def run_event(eventNo):
                 results = pd.concat([results, current_result_dataframe], axis=0)
 
                 # Save jet pair
-                if i == 0:
+                if i == 4:
                     jet1 = jet
-                else:
+                elif i == 5:
                     jet2 = jet
+
+                i += 1
 
         # Hadronize jet pair
         current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles)

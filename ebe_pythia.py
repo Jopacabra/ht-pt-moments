@@ -195,7 +195,7 @@ def run_event(eventNo):
                 i += 1
 
         # Hadronize jet pair
-        current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles)
+        current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
         hadrons = pd.concat([hadrons, current_hadrons], axis=0)
 
         # Declare jet complete

@@ -174,7 +174,7 @@ def scattering():
 
 
 # Function to hadronize a pair of particles
-def fragment(jet1, jet2, process_dataframe):
+def fragment(jet1, jet2, process_dataframe, weight):
     # Settings
     y_res = 0.5
 
@@ -354,7 +354,9 @@ def fragment(jet1, jet2, process_dataframe):
             'py': pion_accepted_py,
             'pz': pion_accepted_pz,
             'pt': pion_accepted_pt,
-            'e': pion_accepted_e
+            'e': pion_accepted_e,
+            'weight': weight,
+            'num_hrz': total_had_runs
         })
 
     return hadrons

@@ -314,30 +314,33 @@ def fragment(jet1, jet2, process_dataframe, weight):
         pythia_had.event.list()
 
         # Look for an acceptable pion
-        pion_accepted_px = np.array([])
-        pion_accepted_py = np.array([])
-        pion_accepted_pz = np.array([])
-        pion_accepted_e = np.array([])
-        pion_accepted_pt = np.array([])
-        pion_accepted_id = np.array([])
-        pion_f_pt = np.array([])
+        hadron_accepted_px = np.array([])
+        hadron_accepted_py = np.array([])
+        hadron_accepted_pz = np.array([])
+        hadron_accepted_y = np.array([])
+        hadron_accepted_e = np.array([])
+        hadron_accepted_pt = np.array([])
+        hadron_accepted_id = np.array([])
+        hadron_f_pt = np.array([])
         pions_f = 0
         for particle in pythia_had.event:
             if particle.status() > 0:  # Particle exists in the final state
                 id = particle.id()
                 if id == 111 or np.abs(id) == 211:  # Particle is a pion
                     pions_f += 1
-                    if np.abs(float(particle.y())) < (y_res / 2):  # Particle is at roughly mid-rapidity
-                        pion_f_pt = np.append(pion_f_pt, np.abs(particle.pT()))
-                        pions_f += 1
-                        if np.abs(particle.pT()) > 1:
-                            accepted = True
-                            pion_accepted_px = np.append(pion_accepted_px, particle.px())
-                            pion_accepted_py = np.append(pion_accepted_py, particle.py())
-                            pion_accepted_pz = np.append(pion_accepted_pz, particle.pz())
-                            pion_accepted_e = np.append(pion_accepted_e, particle.e())
-                            pion_accepted_pt = np.append(pion_accepted_pt, np.abs(particle.pT()))
-                            pion_accepted_id = np.append(pion_accepted_id, particle.id())
+                    hadron_y = particle.y()
+                    hadron_pt = particle.pT()
+                    hadron_f_pt = np.append(hadron_f_pt, np.abs(hadron_pt))
+                    pions_f += 1
+                    if np.abs(hadron_pt) > 1:
+                        accepted = True
+                        hadron_accepted_px = np.append(hadron_accepted_px, particle.px())
+                        hadron_accepted_py = np.append(hadron_accepted_py, particle.py())
+                        hadron_accepted_pz = np.append(hadron_accepted_pz, particle.pz())
+                        hadron_accepted_y = np.append(hadron_accepted_y, hadron_y)
+                        hadron_accepted_e = np.append(hadron_accepted_e, particle.e())
+                        hadron_accepted_pt = np.append(hadron_accepted_pt, np.abs(particle.pT()))
+                        hadron_accepted_id = np.append(hadron_accepted_id, particle.id())
 
         # Count pions and runs to determine weight of the final pion
         total_pions += pions_f
@@ -349,12 +352,13 @@ def fragment(jet1, jet2, process_dataframe, weight):
 
     hadrons = pd.DataFrame(
         {
-            'id': pion_accepted_id,
-            'px': pion_accepted_px,
-            'py': pion_accepted_py,
-            'pz': pion_accepted_pz,
-            'pt': pion_accepted_pt,
-            'e': pion_accepted_e,
+            'id': hadron_accepted_id,
+            'px': hadron_accepted_px,
+            'py': hadron_accepted_py,
+            'pz': hadron_accepted_pz,
+            'pt': hadron_accepted_pt,
+            'y': hadron_accepted_y,
+            'e': hadron_accepted_e,
             'weight': weight,
             'num_hrz': total_had_runs
         })

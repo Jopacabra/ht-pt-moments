@@ -91,138 +91,143 @@ def run_event(eventNo):
     for jetNo in range(0, config.EBE.NUM_SAMPLES):
         # Create unique jet tag
         process_tag = str(int(np.random.uniform(0, 1000000000000)))
-        #########################
-        # Create new scattering #
-        #########################
-        particles, weight = pythia.scattering()
 
-        logging.info('- Scattering {} -'.format(jetNo))
+        logging.info('- Jet Process {} Start -'.format(jetNo))
 
-        for case in [0, 1, 2]:
-            # Determine case details
-            if case == 0:
-                drift = False
-                fg = False
-                grad = False
-                el = True
-            elif case == 1:
-                drift = True
-                fg = False
-                grad = False
-                el = True
-            elif case == 2:
-                drift = True
-                fg = True
-                grad = False
-                el = True
-            elif case == 3:
-                drift = True
-                fg = True
-                grad = True
-                el = True
-            else:
-                drift = True
-                fg = True
-                grad = False
-                el = True
+        try:
+            #########################
+            # Create new scattering #
+            #########################
+            particles, weight = pythia.scattering()
 
-            i = 0
-            for index, particle in particles.iterrows():
-                # Only do the things for the particle output
-                particle_status = particle['status']
-                if particle_status != 23:
-                    i += 1
-                    continue
-                # Read jet properties
-                chosen_e = particle['pt']
-                chosen_weight = weight
-                particle_pid = particle['id']
-                if particle_pid == 21:
-                    chosen_pilot = 'g'
-                elif particle_pid == 1:
-                    chosen_pilot = 'd'
-                elif particle_pid == -1:
-                    chosen_pilot = 'dbar'
-                elif particle_pid == 2:
-                    chosen_pilot = 'u'
-                elif particle_pid == -2:
-                    chosen_pilot = 'ubar'
-                elif particle_pid == 3:
-                    chosen_pilot = 's'
-                elif particle_pid == -3:
-                    chosen_pilot = 'sbar'
-
-                # Select jet production point
-                if not config.mode.VARY_POINT:
-                    x0 = 0
-                    y0 = 0
+            for case in [0, 1, 2]:
+                # Determine case details
+                if case == 0:
+                    drift = False
+                    fg = False
+                    grad = False
+                    el = True
+                elif case == 1:
+                    drift = True
+                    fg = False
+                    grad = False
+                    el = True
+                elif case == 2:
+                    drift = True
+                    fg = True
+                    grad = False
+                    el = True
+                elif case == 3:
+                    drift = True
+                    fg = True
+                    grad = True
+                    el = True
                 else:
-                    newPoint = collision.generate_jet_point(event)
-                    x0, y0 = newPoint[0], newPoint[1]
+                    drift = True
+                    fg = True
+                    grad = False
+                    el = True
 
-                # Read jet production angle
-                phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
+                i = 0
+                for index, particle in particles.iterrows():
+                    # Only do the things for the particle output
+                    particle_status = particle['status']
+                    if particle_status != 23:
+                        i += 1
+                        continue
+                    # Read jet properties
+                    chosen_e = particle['pt']
+                    chosen_weight = weight
+                    particle_pid = particle['id']
+                    if particle_pid == 21:
+                        chosen_pilot = 'g'
+                    elif particle_pid == 1:
+                        chosen_pilot = 'd'
+                    elif particle_pid == -1:
+                        chosen_pilot = 'dbar'
+                    elif particle_pid == 2:
+                        chosen_pilot = 'u'
+                    elif particle_pid == -2:
+                        chosen_pilot = 'ubar'
+                    elif particle_pid == 3:
+                        chosen_pilot = 's'
+                    elif particle_pid == -3:
+                        chosen_pilot = 'sbar'
 
-                # Yell about your selected jet
-                logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
+                    # Select jet production point
+                    if not config.mode.VARY_POINT:
+                        x0 = 0
+                        y0 = 0
+                    else:
+                        newPoint = collision.generate_jet_point(event)
+                        x0, y0 = newPoint[0], newPoint[1]
 
-                el_model = 'SGLV'
+                    # Read jet production angle
+                    phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
 
-                # Log jet number and case description
-                logging.info('Running Jet {}, case {}'.format(str(jetNo), case))
-                logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
+                    # Yell about your selected jet
+                    logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-                # Create the jet object
-                jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=process_tag, no=jetNo, part=chosen_pilot,
-                               weight=chosen_weight)
+                    el_model = 'SGLV'
 
-                # Run the time loop
-                jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
-                                                                 el_model=el_model)
+                    # Log jet number and case description
+                    logging.info('Running Jet {}, case {}'.format(str(jetNo), case))
+                    logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
 
-                # Save the xarray trajectory file
-                # Note we are currently in a temp directory... Save record in directory above.
-                if config.jet.RECORD:
-                    jet_xarray.to_netcdf('../{}_record.nc'.format(process_tag))
+                    # Create the jet object
+                    jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=process_tag, no=jetNo, part=chosen_pilot,
+                                   weight=chosen_weight)
 
-                # Merge the event and jet dataframe lines
-                current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+                    # Run the time loop
+                    jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
+                                                                     el_model=el_model)
 
-                # Append the total dataframe to the results dataframe
-                print('printing current results')
-                print(current_result_dataframe)
-                results = pd.concat([results, current_result_dataframe], axis=0)
+                    # Save the xarray trajectory file
+                    # Note we are currently in a temp directory... Save record in directory above.
+                    if config.jet.RECORD:
+                        jet_xarray.to_netcdf('../{}_record.nc'.format(process_tag))
 
-                # Save jet pair
-                if i == 4:
-                    jet1 = jet
-                elif i == 5:
-                    jet2 = jet
+                    # Merge the event and jet dataframe lines
+                    current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
-                i += 1
+                    # Append the total dataframe to the results dataframe
+                    print('printing current results')
+                    print(current_result_dataframe)
+                    results = pd.concat([results, current_result_dataframe], axis=0)
 
-            # Hadronize jet pair
-            current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
+                    # Save jet pair
+                    if i == 4:
+                        jet1 = jet
+                    elif i == 5:
+                        jet2 = jet
 
-            # Tack case and process details onto the hadron dataframe
-            case_df = pd.DataFrame(
-                {
-                    'drift': [drift],
-                    'el': [el],
-                    'fg': [fg],
-                    'grad': [grad],
-                    'process': [process_tag]
-                }
-            )
-            current_hadrons = pd.concat([current_hadrons, case_df], axis=1)
+                    i += 1
 
-            # debug print current hadrons and
-            print('printing current hadrons')
-            print(current_hadrons)
-            hadrons = pd.concat([hadrons, current_hadrons], axis=0)
+                # Hadronize jet pair
+                current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
+
+                # Tack case and process details onto the hadron dataframe
+                case_df = pd.DataFrame(
+                    {
+                        'drift': [drift],
+                        'el': [el],
+                        'fg': [fg],
+                        'grad': [grad],
+                        'process': [process_tag]
+                    }
+                )
+                current_hadrons = pd.concat([current_hadrons, case_df], axis=1)
+
+                # debug print current hadrons and
+                print('printing current hadrons')
+                print(current_hadrons)
+                hadrons = pd.concat([hadrons, current_hadrons], axis=0)
+
+        except:
+            logging.info('- Jet Process Failed -')
 
         # Declare jet complete
-        logging.info('- Jet ' + str(jetNo) + ' Complete -')
+        logging.info('- Jet Process ' + str(jetNo) + ' Complete -')
 
     return results, hadrons
 

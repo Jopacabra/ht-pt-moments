@@ -99,6 +99,33 @@ def run_event(eventNo):
         logging.info('- Scattering {} -'.format(jetNo))
 
         for case in [0, 1, 2]:
+            # Determine case details
+            if case == 0:
+                drift = False
+                fg = False
+                grad = False
+                el = True
+            elif case == 1:
+                drift = True
+                fg = False
+                grad = False
+                el = True
+            elif case == 2:
+                drift = True
+                fg = True
+                grad = False
+                el = True
+            elif case == 3:
+                drift = True
+                fg = True
+                grad = True
+                el = True
+            else:
+                drift = True
+                fg = True
+                grad = False
+                el = True
+
             i = 0
             for index, particle in particles.iterrows():
                 # Only do the things for the particle output
@@ -140,32 +167,6 @@ def run_event(eventNo):
                 logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
                 el_model = 'SGLV'
-                # Determine case details
-                if case == 0:
-                    drift = False
-                    fg = False
-                    grad = False
-                    el = True
-                elif case == 1:
-                    drift = True
-                    fg = False
-                    grad = False
-                    el = True
-                elif case == 2:
-                    drift = True
-                    fg = True
-                    grad = False
-                    el = True
-                elif case == 3:
-                    drift = True
-                    fg = True
-                    grad = True
-                    el = True
-                else:
-                    drift = True
-                    fg = True
-                    grad = False
-                    el = True
 
                 # Log jet number and case description
                 logging.info('Running Jet {}, case {}'.format(str(jetNo), case))
@@ -200,24 +201,24 @@ def run_event(eventNo):
 
                 i += 1
 
-                # Hadronize jet pair
-                current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
+            # Hadronize jet pair
+            current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
 
-                # Tack case details onto the hadron dataframe
-                case_df = pd.DataFrame(
-                    {
-                    'drift': [drift],
-                    'el': [el],
-                    'fg': [fg],
-                    'grad': [grad]
-                    }
-                )
-                current_hadrons = pd.concat([current_hadrons, case_df], axis=1)
+            # Tack case details onto the hadron dataframe
+            case_df = pd.DataFrame(
+                {
+                'drift': [drift],
+                'el': [el],
+                'fg': [fg],
+                'grad': [grad]
+                }
+            )
+            current_hadrons = pd.concat([current_hadrons, case_df], axis=1)
 
-                # debug print current hadrons and
-                print('printing current hadrons')
-                print(current_hadrons)
-                hadrons = pd.concat([hadrons, current_hadrons], axis=0)
+            # debug print current hadrons and
+            print('printing current hadrons')
+            print(current_hadrons)
+            hadrons = pd.concat([hadrons, current_hadrons], axis=0)
 
         # Declare jet complete
         logging.info('- Jet ' + str(jetNo) + ' Complete -')

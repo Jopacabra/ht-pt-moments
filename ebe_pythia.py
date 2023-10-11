@@ -207,13 +207,14 @@ def run_event(eventNo):
                 current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
 
                 # Tack case and process details onto the hadron dataframe
+                num_hadrons = len(current_hadrons)
                 case_df = pd.DataFrame(
                     {
-                        'drift': [drift],
-                        'el': [el],
-                        'fg': [fg],
-                        'grad': [grad],
-                        'process': [process_tag]
+                        'drift': np.full(num_hadrons, drift),
+                        'el': np.full(num_hadrons, el),
+                        'fg': np.full(num_hadrons, fg),
+                        'grad': np.full(num_hadrons, grad),
+                        'process': np.full(num_hadrons, process_tag)
                     }
                 )
                 current_hadrons = pd.concat([current_hadrons, case_df], axis=1)

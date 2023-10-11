@@ -281,7 +281,7 @@ try:
         # Append returned dataframe to current dataframe
         event_results, event_hadrons = run_event(eventNo=int(identifierString))
         results = pd.concat([results, event_results], axis=0)
-        hadrons = pd.concat([results, event_hadrons], axis=0)
+        hadrons = pd.concat([hadrons, event_hadrons], axis=0)
 
         # Exits directory, saves all current data, and dumps temporary files.
         safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,

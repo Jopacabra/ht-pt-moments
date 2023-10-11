@@ -90,7 +90,7 @@ def run_event(eventNo):
 
     for jetNo in range(0, config.EBE.NUM_SAMPLES):
         # Create unique jet tag
-        jet_tag = str(int(np.random.uniform(0, 1000000000000)))
+        process_tag = str(int(np.random.uniform(0, 1000000000000)))
         #########################
         # Create new scattering #
         #########################
@@ -173,7 +173,7 @@ def run_event(eventNo):
                 logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
 
                 # Create the jet object
-                jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=jet_tag, no=jetNo, part=chosen_pilot,
+                jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=process_tag, no=jetNo, part=chosen_pilot,
                                weight=chosen_weight)
 
                 # Run the time loop
@@ -183,7 +183,7 @@ def run_event(eventNo):
                 # Save the xarray trajectory file
                 # Note we are currently in a temp directory... Save record in directory above.
                 if config.jet.RECORD:
-                    jet_xarray.to_netcdf('../{}_record.nc'.format(jet_tag))
+                    jet_xarray.to_netcdf('../{}_record.nc'.format(process_tag))
 
                 # Merge the event and jet dataframe lines
                 current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
@@ -204,13 +204,14 @@ def run_event(eventNo):
             # Hadronize jet pair
             current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
 
-            # Tack case details onto the hadron dataframe
+            # Tack case and process details onto the hadron dataframe
             case_df = pd.DataFrame(
                 {
-                'drift': [drift],
-                'el': [el],
-                'fg': [fg],
-                'grad': [grad]
+                    'drift': [drift],
+                    'el': [el],
+                    'fg': [fg],
+                    'grad': [grad],
+                    'process': [process_tag]
                 }
             )
             current_hadrons = pd.concat([current_hadrons, case_df], axis=1)

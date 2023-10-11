@@ -35,6 +35,10 @@ def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep
     # Save the dataframe into the identified results folder
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
+    logging.debug(hadrons_df)
+    print('printing dataframes before saving')
+    print(hadrons_df)
+    print(resultsDataFrame)
     resultsDataFrame.to_parquet(results_path + '/{}.parquet'.format(filename))  # Save dataframe to parquet
     hadrons_df.to_parquet(results_path + '/{}_hadrons.parquet'.format(filename))
 
@@ -184,6 +188,8 @@ def run_event(eventNo):
                 current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
                 # Append the total dataframe to the results dataframe
+                print('printing current results')
+                print(current_result_dataframe)
                 results = pd.concat([results, current_result_dataframe], axis=0)
 
                 # Save jet pair
@@ -196,6 +202,8 @@ def run_event(eventNo):
 
         # Hadronize jet pair
         current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
+        print('printing current hadrons')
+        print(current_hadrons)
         hadrons = pd.concat([hadrons, current_hadrons], axis=0)
 
         # Declare jet complete

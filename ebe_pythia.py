@@ -98,48 +98,48 @@ def run_event(eventNo):
 
         logging.info('- Scattering {} -'.format(jetNo))
 
-        i = 0
-        for index, particle in particles.iterrows():
-            # Only do the things for the particle output
-            particle_status = particle['status']
-            if particle_status != 23:
-                i += 1
-                continue
-            # Read jet properties
-            chosen_e = particle['pt']
-            chosen_weight = weight
-            particle_pid = particle['id']
-            if particle_pid == 21:
-                chosen_pilot = 'g'
-            elif particle_pid == 1:
-                chosen_pilot = 'd'
-            elif particle_pid == -1:
-                chosen_pilot = 'dbar'
-            elif particle_pid == 2:
-                chosen_pilot = 'u'
-            elif particle_pid == -2:
-                chosen_pilot = 'ubar'
-            elif particle_pid == 3:
-                chosen_pilot = 's'
-            elif particle_pid == -3:
-                chosen_pilot = 'sbar'
+        for case in [0, 1, 2]:
+            i = 0
+            for index, particle in particles.iterrows():
+                # Only do the things for the particle output
+                particle_status = particle['status']
+                if particle_status != 23:
+                    i += 1
+                    continue
+                # Read jet properties
+                chosen_e = particle['pt']
+                chosen_weight = weight
+                particle_pid = particle['id']
+                if particle_pid == 21:
+                    chosen_pilot = 'g'
+                elif particle_pid == 1:
+                    chosen_pilot = 'd'
+                elif particle_pid == -1:
+                    chosen_pilot = 'dbar'
+                elif particle_pid == 2:
+                    chosen_pilot = 'u'
+                elif particle_pid == -2:
+                    chosen_pilot = 'ubar'
+                elif particle_pid == 3:
+                    chosen_pilot = 's'
+                elif particle_pid == -3:
+                    chosen_pilot = 'sbar'
 
-            # Select jet production point
-            if not config.mode.VARY_POINT:
-                x0 = 0
-                y0 = 0
-            else:
-                newPoint = collision.generate_jet_point(event)
-                x0, y0 = newPoint[0], newPoint[1]
+                # Select jet production point
+                if not config.mode.VARY_POINT:
+                    x0 = 0
+                    y0 = 0
+                else:
+                    newPoint = collision.generate_jet_point(event)
+                    x0, y0 = newPoint[0], newPoint[1]
 
-            # Read jet production angle
-            phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
+                # Read jet production angle
+                phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
 
-            # Yell about your selected jet
-            logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
+                # Yell about your selected jet
+                logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-            el_model = 'SGLV'
-            for case in [1]:
+                el_model = 'SGLV'
                 # Determine case details
                 if case == 0:
                     drift = False
@@ -200,11 +200,24 @@ def run_event(eventNo):
 
                 i += 1
 
-        # Hadronize jet pair
-        current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
-        print('printing current hadrons')
-        print(current_hadrons)
-        hadrons = pd.concat([hadrons, current_hadrons], axis=0)
+                # Hadronize jet pair
+                current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
+
+                # Tack case details onto the hadron dataframe
+                case_df = pd.DataFrame(
+                    {
+                    'drift': [drift],
+                    'el': [el],
+                    'fg': [fg],
+                    'grad': [grad]
+                    }
+                )
+                current_hadrons = pd.concat([current_hadrons, case_df], axis=1)
+
+                # debug print current hadrons and
+                print('printing current hadrons')
+                print(current_hadrons)
+                hadrons = pd.concat([hadrons, current_hadrons], axis=0)
 
         # Declare jet complete
         logging.info('- Jet ' + str(jetNo) + ' Complete -')

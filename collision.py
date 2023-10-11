@@ -489,9 +489,11 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     logging.info('v_2 = {}'.format(v_2))
     logging.info('v_3 = {}'.format(v_3))
 
-    event_dataframe['q_2'] = q_2
+    event_dataframe['q_2_re'] = np.real(q_2)
+    event_dataframe['q_2_im'] = np.imag(q_2)
     event_dataframe['psi_2'] = psi_2
-    event_dataframe['q_3'] = q_3
+    event_dataframe['q_3_re'] = np.real(q_3)
+    event_dataframe['q_3_im'] = np.imag(q_3)
     event_dataframe['psi_3'] = psi_3
     event_dataframe['v_2'] = v_2
     event_dataframe['v_3'] = v_3

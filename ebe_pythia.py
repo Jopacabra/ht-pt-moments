@@ -206,18 +206,43 @@ def run_event(eventNo):
                 # Hadronize jet pair
                 current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
 
-                # Tack case and process details onto the hadron dataframe
+                # Tack case, event, and process details onto the hadron dataframe
                 num_hadrons = len(current_hadrons)
+                event_mult = event_dataframe['mult']
+                event_e2 = event_dataframe['e2']
+                event_psi_e2 = event_dataframe['psi_e2']
+                event_v2 = event_dataframe['v_2']
+                event_psi_2 = event_dataframe['psi_2']
+                event_e3 = event_dataframe['e3']
+                event_psi_e3 = event_dataframe['psi_e3']
+                event_v3 = event_dataframe['v_3']
+                event_psi_3 = event_dataframe['psi_3']
                 case_df = pd.DataFrame(
                     {
                         'drift': np.full(num_hadrons, drift),
                         'el': np.full(num_hadrons, el),
                         'fg': np.full(num_hadrons, fg),
                         'grad': np.full(num_hadrons, grad),
-                        'process': np.full(num_hadrons, process_tag)
+                        'process': np.full(num_hadrons, process_tag),
+                        'e_2': event_e2,
+                        'psi_e2': event_psi_e2,
+                        'v_2': event_v2,
+                        'psi_2': event_psi_2,
+                        'e_3': event_e3,
+                        'psi_e3': event_psi_e3,
+                        'v_3': event_v3,
+                        'psi_3': event_psi_3,
+                        'mult': event_mult
                     }
                 )
                 current_hadrons = pd.concat([current_hadrons, case_df], axis=1)
+
+                # Compute a rough z value for each hadron
+                mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
+                current_hadrons['z'] = current_hadrons['pt'] / mean_part_pt
+
+                # Compute a phi angle for each hadron
+                current_hadrons['phi_f'] = np.arctan2(current_hadrons['py'], current_hadrons['px']) + np.pi
 
                 # debug print current hadrons and
                 print('printing current hadrons')

@@ -11,6 +11,13 @@ from utilities import tempDir
 import timekeeper
 import pythia
 
+# Computes angular distance-ish quantity
+def delta_R(phi1, phi2, y1, y2):
+    dphi = np.abs(phi1 - phi2)
+    if (dphi > np.pi):
+        dphi = 2*np.pi - dphi
+    drap = y1 - y2
+    return np.sqrt(dphi * dphi + drap * drap)
 
 # Exits temporary directory, saves dataframe to parquet, and dumps all temporary data.
 def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep_event=False):
@@ -99,6 +106,7 @@ def run_event(eventNo):
             # Create new scattering #
             #########################
             particles, weight = pythia.scattering()
+            particle_tags = int(np.random.default_rng().uniform(0, 1000000000000, len(particles)))
 
             for case in [0, 1, 2]:
                 # Determine case details
@@ -132,6 +140,7 @@ def run_event(eventNo):
                 for index, particle in particles.iterrows():
                     # Only do the things for the particle output
                     particle_status = particle['status']
+                    particle_tag = particle_tags[i]
                     if particle_status != 23:
                         i += 1
                         continue
@@ -175,7 +184,7 @@ def run_event(eventNo):
                     logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
 
                     # Create the jet object
-                    jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=process_tag, no=jetNo, part=chosen_pilot,
+                    jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jetNo, part=chosen_pilot,
                                    weight=chosen_weight)
 
                     # Run the time loop
@@ -187,8 +196,12 @@ def run_event(eventNo):
                     if config.jet.RECORD:
                         jet_xarray.to_netcdf('../{}_record.nc'.format(process_tag))
 
+                    # Add scattering process tag
+                    jet_dataframe['process'] = process_tag
+
                     # Merge the event and jet dataframe lines
                     current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+
 
                     # Append the total dataframe to the results dataframe
                     print('printing current results')
@@ -219,7 +232,7 @@ def run_event(eventNo):
                 event_psi_3 = event_dataframe['psi_3']
                 event_b = event_dataframe['b']
                 event_ncoll = event_dataframe['ncoll']
-                case_df = pd.DataFrame(
+                detail_df = pd.DataFrame(
                     {
                         'drift': np.full(num_hadrons, drift),
                         'el': np.full(num_hadrons, el),
@@ -236,17 +249,46 @@ def run_event(eventNo):
                         'psi_3': np.full(num_hadrons, event_psi_3),
                         'mult': np.full(num_hadrons, event_mult),
                         'ncoll': np.full(num_hadrons, event_ncoll),
-                        'b': np.full(num_hadrons, event_b)
+                        'b': np.full(num_hadrons, event_b),
+                        'parent_id': np.empty(num_hadrons),
+                        'parent_pt': np.empty(num_hadrons),
+                        'parent_pt_f': np.empty(num_hadrons),
+                        'parent_phi': np.empty(num_hadrons),
+                        'parent_tag': np.empty(num_hadrons),
+                        'z': np.empty(num_hadrons)
                     }
                 )
-                current_hadrons = pd.concat([current_hadrons, case_df], axis=1)
+                current_hadrons = pd.concat([current_hadrons, detail_df], axis=1)
 
                 # Compute a rough z value for each hadron
                 mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
-                current_hadrons['z'] = current_hadrons['pt'] / mean_part_pt
+                current_hadrons['z_mean'] = current_hadrons['pt'] / mean_part_pt
 
                 # Compute a phi angle for each hadron
                 current_hadrons['phi_f'] = np.arctan2(current_hadrons['py'], current_hadrons['px']) + np.pi
+
+                # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
+                for index, hadron in hadrons.iterrows():
+                    min_dR = 10000
+                    parent = None
+
+                    # Check the Delta R to each jet
+                    # Set parent to the minimum Delta R jet
+                    for jet in [jet1, jet2]:
+                        jet_rho, jet_phi = jet.polar_mom_coords()
+                        dR = delta_R(phi1=hadron['phi_f'], phi2=jet_phi, y1=hadron['y'], y2=0)
+                        if dR < min_dR:
+                            min_dR = dR
+                            parent = jet
+
+                    # Save parent info to hadron dataframe
+                    hadron['parent_id'] = parent.id
+                    hadron['parent_pt'] = parent.p_T0
+                    hadron['parent_pt_f'] = parent.p_T()
+                    parent_rho, parent_phi = parent.polar_mom_coords()
+                    hadron['parent_phi'] = parent_phi
+                    hadron['parent_tag'] = parent.tag
+                    hadron['z'] = hadron['pt'] / parent.p_T()  # "Actual" z-value
 
                 # debug print current hadrons and
                 print('printing current hadrons')

@@ -226,17 +226,17 @@ def run_event(eventNo):
                         'fg': np.full(num_hadrons, fg),
                         'grad': np.full(num_hadrons, grad),
                         'process': np.full(num_hadrons, process_tag),
-                        'e_2': event_e2,
-                        'psi_e2': event_psi_e2,
-                        'v_2': event_v2,
-                        'psi_2': event_psi_2,
-                        'e_3': event_e3,
-                        'psi_e3': event_psi_e3,
-                        'v_3': event_v3,
-                        'psi_3': event_psi_3,
-                        'mult': event_mult,
-                        'ncoll': event_ncoll,
-                        'b': event_b
+                        'e_2': np.full(num_hadrons, event_e2),
+                        'psi_e2': np.full(num_hadrons, event_psi_e2),
+                        'v_2': np.full(num_hadrons, event_v2),
+                        'psi_2': np.full(num_hadrons, event_psi_2),
+                        'e_3': np.full(num_hadrons, event_e3),
+                        'psi_e3': np.full(num_hadrons, event_psi_e3),
+                        'v_3': np.full(num_hadrons, event_v3),
+                        'psi_3': np.full(num_hadrons, event_psi_3),
+                        'mult': np.full(num_hadrons, event_mult),
+                        'ncoll': np.full(num_hadrons, event_ncoll),
+                        'b': np.full(num_hadrons, event_b)
                     }
                 )
                 current_hadrons = pd.concat([current_hadrons, case_df], axis=1)

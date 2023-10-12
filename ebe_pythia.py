@@ -217,6 +217,8 @@ def run_event(eventNo):
                 event_psi_e3 = event_dataframe['psi_e3']
                 event_v3 = event_dataframe['v_3']
                 event_psi_3 = event_dataframe['psi_3']
+                event_b = event_dataframe['b']
+                event_ncoll = event_dataframe['ncoll']
                 case_df = pd.DataFrame(
                     {
                         'drift': np.full(num_hadrons, drift),
@@ -232,7 +234,9 @@ def run_event(eventNo):
                         'psi_e3': event_psi_e3,
                         'v_3': event_v3,
                         'psi_3': event_psi_3,
-                        'mult': event_mult
+                        'mult': event_mult,
+                        'ncoll': event_ncoll,
+                        'b': event_b
                     }
                 )
                 current_hadrons = pd.concat([current_hadrons, case_df], axis=1)

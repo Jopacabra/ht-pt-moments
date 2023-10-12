@@ -234,6 +234,7 @@ def run_event(eventNo):
                 event_ncoll = event_dataframe['ncoll']
                 detail_df = pd.DataFrame(
                     {
+                        'hadron_tag': int(np.random.default_rng().uniform(0, 1000000000000, num_hadrons)),
                         'drift': np.full(num_hadrons, drift),
                         'el': np.full(num_hadrons, el),
                         'fg': np.full(num_hadrons, fg),

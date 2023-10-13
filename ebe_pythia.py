@@ -283,13 +283,13 @@ def run_event(eventNo):
                             parent = jet
 
                     # Save parent info to hadron dataframe
-                    hadron['parent_id'] = parent.id
-                    hadron['parent_pt'] = parent.p_T0
-                    hadron['parent_pt_f'] = parent.p_T()
+                    current_hadrons.iloc[index]['parent_id'] = parent.id
+                    current_hadrons.iloc[index]['parent_pt'] = parent.p_T0
+                    current_hadrons.iloc[index]['parent_pt_f'] = parent.p_T()
                     parent_rho, parent_phi = parent.polar_mom_coords()
-                    hadron['parent_phi'] = parent_phi
-                    hadron['parent_tag'] = parent.tag
-                    hadron['z'] = hadron['pt'] / parent.p_T()  # "Actual" z-value
+                    current_hadrons.iloc[index]['parent_phi'] = parent_phi
+                    current_hadrons.iloc[index]['parent_tag'] = parent.tag
+                    current_hadrons.iloc[index]['z'] = hadron['pt'] / parent.p_T()  # "Actual" z-value
 
                 # debug print current hadrons and
                 print('printing current hadrons')

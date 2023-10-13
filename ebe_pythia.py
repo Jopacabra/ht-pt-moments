@@ -298,9 +298,7 @@ def run_event(eventNo):
 
 
         except Exception as error:
-
-            # handle the exception
-            print("An exception occurred:", error)
+            print("An error occurred:", type(error).__name__)  # An error occurred: NameError
             logging.info('- Jet Process Failed -')
 
         # Declare jet complete

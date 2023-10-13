@@ -269,7 +269,7 @@ def run_event(eventNo):
                 current_hadrons['phi_f'] = np.arctan2(current_hadrons['py'], current_hadrons['px']) + np.pi
 
                 # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
-                for index, hadron in hadrons.iterrows():
+                for index in current_hadrons.index:
                     min_dR = 10000
                     parent = None
 
@@ -277,19 +277,20 @@ def run_event(eventNo):
                     # Set parent to the minimum Delta R jet
                     for jet in [jet1, jet2]:
                         jet_rho, jet_phi = jet.polar_mom_coords()
-                        dR = delta_R(phi1=hadron['phi_f'], phi2=jet_phi, y1=hadron['y'], y2=0)
+                        dR = delta_R(phi1=current_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
+                                     y1=current_hadrons.loc[index, 'y'], y2=0)
                         if dR < min_dR:
                             min_dR = dR
                             parent = jet
 
                     # Save parent info to hadron dataframe
-                    hadron['parent_id'] = parent.id
-                    hadron['parent_pt'] = parent.p_T0
-                    hadron['parent_pt_f'] = parent.p_T()
+                    current_hadrons.at[index, 'parent_id'] = parent.id
+                    current_hadrons.at[index, 'parent_pt'] = parent.p_T0
+                    current_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
                     parent_rho, parent_phi = parent.polar_mom_coords()
-                    hadron['parent_phi'] = parent_phi
-                    hadron['parent_tag'] = parent.tag
-                    hadron['z'] = hadron['pt'] / parent.p_T()  # "Actual" z-value
+                    current_hadrons.at[index, 'parent_phi'] = parent_phi
+                    current_hadrons.at[index, 'parent_tag'] = parent.tag
+                    current_hadrons.at[index, 'z'] = current_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
 
                 # debug print current hadrons and
                 print('printing current hadrons')

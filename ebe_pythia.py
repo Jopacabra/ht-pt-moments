@@ -106,7 +106,7 @@ def run_event(eventNo):
             # Create new scattering #
             #########################
             particles, weight = pythia.scattering()
-            particle_tags = int(np.random.default_rng().uniform(0, 1000000000000, len(particles)))
+            particle_tags = np.random.default_rng().uniform(0, 1000000000000, len(particles))
 
             for case in [0, 1, 2]:
                 # Determine case details
@@ -140,7 +140,7 @@ def run_event(eventNo):
                 for index, particle in particles.iterrows():
                     # Only do the things for the particle output
                     particle_status = particle['status']
-                    particle_tag = particle_tags[i]
+                    particle_tag = int(particle_tags[i])
                     if particle_status != 23:
                         i += 1
                         continue
@@ -296,7 +296,11 @@ def run_event(eventNo):
                 print(current_hadrons)
                 hadrons = pd.concat([hadrons, current_hadrons], axis=0)
 
-        except:
+
+        except Exception as error:
+
+            # handle the exception
+            print("An exception occurred:", error)
             logging.info('- Jet Process Failed -')
 
         # Declare jet complete

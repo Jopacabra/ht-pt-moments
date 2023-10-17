@@ -16,10 +16,13 @@ source ~/.bashrc
 
 # create conda virtual environment with dependencies
 conda config --add channels conda-forge
-conda create --prefix /usr/conda/jma numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8
+conda create --prefix /usr/conda/jma numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf
 
 # Activate environment
 conda activate /usr/conda/jma
+
+# Install fragmentation functions
+lhapdf install "JAM20-SIDIS_FF_pion_nlo"
 
 # Debug print of working directory
 pwd

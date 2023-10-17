@@ -65,8 +65,8 @@ def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep
 def run_event(eventNo):
 
     # Generate empty results frame
-    results = pd.DataFrame({})
-    hadrons = pd.DataFrame({})
+    event_partons = pd.DataFrame({})
+    event_hadrons = pd.DataFrame({})
 
     ###############################
     # Generate new event geometry #
@@ -294,15 +294,17 @@ def run_event(eventNo):
                 process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
                 process_partons = pd.concat([process_partons, case_partons], axis=0)
 
-
         except Exception as error:
             logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError
             logging.info('- Jet Process Failed -')
 
+        event_hadrons = pd.concat([event_hadrons, process_hadrons], axis=0)
+        event_partons = pd.concat([event_partons, process_partons], axis=0)
+
         # Declare jet complete
         logging.info('- Jet Process ' + str(jetNo) + ' Complete -')
 
-    return results, hadrons
+    return event_partons, event_hadrons
 
 
 ################

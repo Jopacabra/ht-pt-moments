@@ -277,7 +277,8 @@ def run_event(eventNo):
 
                 logging.info('Hadron phi value')
                 # Compute a phi angle for each hadron
-                case_hadrons['phi_f'] = np.arctan2(float(case_hadrons['py']), float(case_hadrons['px'])) + np.pi
+                case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'].to_numpy().astype(float),
+                                                   case_hadrons['px'].to_numpy().astype(float)) + np.pi
 
                 logging.info('CA-type parent finder')
                 # Apply simplified Cambridge-Aachen-type algorithm to find parent parton

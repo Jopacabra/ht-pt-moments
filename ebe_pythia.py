@@ -205,6 +205,7 @@ def run_event(eventNo):
                     # Merge the event and jet dataframe lines
                     current_parton = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
+                    logging.info('FF Fragmentation')
                     # Perform ff fragmentation
                     frag_z = ff.frag(jet)
                     pion_pt = jet.p_T() * frag_z
@@ -222,9 +223,11 @@ def run_event(eventNo):
 
                     i += 1
 
+                logging.info('Hadronizing...')
                 # Hadronize jet pair
                 case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
 
+                logging.info('Appending event dataframe to hadrons')
                 # Tack case, event, and process details onto the hadron dataframe
                 num_hadrons = len(case_hadrons)
                 event_mult = event_dataframe['mult']
@@ -240,7 +243,7 @@ def run_event(eventNo):
                 event_ncoll = event_dataframe['ncoll']
                 detail_df = pd.DataFrame(
                     {
-                        'hadron_tag': int(np.random.default_rng().uniform(0, 1000000000000, num_hadrons)),
+                        'hadron_tag': np.random.default_rng().uniform(0, 1000000000000, num_hadrons).astype(int),
                         'drift': np.full(num_hadrons, drift),
                         'el': np.full(num_hadrons, el),
                         'fg': np.full(num_hadrons, fg),
@@ -267,13 +270,16 @@ def run_event(eventNo):
                 )
                 case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
 
+                logging.info('Hadron z value')
                 # Compute a rough z value for each hadron
                 mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
                 case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
 
+                logging.info('Hadron phi value')
                 # Compute a phi angle for each hadron
-                case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'], case_hadrons['px']) + np.pi
+                case_hadrons['phi_f'] = np.arctan2(float(case_hadrons['py']), float(case_hadrons['px'])) + np.pi
 
+                logging.info('CA-type parent finder')
                 # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
                 for index in case_hadrons.index:
                     min_dR = 10000
@@ -298,6 +304,7 @@ def run_event(eventNo):
                     case_hadrons.at[index, 'parent_tag'] = parent.tag
                     case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
 
+                logging.info('Appending case results to process results')
                 process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
                 process_partons = pd.concat([process_partons, case_partons], axis=0)
 

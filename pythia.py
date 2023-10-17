@@ -354,15 +354,15 @@ def fragment(jet1, jet2, process_dataframe, weight):
 
     hadrons = pd.DataFrame(
         {
-            'id': hadron_accepted_id,
-            'px': hadron_accepted_px,
-            'py': hadron_accepted_py,
-            'pz': hadron_accepted_pz,
-            'pt': hadron_accepted_pt,
-            'y': hadron_accepted_y,
-            'e': hadron_accepted_e,
-            'weight': weight,
-            'num_hrz': total_had_runs
+            'id': hadron_accepted_id.astype(int),
+            'px': hadron_accepted_px.astype(float),
+            'py': hadron_accepted_py.astype(float),
+            'pz': hadron_accepted_pz.astype(float),
+            'pt': hadron_accepted_pt.astype(float),
+            'y': hadron_accepted_y.astype(float),
+            'e': hadron_accepted_e.astype(float),
+            'weight': np.full_like(hadron_accepted_id, float(weight)).astype(float),
+            'num_hrz': np.full_like(hadron_accepted_id, int(total_had_runs)).astype(int)
         })
 
     return hadrons

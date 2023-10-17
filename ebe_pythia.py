@@ -270,7 +270,7 @@ def run_event(eventNo):
                 )
                 case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
 
-                logging.info('Hadron z value')
+                logging.info('Hadron z_mean value')
                 # Compute a rough z value for each hadron
                 mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
                 case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt

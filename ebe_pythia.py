@@ -10,6 +10,7 @@ import utilities
 from utilities import tempDir
 import timekeeper
 import pythia
+import ff
 
 # Computes angular distance-ish quantity
 def delta_R(phi1, phi2, y1, y2):
@@ -203,6 +204,12 @@ def run_event(eventNo):
 
                     # Merge the event and jet dataframe lines
                     current_parton = pd.concat([jet_dataframe, event_dataframe], axis=1)
+
+                    # Perform ff fragmentation
+                    frag_z = ff.frag(jet)
+                    pion_pt = jet.p_T() * frag_z
+                    current_parton['z'] = frag_z
+                    current_parton['pion_pt'] = pion_pt
 
                     # Save jet pair
                     if i == 4:

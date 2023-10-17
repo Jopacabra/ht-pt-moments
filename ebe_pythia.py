@@ -111,7 +111,6 @@ def run_event(eventNo):
 
             for case in [0, 1, 2]:
                 case_partons = pd.DataFrame({})
-                case_hadrons = pd.DataFrame({})
                 # Determine case details
                 if case == 0:
                     drift = False

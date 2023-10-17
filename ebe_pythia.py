@@ -97,8 +97,7 @@ def run_event(eventNo):
 
     for jetNo in range(0, config.EBE.NUM_SAMPLES):
         # Create unique jet tag
-        process_tag = str(int(np.random.uniform(0, 1000000000000)))
-
+        process_tag = int(np.random.uniform(0, 1000000000000))
         logging.info('- Jet Process {} Start -'.format(jetNo))
 
         try:
@@ -107,8 +106,12 @@ def run_event(eventNo):
             #########################
             particles, weight = pythia.scattering()
             particle_tags = np.random.default_rng().uniform(0, 1000000000000, len(particles))
+            process_partons = pd.DataFrame({})
+            process_hadrons = pd.DataFrame({})
 
             for case in [0, 1, 2]:
+                case_partons = pd.DataFrame({})
+                case_hadrons = pd.DataFrame({})
                 # Determine case details
                 if case == 0:
                     drift = False
@@ -200,13 +203,11 @@ def run_event(eventNo):
                     jet_dataframe['process'] = process_tag
 
                     # Merge the event and jet dataframe lines
-                    current_result_dataframe = pd.concat([jet_dataframe, event_dataframe], axis=1)
+                    current_parton = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
-
-                    # Append the total dataframe to the results dataframe
-                    print('printing current results')
-                    print(current_result_dataframe)
-                    results = pd.concat([results, current_result_dataframe], axis=0)
+                    # Debug print current parton
+                    print('printing current parton row')
+                    print(current_parton)
 
                     # Save jet pair
                     if i == 4:
@@ -214,13 +215,16 @@ def run_event(eventNo):
                     elif i == 5:
                         jet2 = jet
 
+                    # Append current partons to the case partons
+                    case_partons = pd.concat([current_parton, case_partons], axis=0)
+
                     i += 1
 
                 # Hadronize jet pair
-                current_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
+                case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
 
                 # Tack case, event, and process details onto the hadron dataframe
-                num_hadrons = len(current_hadrons)
+                num_hadrons = len(case_hadrons)
                 event_mult = event_dataframe['mult']
                 event_e2 = event_dataframe['e2']
                 event_psi_e2 = event_dataframe['psi_e2']
@@ -259,17 +263,17 @@ def run_event(eventNo):
                         'z': np.empty(num_hadrons)
                     }
                 )
-                current_hadrons = pd.concat([current_hadrons, detail_df], axis=1)
+                case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
 
                 # Compute a rough z value for each hadron
                 mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
-                current_hadrons['z_mean'] = current_hadrons['pt'] / mean_part_pt
+                case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
 
                 # Compute a phi angle for each hadron
-                current_hadrons['phi_f'] = np.arctan2(current_hadrons['py'], current_hadrons['px']) + np.pi
+                case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'], case_hadrons['px']) + np.pi
 
                 # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
-                for index in current_hadrons.index:
+                for index in case_hadrons.index:
                     min_dR = 10000
                     parent = None
 
@@ -277,29 +281,32 @@ def run_event(eventNo):
                     # Set parent to the minimum Delta R jet
                     for jet in [jet1, jet2]:
                         jet_rho, jet_phi = jet.polar_mom_coords()
-                        dR = delta_R(phi1=current_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
-                                     y1=current_hadrons.loc[index, 'y'], y2=0)
+                        dR = delta_R(phi1=case_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
+                                     y1=case_hadrons.loc[index, 'y'], y2=0)
                         if dR < min_dR:
                             min_dR = dR
                             parent = jet
 
                     # Save parent info to hadron dataframe
-                    current_hadrons.at[index, 'parent_id'] = parent.id
-                    current_hadrons.at[index, 'parent_pt'] = parent.p_T0
-                    current_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
+                    case_hadrons.at[index, 'parent_id'] = parent.id
+                    case_hadrons.at[index, 'parent_pt'] = parent.p_T0
+                    case_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
                     parent_rho, parent_phi = parent.polar_mom_coords()
-                    current_hadrons.at[index, 'parent_phi'] = parent_phi
-                    current_hadrons.at[index, 'parent_tag'] = parent.tag
-                    current_hadrons.at[index, 'z'] = current_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
+                    case_hadrons.at[index, 'parent_phi'] = parent_phi
+                    case_hadrons.at[index, 'parent_tag'] = parent.tag
+                    case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
 
-                # debug print current hadrons and
+                # debug print current hadrons
                 print('printing current hadrons')
-                print(current_hadrons)
-                hadrons = pd.concat([hadrons, current_hadrons], axis=0)
+                print(case_hadrons)
+
+
+                process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
+                process_partons = pd.concat([process_partons, case_partons], axis=0)
 
 
         except Exception as error:
-            print("An error occurred:", type(error).__name__)  # An error occurred: NameError
+            logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError
             logging.info('- Jet Process Failed -')
 
         # Declare jet complete

@@ -43,7 +43,7 @@ def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep
     logging.info('Saving progress...')
     logging.debug(resultsDataFrame)
     logging.debug(hadrons_df)
-    print('printing dataframes before saving')
+    logging.info('printing dataframes before saving')
     print(hadrons_df)
     print(resultsDataFrame)
     resultsDataFrame.to_parquet(results_path + '/{}.parquet'.format(filename))  # Save dataframe to parquet
@@ -105,7 +105,7 @@ def run_event(eventNo):
             # Create new scattering #
             #########################
             particles, weight = pythia.scattering()
-            particle_tags = np.random.default_rng().uniform(0, 1000000000000, len(particles))
+            particle_tags = np.random.default_rng().uniform(0, 1000000000000, len(particles)).astype(int)
             process_partons = pd.DataFrame({})
             process_hadrons = pd.DataFrame({})
 
@@ -204,10 +204,6 @@ def run_event(eventNo):
                     # Merge the event and jet dataframe lines
                     current_parton = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
-                    # Debug print current parton
-                    print('printing current parton row')
-                    print(current_parton)
-
                     # Save jet pair
                     if i == 4:
                         jet1 = jet
@@ -295,11 +291,6 @@ def run_event(eventNo):
                     case_hadrons.at[index, 'parent_tag'] = parent.tag
                     case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
 
-                # debug print current hadrons
-                print('printing current hadrons')
-                print(case_hadrons)
-
-
                 process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
                 process_partons = pd.concat([process_partons, case_partons], axis=0)
 
@@ -356,7 +347,7 @@ try:
     while config.EBE.NUM_EVENTS == 0 or eventNo < config.EBE.NUM_EVENTS:
         # Create and move to temporary directory
         temp_dir = tempDir(location=results_path)
-        print(os.getcwd())
+        logging.info(os.getcwd())
 
         # Generate a new HIC event and sample config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe

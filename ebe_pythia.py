@@ -190,6 +190,9 @@ def run_event(eventNo):
                     jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jetNo, part=chosen_pilot,
                                    weight=chosen_weight)
 
+                    # Perform pp-level fragmentation
+                    pp_frag_z = ff.frag(jet)
+
                     # Run the time loop
                     jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
                                                                      el_model=el_model)
@@ -210,6 +213,7 @@ def run_event(eventNo):
                     frag_z = ff.frag(jet)
                     pion_pt = jet.p_T() * frag_z
                     current_parton['z'] = frag_z
+                    current_parton['pp_z'] = pp_frag_z
                     current_parton['pion_pt'] = pion_pt
 
                     # Save jet pair

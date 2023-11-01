@@ -72,12 +72,8 @@ def scattering():
     pythia_process.readString("PartonLevel:all = off")
     pythia_process.readString("HadronLevel:all = off")
 
-    # Turn on only hard processes that can yield a color-singlet state
-    pythia_process.readString("HardQCD:gg2gg = on")
-    pythia_process.readString("HardQCD:gg2qqbar = on")
-    # pythia_process.readString("HardQCD:qq2qq = on")  # ?
-    pythia_process.readString("HardQCD:qqbar2gg = on")
-    pythia_process.readString(" HardQCD:qqbar2qqbarNew = on")
+    # Turn on all hard QCD processes
+    pythia_process.readString("HardQCD:all = on")
 
     # Turn off all showers
     # pythia_process.readString("PartonLevel:MPI = off")
@@ -187,7 +183,9 @@ def fragment(jet1, jet2, process_dataframe, weight):
     id1 = jet1.id
     id2 = jet2.id
 
+    remnant = False
     # Choose colors so as to get a color singlet
+    # Add a third particle as a beam remnant to get a color singlet, if necessary
     if id1 == 21 and id2 == 21:
         # A pair of gluons
         # Particles just get opposite colors and anticolors
@@ -195,21 +193,60 @@ def fragment(jet1, jet2, process_dataframe, weight):
         acol1 = 102
         col2 = 102
         acol2 = 101
-    elif id1 > 0 and id2 < 0:
+    elif (3.1 > id1 > 0) and (-3.1 < id2 < 0):
         # Quark antiquark pair
         col1 = 101
         acol1 = 0
         col2 = 0
         acol2 = 101
-    else:
+    elif (-3.1 < id1 < 0) and (3.1 > id2 > 0):
         # Antiquark quark pair
         col1 = 0
         acol1 = 101
         col2 = 101
         acol2 = 0
+    elif (-3.1 < id1 < 0) and id2 == 21:
+        # antiquark gluon pair
+        remnant = True
+        rem_col = 102
+        rem_acol = 0
+        col1 = 0
+        acol1 = 101
+        col2 = 101
+        acol2 = 102
+    elif id1 == 21 and (-3.1 < id2 < 0):
+        # gluon antiquark pair
+        remnant = True
+        rem_col = 102
+        rem_acol = 0
+        col1 = 101
+        acol1 = 102
+        col2 = 0
+        acol2 = 101
+    elif (3.1 > id1 > 0) and id2 == 21:
+        # quark gluon pair
+        remnant = True
+        rem_col = 0
+        rem_acol = 102
+        col1 = 101
+        acol1 = 0
+        col2 = 102
+        acol2 = 101
+    elif id1 == 21 and (3.1 > id2 > 0):
+        # gluon quark pair
+        remnant = True
+        rem_col = 0
+        rem_acol = 101
+        col1 = 101
+        acol1 = 102
+        col2 = 102
+        acol2 = 0
 
     col_array = np.array([col1, col2])
     acol_array = np.array([acol1, acol2])
+    if remnant:
+        col_array = np.append(col_array, rem_col)
+        acol_array = np.append(acol_array, rem_acol)
 
     ############################################
     # Set up Pythia instance for hadronization #
@@ -295,8 +332,27 @@ def fragment(jet1, jet2, process_dataframe, weight):
                                             e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + particle['m'] ** 2)),
                                             m=float(particle['m']),
                                             scaleIn=float(particle['scaleIn']))
+                    scaleIn_last = float(particle['scaleIn'])
             i += 1
-
+        if remnant:
+            if rem_col != 0:
+                rem_id = np.random.default_rng().choice([2, 2, 1])
+                if rem_id == 2:
+                    rem_m = 0.0022
+                else:
+                    rem_m = 0.0047
+            else:
+                rem_id = np.random.default_rng().choice([-2, -2, -1])
+                if rem_id == -2:
+                    rem_m = 0.0022
+                else:
+                    rem_m = 0.0047
+            pythia_had.event.append(id=int(rem_id), status=int(23),
+                                    col=int(col_array[2]), acol=int(acol_array[2]),
+                                    px=0, py=0, pz=10000,
+                                    e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + rem_m ** 2)),
+                                    m=float(rem_m),
+                                    scaleIn=float(scaleIn_last))
         # part_i = -1
         # for particle in pythia_had.process:
         #     part_i += 1

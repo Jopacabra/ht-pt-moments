@@ -23,7 +23,7 @@ echo "Event complete!"
 
 # Transfer relevant output files to /srv
 echo "Moving results parquet to /srv..."
-mv /srv/results/*/*.parquet /srv
+mv /srv/results/*/*.pickle /srv
 mv /srv/results/*/*.dat /srv
 
 echo "Job complete! Have a great day! :)"

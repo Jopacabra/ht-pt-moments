@@ -20,7 +20,7 @@ def delta_R(phi1, phi2, y1, y2):
     drap = y1 - y2
     return np.sqrt(dphi * dphi + drap * drap)
 
-# Exits temporary directory, saves dataframe to parquet, and dumps all temporary data.
+# Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
 def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep_event=False):
     # Save hydro event file
     if keep_event:
@@ -47,8 +47,8 @@ def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep
     logging.info('printing dataframes before saving')
     print(hadrons_df)
     print(resultsDataFrame)
-    resultsDataFrame.to_parquet(results_path + '/{}.parquet'.format(filename))  # Save dataframe to parquet
-    hadrons_df.to_parquet(results_path + '/{}_hadrons.parquet'.format(filename))
+    resultsDataFrame.to_pickle(results_path + '/{}.pickle'.format(filename))  # Save dataframe to pickle
+    hadrons_df.to_pickle(results_path + '/{}_hadrons.pickle'.format(filename))
 
     # Return to the directory in which we ran the script.
     os.chdir(home_path)

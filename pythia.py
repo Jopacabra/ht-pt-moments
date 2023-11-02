@@ -184,6 +184,7 @@ def fragment(jet1, jet2, process_dataframe, weight):
     id2 = jet2.id
 
     remnant = False
+    remnant2 = False
     # Choose colors so as to get a color singlet
     # Add a third particle as a beam remnant to get a color singlet, if necessary
     if id1 == 21 and id2 == 21:
@@ -241,12 +242,37 @@ def fragment(jet1, jet2, process_dataframe, weight):
         acol1 = 102
         col2 = 102
         acol2 = 0
+    elif (3.1 > id1 > 0) and (3.1 > id2 > 0):
+        # quark quark pair
+        remnant = True
+        rem_col = 0
+        rem_acol = 101
+        rem2_col = 0
+        rem2_acol = 102
+        col1 = 101
+        acol1 = 0
+        col2 = 102
+        acol2 = 0
+    elif (3.1 > id1 > 0) and (3.1 > id2 > 0):
+        # quark quark pair
+        remnant = True
+        rem_col = 101
+        rem_acol = 0
+        rem2_col = 102
+        rem2_acol = 0
+        col1 = 0
+        acol1 = 101
+        col2 = 0
+        acol2 = 102
 
     col_array = np.array([col1, col2])
     acol_array = np.array([acol1, acol2])
     if remnant:
         col_array = np.append(col_array, rem_col)
         acol_array = np.append(acol_array, rem_acol)
+    if remnant2:
+        col_array = np.append(col_array, rem2_col)
+        acol_array = np.append(acol_array, rem2_acol)
 
     ############################################
     # Set up Pythia instance for hadronization #
@@ -353,6 +379,27 @@ def fragment(jet1, jet2, process_dataframe, weight):
                                     e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + rem_m ** 2)),
                                     m=float(rem_m),
                                     scaleIn=float(scaleIn_last))
+            i += 1
+        if remnant2:
+            if rem2_col != 0:
+                rem2_id = np.random.default_rng().choice([2, 2, 1])
+                if rem2_id == 2:
+                    rem2_m = 0.0022
+                else:
+                    rem2_m = 0.0047
+            else:
+                rem2_id = np.random.default_rng().choice([-2, -2, -1])
+                if rem2_id == -2:
+                    rem2_m = 0.0022
+                else:
+                    rem2_m = 0.0047
+            pythia_had.event.append(id=int(rem2_id), status=int(23),
+                                    col=int(col_array[3]), acol=int(acol_array[3]),
+                                    px=0, py=0, pz=10000,
+                                    e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + rem2_m ** 2)),
+                                    m=float(rem2_m),
+                                    scaleIn=float(scaleIn_last))
+            i += 1
         # part_i = -1
         # for particle in pythia_had.process:
         #     part_i += 1

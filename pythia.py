@@ -253,8 +253,8 @@ def fragment(jet1, jet2, process_dataframe, weight):
         acol1 = 0
         col2 = 102
         acol2 = 0
-    elif (3.1 > id1 > 0) and (3.1 > id2 > 0):
-        # quark quark pair
+    elif (-3.1 < id1 < 0) and (-3.1 < id2 < 0):
+        # antiquark antiquark pair
         remnant = True
         rem_col = 101
         rem_acol = 0

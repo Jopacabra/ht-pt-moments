@@ -376,7 +376,7 @@ def fragment(jet1, jet2, process_dataframe, weight):
             pythia_had.event.append(id=int(rem_id), status=int(23),
                                     col=int(col_array[2]), acol=int(acol_array[2]),
                                     px=0, py=0, pz=10000,
-                                    e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + rem_m ** 2)),
+                                    e=float(np.sqrt(0 ** 2 + 0 ** 2 + 10000 **2 + rem_m ** 2)),
                                     m=float(rem_m),
                                     scaleIn=float(scaleIn_last))
             i += 1
@@ -395,8 +395,8 @@ def fragment(jet1, jet2, process_dataframe, weight):
                     rem2_m = 0.0047
             pythia_had.event.append(id=int(rem2_id), status=int(23),
                                     col=int(col_array[3]), acol=int(acol_array[3]),
-                                    px=0, py=0, pz=10000,
-                                    e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + rem2_m ** 2)),
+                                    px=0, py=0, pz=-10000,
+                                    e=float(np.sqrt(0 ** 2 + 0 ** 2 + 10000 **2 + rem2_m ** 2)),
                                     m=float(rem2_m),
                                     scaleIn=float(scaleIn_last))
             i += 1

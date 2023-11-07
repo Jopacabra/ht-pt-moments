@@ -404,7 +404,7 @@ def fragment(jet1, jet2, scaleIn=2, weight=1):
         for particle in pythia_had.event:
             if particle.status() > 0:  # Particle exists in the final state
                 id = particle.id()
-                if True:  # Collect all particles #id == 111 or np.abs(id) == 211:  # Collect pions
+                if id == 111 or np.abs(id) == 211:  # Collect pions
                     pions_f += 1
                     hadron_y = particle.y()
                     hadron_pt = particle.pT()

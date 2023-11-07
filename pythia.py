@@ -344,16 +344,12 @@ def fragment(jet1, jet2, process_dataframe, weight):
             elif particle['id'] != 90 and particle['status'] > 1:
                 if i == 4:
                     pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
-                                            mother1=int(particle['mother1']), mother2=int(particle['mother2']),
-                                            daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
                                             col=int(col_array[0]), acol=int(acol_array[0]),
                                             px=float(jet1.p_x), py=float(jet1.p_y), pz=0,
                                             e=float(np.sqrt(jet1.p_x**2 + jet1.p_y**2 + particle['m']**2)), m=float(particle['m']),
                                             scaleIn=float(particle['scaleIn']))
                 elif i == 5:
                     pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
-                                            mother1=int(particle['mother1']), mother2=int(particle['mother2']),
-                                            daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
                                             col=int(col_array[1]), acol=int(acol_array[1]),
                                             px=float(jet2.p_x), py=float(jet2.p_y), pz=0,
                                             e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + particle['m'] ** 2)),

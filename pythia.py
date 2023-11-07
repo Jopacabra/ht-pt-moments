@@ -297,7 +297,7 @@ def fragment(jet1, jet2, process_dataframe, weight):
     # pythia_had.readString("ColourReconnection:forceHadronLevelCR = on")
 
     # Turn off event checks that enforce conservation of momentum in the event
-    pythia_had.readString("Check:event = off")
+    pythia_had.readString("Check:event = on")
 
     # Tell Pythia to "do the thing" (run with the configurations above)
     pythia_had.init()

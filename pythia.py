@@ -332,13 +332,14 @@ def fragment(jet1, jet2, process_dataframe, weight):
 
             # Add source particles in
             if particle['id'] != 90 and particle['status'] < 1:
-                pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
-                                        mother1=int(particle['mother1']), mother2=int(particle['mother2']),
-                                        daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
-                                        col=int(particle['col']), acol=int(particle['acol']),
-                                        px=float(particle['px']), py=float(particle['py']), pz=float(particle['pz']),
-                                        e=float(particle['e']), m=float(particle['m']),
-                                        scaleIn=float(particle['scaleIn']))
+                pass  # Do not add source particles
+                # pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
+                #                         mother1=int(particle['mother1']), mother2=int(particle['mother2']),
+                #                         daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
+                #                         col=int(particle['col']), acol=int(particle['acol']),
+                #                         px=float(particle['px']), py=float(particle['py']), pz=float(particle['pz']),
+                #                         e=float(particle['e']), m=float(particle['m']),
+                #                         scaleIn=float(particle['scaleIn']))
             # Add jet seed particles back in, with momentum modifications
             elif particle['id'] != 90 and particle['status'] > 1:
                 if i == 4:
@@ -430,7 +431,7 @@ def fragment(jet1, jet2, process_dataframe, weight):
         for particle in pythia_had.event:
             if particle.status() > 0:  # Particle exists in the final state
                 id = particle.id()
-                if id == 111 or np.abs(id) == 211:  # Particle is a pion
+                if True:  # Collect all particles #id == 111 or np.abs(id) == 211:  # Collect pions
                     pions_f += 1
                     hadron_y = particle.y()
                     hadron_pt = particle.pT()

@@ -229,7 +229,8 @@ def run_event(eventNo):
 
                 logging.info('Hadronizing...')
                 # Hadronize jet pair
-                case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, process_dataframe=particles, weight=chosen_weight)
+                scale = particles.at[-1, 'scaleIn']  # use last particle to set hard process scale
+                case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, scaleIn=scale, weight=chosen_weight)
 
                 logging.info('Appending event dataframe to hadrons')
                 # Tack case, event, and process details onto the hadron dataframe

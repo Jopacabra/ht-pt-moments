@@ -170,7 +170,7 @@ def scattering():
 
 
 # Function to hadronize a pair of particles
-def fragment(jet1, jet2, process_dataframe, weight):
+def fragment(jet1, jet2, scaleIn=2, weight=1):
     # Settings
     y_res = 1
     max_had_runs = 10000
@@ -343,19 +343,19 @@ def fragment(jet1, jet2, process_dataframe, weight):
             # Add jet seed particles back in, with momentum modifications
             elif particle['id'] != 90 and particle['status'] > 1:
                 if i == 4:
-                    pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
+                    pythia_had.event.append(id=int(id1), status=int(23),
                                             col=int(col_array[0]), acol=int(acol_array[0]),
                                             px=float(jet1.p_x), py=float(jet1.p_y), pz=0,
-                                            e=float(np.sqrt(jet1.p_x**2 + jet1.p_y**2 + particle['m']**2)), m=float(particle['m']),
-                                            scaleIn=float(particle['scaleIn']))
+                                            e=float(np.sqrt(jet1.p_x**2 + jet1.p_y**2 + float(jet1.m)**2)),
+                                            m=float(jet1.m),
+                                            scaleIn=float(scaleIn))
                 elif i == 5:
-                    pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
+                    pythia_had.event.append(id=int(id2), status=int(23),
                                             col=int(col_array[1]), acol=int(acol_array[1]),
                                             px=float(jet2.p_x), py=float(jet2.p_y), pz=0,
-                                            e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + particle['m'] ** 2)),
-                                            m=float(particle['m']),
-                                            scaleIn=float(particle['scaleIn']))
-                    scaleIn_last = float(particle['scaleIn'])
+                                            e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + float(jet2.m) ** 2)),
+                                            m=float(jet2.m),
+                                            scaleIn=float(scaleIn))
             i += 1
         if remnant:
             if rem_col != 0:
@@ -375,7 +375,7 @@ def fragment(jet1, jet2, process_dataframe, weight):
                                     px=0, py=0, pz=10000,
                                     e=float(np.sqrt(0 ** 2 + 0 ** 2 + 10000 **2 + rem_m ** 2)),
                                     m=float(rem_m),
-                                    scaleIn=float(scaleIn_last))
+                                    scaleIn=float(scaleIn))
             i += 1
         if remnant2:
             if rem2_col != 0:
@@ -395,7 +395,7 @@ def fragment(jet1, jet2, process_dataframe, weight):
                                     px=0, py=0, pz=-10000,
                                     e=float(np.sqrt(0 ** 2 + 0 ** 2 + 10000 **2 + rem2_m ** 2)),
                                     m=float(rem2_m),
-                                    scaleIn=float(scaleIn_last))
+                                    scaleIn=float(scaleIn))
             i += 1
         # part_i = -1
         # for particle in pythia_had.process:

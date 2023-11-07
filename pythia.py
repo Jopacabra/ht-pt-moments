@@ -317,46 +317,23 @@ def fragment(jet1, jet2, scaleIn=2, weight=1):
         # Add in edited particles
         part_i = -1
         i = 0
-        for index, particle in process_dataframe.iterrows():  #np.array([pythia_process.process[5], pythia_process.process[6]]):
-            part_i += 1
-            # Append to the hadronization event if the particle exists in the final state
-            '''
-            Lots of important things to note here...
-            
-            1. We must append a scale at which the particle was produced, otherwise parton showers and 
-                hadronization won't occur
-            2. We kill all of the z momentum, so we need to recompute the particle energy as on-shell
-            '''
-            # Importantly,
-            # and hadronization cannot occur!!!
+        # jet 1
+        pythia_had.event.append(id=int(id1), status=int(23),
+                                col=int(col_array[0]), acol=int(acol_array[0]),
+                                px=float(jet1.p_x), py=float(jet1.p_y), pz=0,
+                                e=float(np.sqrt(jet1.p_x**2 + jet1.p_y**2 + float(jet1.m)**2)),
+                                m=float(jet1.m),
+                                scaleIn=float(scaleIn))
+        i += 1
+        # jet 2
+        pythia_had.event.append(id=int(id2), status=int(23),
+                                col=int(col_array[1]), acol=int(acol_array[1]),
+                                px=float(jet2.p_x), py=float(jet2.p_y), pz=0,
+                                e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + float(jet2.m) ** 2)),
+                                m=float(jet2.m),
+                                scaleIn=float(scaleIn))
+        i += 1
 
-            # Add source particles in
-            if particle['id'] != 90 and particle['status'] < 1:
-                pass  # Do not add source particles
-                # pythia_had.event.append(id=int(particle['id']), status=int(particle['status']),
-                #                         mother1=int(particle['mother1']), mother2=int(particle['mother2']),
-                #                         daughter1=int(particle['daughter1']), daughter2=int(particle['daughter2']),
-                #                         col=int(particle['col']), acol=int(particle['acol']),
-                #                         px=float(particle['px']), py=float(particle['py']), pz=float(particle['pz']),
-                #                         e=float(particle['e']), m=float(particle['m']),
-                #                         scaleIn=float(particle['scaleIn']))
-            # Add jet seed particles back in, with momentum modifications
-            elif particle['id'] != 90 and particle['status'] > 1:
-                if i == 4:
-                    pythia_had.event.append(id=int(id1), status=int(23),
-                                            col=int(col_array[0]), acol=int(acol_array[0]),
-                                            px=float(jet1.p_x), py=float(jet1.p_y), pz=0,
-                                            e=float(np.sqrt(jet1.p_x**2 + jet1.p_y**2 + float(jet1.m)**2)),
-                                            m=float(jet1.m),
-                                            scaleIn=float(scaleIn))
-                elif i == 5:
-                    pythia_had.event.append(id=int(id2), status=int(23),
-                                            col=int(col_array[1]), acol=int(acol_array[1]),
-                                            px=float(jet2.p_x), py=float(jet2.p_y), pz=0,
-                                            e=float(np.sqrt(jet2.p_x ** 2 + jet2.p_y ** 2 + float(jet2.m) ** 2)),
-                                            m=float(jet2.m),
-                                            scaleIn=float(scaleIn))
-            i += 1
         if remnant:
             if rem_col != 0:
                 rem_id = np.random.default_rng().choice([2, 2, 1])

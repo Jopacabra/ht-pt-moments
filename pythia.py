@@ -385,8 +385,9 @@ def fragment(jet1, jet2, scaleIn=2, weight=1):
         # List particles for debug
         pythia_had.event.list()
 
-        # hadronize
-        pythia_had.next()
+        # hadronize - restart if event checks fail
+        if not pythia_had.next():
+            continue
 
         # List particles again for debug
         pythia_had.event.list()

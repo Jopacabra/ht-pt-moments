@@ -309,6 +309,7 @@ def fragment(jet1, jet2, scaleIn=2, weight=1):
     accepted = False
     total_pions = 0
     total_had_runs = 0
+    success_had_runs = 0
     while total_had_runs < max_had_runs:
 
         # Clear the event
@@ -387,7 +388,10 @@ def fragment(jet1, jet2, scaleIn=2, weight=1):
 
         # hadronize - restart if event checks fail
         if not pythia_had.next():
+            total_had_runs += 1  # Add a total hadronization
             continue
+        success_had_runs += 1  # Add a successful hadronization
+        total_had_runs += 1  # Add a total hadronization
 
         # List particles again for debug
         pythia_had.event.list()
@@ -424,7 +428,6 @@ def fragment(jet1, jet2, scaleIn=2, weight=1):
 
         # Count pions and runs to determine weight of the final pion
         total_pions += pions_f
-        total_had_runs += 1
 
         if accepted:
             break
@@ -440,7 +443,8 @@ def fragment(jet1, jet2, scaleIn=2, weight=1):
             'y': hadron_accepted_y.astype(float),
             'e': hadron_accepted_e.astype(float),
             'weight': np.full_like(hadron_accepted_id, float(weight)).astype(float),
-            'num_hrz': np.full_like(hadron_accepted_id, int(total_had_runs)).astype(int)
+            'num_hrz': np.full_like(hadron_accepted_id, int(success_had_runs)).astype(int),
+            'failures': np.full_like(hadron_accepted_id, int(total_had_runs - success_had_runs)).astype(int)
         })
 
     return hadrons

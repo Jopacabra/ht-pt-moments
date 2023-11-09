@@ -108,8 +108,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
                     "e5_re": [float(trentoOutput[11])],
                     "e5_im": [float(trentoOutput[12])],
                     "psi_e5": [float((1/5) * np.arctan2(float(trentoOutput[12]), float(trentoOutput[11])))],
-                    "seed": [randomSeed],
-                    "cmd": [trentoCmd],
+                    "seed": [randomSeed]
                 }
             )
         except ValueError:

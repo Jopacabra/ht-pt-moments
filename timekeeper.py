@@ -311,7 +311,6 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=
             "jet_tag": [jet.tag],
             "jet_weight": [jet.weight],
             "jet_particle": [jet.part],
-            "jet_mass": [jet.m],
             "jet_pT": [jet.p_T0],
             "jet_pT_f": [pT_final],
             "q_el": [float(q_el_total)],
@@ -335,17 +334,12 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=
             "Tmax_jet": [maxT],
             "initial_time": [event.t0],
             "final_time": [event.tf],
-            "dx": [config.transport.GRID_STEP],
-            "dt": [config.transport.TIME_STEP],
             "tau": [config.jet.TAU],
             "Tmax_event": [event.max_temp()],
             "drift": [drift],
             "grad": [grad],
             "el": [el],
             "fg": [fg],
-            "el_model": [el_model],
-            "k_drift": [scale_drift*config.constants.K_DRIFT],
-            "k_BBMG": [scale_el * config.constants.K_BBMG],
             "exit_code": [exit_code]
         }
     )

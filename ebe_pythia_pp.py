@@ -1,15 +1,7 @@
-import pythia8
-import os
 import numpy as np
 import pandas as pd
 import logging
-import collision
-import plasma
 import jets
-import config
-import utilities
-from utilities import tempDir
-import timekeeper
 import pythia
 
 

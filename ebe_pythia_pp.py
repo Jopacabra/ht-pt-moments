@@ -46,6 +46,7 @@ def downcast_numerics(df, verbose=True):
 # Jet Analysis #
 ################
 # Oversample the background with jets
+event_hadrons = pd.DataFrame({})
 
 process_num = 1000000
 for jetNo in range(0, process_num):

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy import interpolate
+from scipy import integrate
 try:
     import matplotlib.pyplot as plt
 except:
@@ -1073,15 +1074,78 @@ def jet_IS_LHC(npart=None, num_samples=1):
         return chosen_pilot_array, chosen_pT_array, chosen_weight_array
 
 # Function to create plasma object for Woods-Saxon distribution
-def woods_saxon_plasma(b, T0=0.4, V0=0.5, A=82):
+def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=82, name=None,
+                          resolution=5, xmax=8, time=None, rmax=None, return_grids=False):
     # Determine radius
     R = 1.25 * (A)**(1/3)
 
     # Define temperature and velocity functions
-    ws = lambda x, y, x0: 1 / (1 + np.exp( (np.sqrt((x-x0)**2 + y**2) - R) / 0.5))
-    temperature = lambda t, x, y : T0 * ws(x, y, -b/2) * ws(x, y, b/2)
-    xvel = lambda t, x, y : np.cos(np.mod(np.arctan2(y,x), 2*np.pi)) * temperature(t, x, y) * (V0/T0)
-    yvel = lambda t, x, y: np.sin(np.mod(np.arctan2(y,x), 2 * np.pi)) * temperature(t, x, y) * (V0/T0)
+    ws = lambda x, y, z, x0: 1 / (1 + np.exp( (np.sqrt((x-x0)**2 + y**2 + z**2) - R) / 0.5))
+    # temperature = lambda t, x, y : T0 * ws(x, y, -b/2) * ws(x, y, b/2)
+    x_vel_func = lambda t, x, y : np.cos(np.mod(np.arctan2(y,x), 2*np.pi)) * (V0/T0)
+    y_vel_func = lambda t, x, y: np.sin(np.mod(np.arctan2(y,x), 2 * np.pi)) * (V0/T0)
 
-    # Create plasma object
-    return plasma.functional_plasma(temp_func=temperature, x_vel_func=xvel, y_vel_func=yvel)
+    # Define grid time and space domains
+    if time is None:
+        t_space = np.linspace(0, 2 * xmax, int((xmax + xmax) * resolution))
+    else:
+        t_space = np.linspace(0, time, int((xmax + xmax) * resolution))
+    x_space = np.linspace((0 - xmax), xmax, int((xmax + xmax) * resolution))
+    grid_step = (2 * xmax) / int((xmax + xmax) * resolution)
+
+    # Create meshgrid for function evaluation
+    t_coords, x_coords, y_coords = np.meshgrid(t_space, x_space, x_space, indexing='ij')
+
+    # def integrate_ws(t, x, y):
+    #     z_vals = np.arange(-R, R, 0.5)
+    #     vals = np.array([])
+    #     for z in z_vals:
+    #         new_val = ws(x, y, z, -b / 2)
+    #         vals = np.append(vals, new_val)
+    #
+    #     return np.sum(vals)
+    # def integrate_ws_2(t, x, y):
+    #     z_vals = np.arange(-R, R, 0.5)
+    #     vals = np.array([])
+    #     for z in z_vals:
+    #         new_val = ws(x, y, z, b / 2)
+    #         vals = np.append(vals, new_val)
+    #
+    #     return np.sum(vals)
+    z_vals = np.arange(-R, R, 0.5)
+    #temp_1_func = np.vectorize(lambda t, x, y: integrate.quad(lambda z: ws(x, y, z, -b / 2), -R, R) + t - t)
+    #temp_2_func = np.vectorize(lambda t, x, y: integrate.quad(lambda z: ws(x, y, z, b / 2), -R, R) + t - t)
+    temp_1_func = np.vectorize(lambda t, x, y: integrate.trapezoid(ws(x, y, z_vals, -b/2)) + t - t)
+    temp_2_func = np.vectorize(lambda t, x, y: integrate.trapezoid(ws(x, y, z_vals, b/2)) + t - t)
+
+
+    # Evaluate functions for grid points
+    temp_values = np.power(np.multiply(temp_1_func(t_coords, x_coords, y_coords),
+                                       temp_2_func(t_coords, x_coords, y_coords)), 1/6)
+    temp_values = (T0 / 2.708) * temp_values  # normalize max temp to proper event
+    # temp_values = T0 * np.multiply(integrate_ws(t_coords, x_coords, y_coords), integrate_ws_2(t_coords, x_coords, y_coords))
+    x_vel_values = np.multiply(temp_values, x_vel_func(t_coords, x_coords, y_coords))
+    y_vel_values = np.multiply(temp_values, y_vel_func(t_coords, x_coords, y_coords))
+
+    print(np.ndim(temp_values))
+    # Compute gradients
+    temp_grad_x_values = np.gradient(temp_values, grid_step, axis=1)
+    temp_grad_y_values = np.gradient(temp_values, grid_step, axis=2)
+
+    # Interpolate functions
+    interped_temp_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), temp_values)
+    interped_x_vel_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), x_vel_values)
+    interped_y_vel_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), y_vel_values)
+    interped_grad_x_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), temp_grad_x_values)
+    interped_grad_y_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), temp_grad_y_values)
+
+    # Create and return plasma object
+    plasma_object = plasma.plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
+                                 y_vel_func=interped_y_vel_function, grad_x_func=interped_grad_x_function,
+                                 grad_y_func=interped_grad_y_function, name=name, rmax=rmax)
+
+    # Return the grids of evaluated points, if requested.
+    if return_grids:
+        return plasma_object, temp_values, x_vel_values, y_vel_values,
+    else:
+        return plasma_object

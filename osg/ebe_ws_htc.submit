@@ -1,5 +1,5 @@
 # We want to use the custom jopacabra/jma2 container image
-+SingularityImage = "osdf:///ospool/ap21/data/jopacabra/jma3.23.g2.5.sif"
++SingularityImage = "osdf:///ospool/ap21/data/jopacabra/jma4.01.g2.sif"
 # Requirements omit one resource location and require hardware to match newness of
 # hardware where we compiled osu-hydro and trento (on the login node)
 Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
@@ -15,7 +15,7 @@ executable = ../ebe_ws.sh
 # We don't feed any particular files to transfer, so all files in the /srv directory are transferred
 # transfer_output_files = /srv/*.pkl
 
-#error = log/job.$(Cluster).$(Process).error
+error = log/job.$(Cluster).$(Process).error
 #output = log/job.$(Cluster).$(Process).output
 #log = log/job.$(Cluster).$(Process).log
 transfer_output_remaps = "*.pickle = osdf:///ospool/ap21/data/jopacabra/tester/*.pickle"

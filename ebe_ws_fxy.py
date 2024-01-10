@@ -127,18 +127,7 @@ def run_event(eventNo):
     # Create event object
     event = collision.woods_saxon_plasma(chosen_b, resolution=5, xmax=8)
 
-    event_dataframe = pd.DataFrame({})
-    event_dataframe['mult'] = 0
-    event_dataframe['e2'] = 0
-    event_dataframe['psi_e2'] = 0
-    event_dataframe['v_2'] = 0
-    event_dataframe['psi_2'] = 0
-    event_dataframe['e3'] = 0
-    event_dataframe['psi_e3'] = 0
-    event_dataframe['v_3'] = 0
-    event_dataframe['psi_3'] = 0
-    event_dataframe['b'] = chosen_b
-    event_dataframe['ncoll'] = 0
+    event_dataframe = pd.DataFrame({'b': [chosen_b]})
 
     ################
     # Jet Analysis #

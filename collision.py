@@ -1074,8 +1074,8 @@ def jet_IS_LHC(npart=None, num_samples=1):
         return chosen_pilot_array, chosen_pT_array, chosen_weight_array
 
 # Function to create plasma object for Woods-Saxon distribution
-def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=None, a=0.546, name=None,
-                          resolution=5, xmax=8, time=None, rmax=None, return_grids=False):
+def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, name=None,
+                          resolution=5, xmax=10, time=None, rmax=None, return_grids=False):
     # Defaults are Trento PbPb parameters
 
     # Determine radius

@@ -13,6 +13,7 @@ import utilities
 import config
 from hic import flow
 from utilities import cube_random
+import plasma
 
 try:
     import freestream
@@ -1070,3 +1071,17 @@ def jet_IS_LHC(npart=None, num_samples=1):
         return chosen_pilot_array[0], chosen_pT_array[0], chosen_weight_array[0]
     else:
         return chosen_pilot_array, chosen_pT_array, chosen_weight_array
+
+# Function to create plasma object for Woods-Saxon distribution
+def woods_saxon_plasma(b, T0=0.4, V0=0.5, A=82):
+    # Determine radius
+    R = 1.25 * (A)**(1/3)
+
+    # Define temperature and velocity functions
+    ws = lambda x, y, x0: 1 / (1 + np.exp( (np.sqrt((x-x0)**2 + y**2) - R) / 0.5))
+    temperature = lambda t, x, y : T0 * ws(x, y, -b/2) * ws(x, y, b/2)
+    xvel = lambda t, x, y : np.cos(np.mod(np.arctan2(y,x), 2*np.pi)) * temperature(t, x, y) * (V0/T0)
+    yvel = lambda t, x, y: np.sin(np.mod(np.arctan2(y,x), 2 * np.pi)) * temperature(t, x, y) * (V0/T0)
+
+    # Create plasma object
+    return plasma.functional_plasma(temp_func=temperature, x_vel_func=xvel, y_vel_func=yvel)

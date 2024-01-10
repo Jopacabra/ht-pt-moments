@@ -122,7 +122,7 @@ def run_event(eventNo):
     # file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(seed))
 
     # Choose an impact parameter on 0 to 2R
-    chosen_b = np.random.default_rng().uniform(0, 2*1.25 * (82)**(1/3)).astype(float)
+    chosen_b = np.random.default_rng().uniform(0, 2*1.25 * (82)**(1/3))
 
     # Create event object
     event = collision.woods_saxon_plasma(chosen_b, resolution=5, xmax=8)

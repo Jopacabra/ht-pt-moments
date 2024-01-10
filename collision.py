@@ -1074,13 +1074,16 @@ def jet_IS_LHC(npart=None, num_samples=1):
         return chosen_pilot_array, chosen_pT_array, chosen_weight_array
 
 # Function to create plasma object for Woods-Saxon distribution
-def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=82, name=None,
+def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=None, a=0.546, name=None,
                           resolution=5, xmax=8, time=None, rmax=None, return_grids=False):
+    # Defaults are Trento PbPb parameters
+
     # Determine radius
-    R = 1.25 * (A)**(1/3)
+    if R == None:
+        R = 1.25 * (A)**(1/3)  # Good approximation, re:https://en.wikipedia.org/wiki/Woods%E2%80%93Saxon_potential
 
     # Define temperature and velocity functions
-    ws = lambda x, y, z, x0: 1 / (1 + np.exp( (np.sqrt((x-x0)**2 + y**2 + z**2) - R) / 0.5))
+    ws = lambda x, y, z, x0: 1 / (1 + np.exp( (np.sqrt((x-x0)**2 + y**2 + z**2) - R) / a))
     # temperature = lambda t, x, y : T0 * ws(x, y, -b/2) * ws(x, y, b/2)
     x_vel_func = lambda t, x, y : np.cos(np.mod(np.arctan2(y,x), 2*np.pi)) * (V0/T0)
     y_vel_func = lambda t, x, y: np.sin(np.mod(np.arctan2(y,x), 2 * np.pi)) * (V0/T0)

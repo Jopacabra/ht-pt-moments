@@ -170,6 +170,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
         # Note that we do not apply FERMItoGeV, since this rate is in GeV / fm
         return (-1) * sample_eloss_rate(mean_rate=mean_el_rate, num_samples=None)
     elif model == 'SGLV':
+        # https://inspirehep.net/literature/539404
         # Note that we apply FERMItoGeV twice... Once for the t factor, once for the (int dt).
         # Set C_R, "quadratic Casimir of the representation R of SU(3) for the jet"
         if jet.part == 'g':

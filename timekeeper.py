@@ -339,7 +339,8 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=
             "grad": [bool(grad)],
             "el": [bool(el)],
             "fg": [bool(fg)],
-            "exit": [int(exit_code)]
+            "exit": [int(exit_code)],
+            "g": [float(config.constants.G)]
         }
     )
 

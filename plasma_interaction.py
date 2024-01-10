@@ -163,7 +163,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
     # Select energy loss model and return appropriate energy loss
     if model == 'BBMG':
         # Note that we apply FERMItoGeV twice... Once for the t factor, once for the (int dt).
-        return (config.constants.K_BBMG * (-1) * ((1 / FmGeV) ** 2) * tau * event.temp(jet_point) ** 3
+        return (config.constants.K_BBMG * (-1) * ((1 / FmGeV) ** 2) * time * event.temp(jet_point) ** 3
                 * zeta(q=-1) * (1 / np.sqrt(1 - event.vel(point=jet_point)**2))
                 * (1))
     elif model == 'Vitev_hack':
@@ -185,7 +185,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
         alphas = (config.constants.G**2) / (4*np.pi)
 
         # Calculate and return energy loss of this step.
-        return (CR * alphas / 2) * (((1 / FmGeV) ** 2)
+        return (-1)*(CR * alphas / 2) * (((1 / FmGeV) ** 2)
                                     * (time - event.t0)
                                     * (event.mu(point=jet_point)**2)
                                     * inv_lambda(event=event, jet=jet, point=jet_point)

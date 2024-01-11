@@ -1074,8 +1074,9 @@ def jet_IS_LHC(npart=None, num_samples=1):
         return chosen_pilot_array, chosen_pT_array, chosen_weight_array
 
 # Function to create plasma object for Woods-Saxon distribution
-def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, name=None,
-                          resolution=5, xmax=10, time=None, rmax=None, return_grids=False):
+# Alpha is expansion power level
+def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, alpha=0, name=None,
+                       resolution=5, xmax=10, tmin=0.5, tmax=None, rmax=None, return_grids=False):
     # Defaults are Trento PbPb parameters
 
     # Determine radius
@@ -1089,10 +1090,10 @@ def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, name=None,
     y_vel_func = lambda t, x, y: np.sin(np.mod(np.arctan2(y,x), 2 * np.pi)) * (V0/T0)
 
     # Define grid time and space domains
-    if time is None:
-        t_space = np.linspace(0, 2 * xmax, int((xmax + xmax) * resolution))
+    if tmax is None:
+        t_space = np.linspace(tmin, 2 * xmax, int((xmax + xmax) * resolution))
     else:
-        t_space = np.linspace(0, time, int((xmax + xmax) * resolution))
+        t_space = np.linspace(tmin, tmax, int((xmax + xmax) * resolution))
     x_space = np.linspace((0 - xmax), xmax, int((xmax + xmax) * resolution))
     grid_step = (2 * xmax) / int((xmax + xmax) * resolution)
 
@@ -1117,14 +1118,18 @@ def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, name=None,
     #     return np.sum(vals)
     z_vals = np.arange(-R, R, 0.5)
     #temp_1_func = np.vectorize(lambda t, x, y: integrate.quad(lambda z: ws(x, y, z, -b / 2), -R, R) + t - t)
-    #temp_2_func = np.vectorize(lambda t, x, y: integrate.quad(lambda z: ws(x, y, z, b / 2), -R, R) + t - t)
-    temp_1_func = np.vectorize(lambda t, x, y: integrate.trapezoid(ws(x, y, z_vals, -b/2)) + t - t)
-    temp_2_func = np.vectorize(lambda t, x, y: integrate.trapezoid(ws(x, y, z_vals, b/2)) + t - t)
+    #T_B = np.vectorize(lambda t, x, y: integrate.quad(lambda z: ws(x, y, z, b / 2), -R, R) + t - t)
+    #T_A = np.vectorize(lambda t, x, y: integrate.trapezoid(ws(x, y, z_vals, -b/2)) * ((tmin/t)**(2*alpha)))
+    # T_B = np.vectorize(lambda t, x, y: integrate.trapezoid(ws(x, y, z_vals, b/2)) * ((tmin/t)**(2*alpha)))
+    TATB = np.vectorize(lambda t, x, y: integrate.trapezoid(ws(x, y, z_vals, -b / 2))
+                                                     * integrate.trapezoid(ws(x, y, z_vals, b / 2))
+                                                     * ((tmin / t) ** (alpha)))
 
 
     # Evaluate functions for grid points
-    temp_values = np.power(np.multiply(temp_1_func(t_coords, x_coords, y_coords),
-                                       temp_2_func(t_coords, x_coords, y_coords)), 1/6)
+    # temp_values = np.power(np.multiply(T_A(t_coords, x_coords, y_coords),
+    #                                    T_B(t_coords, x_coords, y_coords)), 1/2)
+    temp_values = np.power(TATB(t_coords, x_coords, y_coords), 1/6)
     temp_values = (T0 / 2.708) * temp_values  # normalize max temp to proper event
     # temp_values = T0 * np.multiply(integrate_ws(t_coords, x_coords, y_coords), integrate_ws_2(t_coords, x_coords, y_coords))
     x_vel_values = np.multiply(temp_values, x_vel_func(t_coords, x_coords, y_coords))

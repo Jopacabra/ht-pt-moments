@@ -373,7 +373,7 @@ eventNo = 0
 temp_dir = None  # Instantiates object for interrupt before temp_dir created.
 results = pd.DataFrame({})
 hadrons = pd.DataFrame({})
-identifierString = str(int(np.random.uniform(0, 10000000)))
+identifierString = str(int(np.random.uniform(0, 9999999999999)))
 resultsFilename = 'results' + identifierString + 'p' + str(part)
 
 # Set running location as current directory - whatever the pwd was when running the script

@@ -117,6 +117,9 @@ def run_event(eventNo):
     # Record seed selected
     seed = event_dataframe.iloc[0]['seed']
 
+    # Record event psi_2
+    psi_2 = event_dataframe.iloc[0]['psi_2']
+
     # Open the hydro file and create file object for manipulation.
     plasmaFilePath = 'viscous_14_moments_evo.dat'
     file = plasma.osu_hydro_file(file_path=plasmaFilePath, event_name='seed: {}'.format(seed))
@@ -128,12 +131,15 @@ def run_event(eventNo):
     ################
     # Jet Analysis #
     ################
-    # Oversample the background with jets
+    # Select angular bin centers fixed at elliptic flow attractors and repulsors.
+    phi_res = np.pi/2
+    phi_bin_centers = np.arange(0, 2*np.pi, phi_res) + psi_2
 
-    for jetNo in range(0, config.EBE.NUM_SAMPLES):
+    # Oversample the background with jets
+    for process_num in range(0, config.EBE.NUM_SAMPLES):
         # Create unique jet tag
         process_tag = int(np.random.uniform(0, 1000000000000))
-        logging.info('- Jet Process {} Start -'.format(jetNo))
+        logging.info('- Jet Process {} Start -'.format(process_num))
 
         try:
             #########################
@@ -144,209 +150,220 @@ def run_event(eventNo):
             process_partons = pd.DataFrame({})
             process_hadrons = pd.DataFrame({})
 
-            for case in [0, 1, 2]:
-                case_partons = pd.DataFrame({})
-                # Determine case details
-                if case == 0:
-                    drift = False
-                    fg = False
-                    grad = False
-                    el = True
-                elif case == 1:
-                    drift = True
-                    fg = False
-                    grad = False
-                    el = True
-                elif case == 2:
-                    drift = True
-                    fg = True
-                    grad = False
-                    el = True
-                elif case == 3:
-                    drift = True
-                    fg = True
-                    grad = True
-                    el = True
-                else:
-                    drift = True
-                    fg = True
-                    grad = False
-                    el = True
+            for phi_center in phi_bin_centers:
+                phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 
-                i = 0
-                for index, particle in particles.iterrows():
-                    # Only do the things for the particle output
-                    particle_status = particle['status']
-                    particle_tag = int(particle_tags[i])
-                    if particle_status != 23:
-                        i += 1
-                        continue
-                    # Read jet properties
-                    chosen_e = particle['pt']
-                    chosen_weight = weight
-                    particle_pid = particle['id']
-                    if particle_pid == 21:
-                        chosen_pilot = 'g'
-                    elif particle_pid == 1:
-                        chosen_pilot = 'd'
-                    elif particle_pid == -1:
-                        chosen_pilot = 'dbar'
-                    elif particle_pid == 2:
-                        chosen_pilot = 'u'
-                    elif particle_pid == -2:
-                        chosen_pilot = 'ubar'
-                    elif particle_pid == 3:
-                        chosen_pilot = 's'
-                    elif particle_pid == -3:
-                        chosen_pilot = 'sbar'
-
-                    # Select jet production point
-                    if not config.mode.VARY_POINT:
-                        x0 = 0
-                        y0 = 0
+                for case in [0, 1, 2]:
+                    case_partons = pd.DataFrame({})
+                    # Determine case details
+                    if case == 0:
+                        drift = False
+                        fg = False
+                        grad = False
+                        el = True
+                    elif case == 1:
+                        drift = True
+                        fg = False
+                        grad = False
+                        el = True
+                    elif case == 2:
+                        drift = True
+                        fg = True
+                        grad = False
+                        el = True
+                    elif case == 3:
+                        drift = True
+                        fg = True
+                        grad = True
+                        el = True
                     else:
-                        newPoint = collision.generate_jet_point(event)
-                        x0, y0 = newPoint[0], newPoint[1]
+                        drift = True
+                        fg = True
+                        grad = False
+                        el = True
 
-                    # Read jet production angle
-                    phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
+                    i = 0
+                    jet_num = -1
+                    for index, particle in particles.iterrows():
+                        # Only do the things for the particle output
+                        particle_status = particle['status']
+                        particle_tag = int(particle_tags[i])
+                        if particle_status != 23:
+                            i += 1
+                            continue
+                        jet_num += 1
+                        # Read jet properties
+                        chosen_e = particle['pt']
+                        chosen_weight = weight
+                        particle_pid = particle['id']
+                        if particle_pid == 21:
+                            chosen_pilot = 'g'
+                        elif particle_pid == 1:
+                            chosen_pilot = 'd'
+                        elif particle_pid == -1:
+                            chosen_pilot = 'dbar'
+                        elif particle_pid == 2:
+                            chosen_pilot = 'u'
+                        elif particle_pid == -2:
+                            chosen_pilot = 'ubar'
+                        elif particle_pid == 3:
+                            chosen_pilot = 's'
+                        elif particle_pid == -3:
+                            chosen_pilot = 'sbar'
 
-                    # Yell about your selected jet
-                    logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
+                        # Select jet production point
+                        if not config.mode.VARY_POINT:
+                            x0 = 0
+                            y0 = 0
+                        else:
+                            newPoint = collision.generate_jet_point(event)
+                            x0, y0 = newPoint[0], newPoint[1]
 
-                    el_model = 'SGLV'
+                        # Select jet angle from sample
+                        if jet_num == 0:
+                            phi_0 = phi_val
+                        else:
+                            phi_0 = np.mod(phi_val + np.pi, 2*np.pi)
 
-                    # Log jet number and case description
-                    logging.info('Running Jet {}, case {}'.format(str(jetNo), case))
-                    logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
+                        # Read jet production angle
+                        #phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
 
-                    # Create the jet object
-                    jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jetNo, part=chosen_pilot,
-                                   weight=chosen_weight)
+                        # Yell about your selected jet
+                        logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-                    # Perform pp-level fragmentation
-                    pp_frag_z = ff.frag(jet)
+                        el_model = 'SGLV'
 
-                    # Run the time loop
-                    jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
-                                                                     el_model=el_model)
+                        # Log jet number and case description
+                        logging.info('Running Jet {}, case {}'.format(str(process_num), case))
+                        logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
 
-                    # Save the xarray trajectory file
-                    # Note we are currently in a temp directory... Save record in directory above.
-                    if config.jet.RECORD:
-                        jet_xarray.to_netcdf('../{}_record.nc'.format(process_tag))
+                        # Create the jet object
+                        jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=process_num, part=chosen_pilot,
+                                       weight=chosen_weight)
 
-                    # Add scattering process tag
-                    jet_dataframe['process'] = process_tag
+                        # Perform pp-level fragmentation
+                        pp_frag_z = ff.frag(jet)
 
-                    # Merge the event and jet dataframe lines
-                    current_parton = pd.concat([jet_dataframe, event_dataframe], axis=1)
+                        # Run the time loop
+                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
+                                                                         el_model=el_model)
 
-                    logging.info('FF Fragmentation')
-                    # Perform ff fragmentation
-                    frag_z = ff.frag(jet)
-                    pion_pt = jet.p_T() * frag_z
-                    current_parton['z'] = frag_z
-                    current_parton['pp_z'] = pp_frag_z
-                    current_parton['pion_pt'] = pion_pt
+                        # Save the xarray trajectory file
+                        # Note we are currently in a temp directory... Save record in directory above.
+                        if config.jet.RECORD:
+                            jet_xarray.to_netcdf('../{}_record.nc'.format(process_tag))
 
-                    # Save jet pair
-                    if i == 4:
-                        jet1 = jet
-                    elif i == 5:
-                        jet2 = jet
+                        # Add scattering process tag
+                        jet_dataframe['process'] = process_tag
 
-                    # Append current partons to the case partons
-                    case_partons = pd.concat([current_parton, case_partons], axis=0)
+                        # Merge the event and jet dataframe lines
+                        current_parton = pd.concat([jet_dataframe, event_dataframe], axis=1)
 
-                    i += 1
+                        logging.info('FF Fragmentation')
+                        # Perform ff fragmentation
+                        frag_z = ff.frag(jet)
+                        pion_pt = jet.p_T() * frag_z
+                        current_parton['z'] = frag_z
+                        current_parton['pp_z'] = pp_frag_z
+                        current_parton['pion_pt'] = pion_pt
 
-                logging.info('Hadronizing...')
-                # Hadronize jet pair
-                scale = particles['scaleIn'].to_numpy()[-1]  # use last particle to set hard process scale
-                case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, scaleIn=scale, weight=chosen_weight)
+                        # Save jet pair
+                        if i == 4:
+                            jet1 = jet
+                        elif i == 5:
+                            jet2 = jet
 
-                logging.info('Appending event dataframe to hadrons')
-                # Tack case, event, and process details onto the hadron dataframe
-                num_hadrons = len(case_hadrons)
-                event_mult = event_dataframe['mult']
-                event_e2 = event_dataframe['e2']
-                event_psi_e2 = event_dataframe['psi_e2']
-                event_v2 = event_dataframe['v_2']
-                event_psi_2 = event_dataframe['psi_2']
-                event_e3 = event_dataframe['e3']
-                event_psi_e3 = event_dataframe['psi_e3']
-                event_v3 = event_dataframe['v_3']
-                event_psi_3 = event_dataframe['psi_3']
-                event_b = event_dataframe['b']
-                event_ncoll = event_dataframe['ncoll']
-                detail_df = pd.DataFrame(
-                    {
-                        'hadron_tag': np.random.default_rng().uniform(0, 1000000000000, num_hadrons).astype(int),
-                        'drift': np.full(num_hadrons, drift),
-                        'el': np.full(num_hadrons, el),
-                        'fg': np.full(num_hadrons, fg),
-                        'grad': np.full(num_hadrons, grad),
-                        'process': np.full(num_hadrons, process_tag),
-                        'e_2': np.full(num_hadrons, event_e2),
-                        'psi_e2': np.full(num_hadrons, event_psi_e2),
-                        'v_2': np.full(num_hadrons, event_v2),
-                        'psi_2': np.full(num_hadrons, event_psi_2),
-                        'e_3': np.full(num_hadrons, event_e3),
-                        'psi_e3': np.full(num_hadrons, event_psi_e3),
-                        'v_3': np.full(num_hadrons, event_v3),
-                        'psi_3': np.full(num_hadrons, event_psi_3),
-                        'mult': np.full(num_hadrons, event_mult),
-                        'ncoll': np.full(num_hadrons, event_ncoll),
-                        'b': np.full(num_hadrons, event_b),
-                        'parent_id': np.empty(num_hadrons),
-                        'parent_pt': np.empty(num_hadrons),
-                        'parent_pt_f': np.empty(num_hadrons),
-                        'parent_phi': np.empty(num_hadrons),
-                        'parent_tag': np.empty(num_hadrons),
-                        'z': np.empty(num_hadrons)
-                    }
-                )
-                case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
+                        # Append current partons to the case partons
+                        case_partons = pd.concat([current_parton, case_partons], axis=0)
 
-                logging.info('Hadron z_mean value')
-                # Compute a rough z value for each hadron
-                mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
-                case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
+                        i += 1
 
-                logging.info('Hadron phi value')
-                # Compute a phi angle for each hadron
-                case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'].to_numpy().astype(float),
-                                                   case_hadrons['px'].to_numpy().astype(float)) + np.pi
+                    logging.info('Hadronizing...')
+                    # Hadronize jet pair
+                    scale = particles['scaleIn'].to_numpy()[-1]  # use last particle to set hard process scale
+                    case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, scaleIn=scale, weight=chosen_weight)
 
-                logging.info('CA-type parent finder')
-                # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
-                for index in case_hadrons.index:
-                    min_dR = 10000
-                    parent = None
+                    logging.info('Appending event dataframe to hadrons')
+                    # Tack case, event, and process details onto the hadron dataframe
+                    num_hadrons = len(case_hadrons)
+                    event_mult = event_dataframe['mult']
+                    event_e2 = event_dataframe['e2']
+                    event_psi_e2 = event_dataframe['psi_e2']
+                    event_v2 = event_dataframe['v_2']
+                    event_psi_2 = event_dataframe['psi_2']
+                    event_e3 = event_dataframe['e3']
+                    event_psi_e3 = event_dataframe['psi_e3']
+                    event_v3 = event_dataframe['v_3']
+                    event_psi_3 = event_dataframe['psi_3']
+                    event_b = event_dataframe['b']
+                    event_ncoll = event_dataframe['ncoll']
+                    detail_df = pd.DataFrame(
+                        {
+                            'hadron_tag': np.random.default_rng().uniform(0, 1000000000000, num_hadrons).astype(int),
+                            'drift': np.full(num_hadrons, drift),
+                            'el': np.full(num_hadrons, el),
+                            'fg': np.full(num_hadrons, fg),
+                            'grad': np.full(num_hadrons, grad),
+                            'process': np.full(num_hadrons, process_tag),
+                            'e_2': np.full(num_hadrons, event_e2),
+                            'psi_e2': np.full(num_hadrons, event_psi_e2),
+                            'v_2': np.full(num_hadrons, event_v2),
+                            'psi_2': np.full(num_hadrons, event_psi_2),
+                            'e_3': np.full(num_hadrons, event_e3),
+                            'psi_e3': np.full(num_hadrons, event_psi_e3),
+                            'v_3': np.full(num_hadrons, event_v3),
+                            'psi_3': np.full(num_hadrons, event_psi_3),
+                            'mult': np.full(num_hadrons, event_mult),
+                            'ncoll': np.full(num_hadrons, event_ncoll),
+                            'b': np.full(num_hadrons, event_b),
+                            'parent_id': np.empty(num_hadrons),
+                            'parent_pt': np.empty(num_hadrons),
+                            'parent_pt_f': np.empty(num_hadrons),
+                            'parent_phi': np.empty(num_hadrons),
+                            'parent_tag': np.empty(num_hadrons),
+                            'z': np.empty(num_hadrons)
+                        }
+                    )
+                    case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
 
-                    # Check the Delta R to each jet
-                    # Set parent to the minimum Delta R jet
-                    for jet in [jet1, jet2]:
-                        jet_rho, jet_phi = jet.polar_mom_coords()
-                        dR = delta_R(phi1=case_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
-                                     y1=case_hadrons.loc[index, 'y'], y2=0)
-                        if dR < min_dR:
-                            min_dR = dR
-                            parent = jet
+                    logging.info('Hadron z_mean value')
+                    # Compute a rough z value for each hadron
+                    mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
+                    case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
 
-                    # Save parent info to hadron dataframe
-                    case_hadrons.at[index, 'parent_id'] = parent.id
-                    case_hadrons.at[index, 'parent_pt'] = parent.p_T0
-                    case_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
-                    parent_rho, parent_phi = parent.polar_mom_coords()
-                    case_hadrons.at[index, 'parent_phi'] = parent_phi
-                    case_hadrons.at[index, 'parent_tag'] = parent.tag
-                    case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
+                    logging.info('Hadron phi value')
+                    # Compute a phi angle for each hadron
+                    case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'].to_numpy().astype(float),
+                                                       case_hadrons['px'].to_numpy().astype(float)) + np.pi
 
-                logging.info('Appending case results to process results')
-                process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
-                process_partons = pd.concat([process_partons, case_partons], axis=0)
+                    logging.info('CA-type parent finder')
+                    # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
+                    for index in case_hadrons.index:
+                        min_dR = 10000
+                        parent = None
+
+                        # Check the Delta R to each jet
+                        # Set parent to the minimum Delta R jet
+                        for jet in [jet1, jet2]:
+                            jet_rho, jet_phi = jet.polar_mom_coords()
+                            dR = delta_R(phi1=case_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
+                                         y1=case_hadrons.loc[index, 'y'], y2=0)
+                            if dR < min_dR:
+                                min_dR = dR
+                                parent = jet
+
+                        # Save parent info to hadron dataframe
+                        case_hadrons.at[index, 'parent_id'] = parent.id
+                        case_hadrons.at[index, 'parent_pt'] = parent.p_T0
+                        case_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
+                        parent_rho, parent_phi = parent.polar_mom_coords()
+                        case_hadrons.at[index, 'parent_phi'] = parent_phi
+                        case_hadrons.at[index, 'parent_tag'] = parent.tag
+                        case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
+
+                    logging.info('Appending case results to process results')
+                    process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
+                    process_partons = pd.concat([process_partons, case_partons], axis=0)
 
         except Exception as error:
             logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError
@@ -356,7 +373,7 @@ def run_event(eventNo):
         event_partons = pd.concat([event_partons, process_partons], axis=0)
 
         # Declare jet complete
-        logging.info('- Jet Process ' + str(jetNo) + ' Complete -')
+        logging.info('- Jet Process ' + str(process_num) + ' Complete -')
 
     return event_partons, event_hadrons
 

@@ -4,7 +4,7 @@ mode:  # Operation mode flags
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
     WEIGHT_POINT: True  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
     NUM_EVENTS: 1  # Number of events to generate -- 0 runs events until interrupt.
-    NUM_SAMPLES: 1000  # Number of jets to run in each event
+    NUM_SAMPLES: 500  # Number of jets to run in each event
     KEEP_EVENT: False  # Keep plasma data for future analysis
 transport:  # Parameters for the jets to be run
     TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.

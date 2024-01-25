@@ -241,7 +241,7 @@ def run_event(eventNo):
                         logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
 
                         # Create the jet object
-                        jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=process_num, part=chosen_pilot,
+                        jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_num, part=chosen_pilot,
                                        weight=chosen_weight)
 
                         # Perform pp-level fragmentation

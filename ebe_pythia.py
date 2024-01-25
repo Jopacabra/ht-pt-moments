@@ -160,6 +160,7 @@ def run_event(eventNo):
                 newPoint = collision.generate_jet_point(event)
                 x0, y0 = newPoint[0], newPoint[1]
 
+            process_run = 0
             phi_values = phi_rng.uniform(0, 2 * np.pi, num_phi)
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
@@ -266,9 +267,12 @@ def run_event(eventNo):
                         # Perform ff fragmentation
                         frag_z = ff.frag(jet)
                         pion_pt = jet.p_T() * frag_z
+                        pion_pt_0 = jet.p_T0 * pp_frag_z
                         current_parton['z'] = frag_z
                         current_parton['pp_z'] = pp_frag_z
-                        current_parton['pion_pt'] = pion_pt
+                        current_parton['pion_pt_f'] = pion_pt
+                        current_parton['pion_pt_0'] = pion_pt_0
+                        current_parton['process_run'] = process_run
 
                         # Save jet pair
                         if i == 4:
@@ -367,6 +371,7 @@ def run_event(eventNo):
                     logging.info('Appending case results to process results')
                     process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
                     process_partons = pd.concat([process_partons, case_partons], axis=0)
+                    process_run += 1
 
         except Exception as error:
             logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError

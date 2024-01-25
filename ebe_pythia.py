@@ -132,8 +132,10 @@ def run_event(eventNo):
     # Jet Analysis #
     ################
     # Select angular bin centers fixed at elliptic flow attractors and repulsors.
-    phi_res = np.pi/2
-    phi_bin_centers = np.arange(0, 2*np.pi, phi_res) + psi_2
+    # phi_res = np.pi/2
+    # phi_bin_centers = np.arange(0, 2*np.pi, phi_res) + psi_2
+    phi_rng = np.random.default_rng()
+    num_phi = 5
 
     # Oversample the background with jets
     for process_num in range(0, config.EBE.NUM_SAMPLES):
@@ -150,8 +152,17 @@ def run_event(eventNo):
             process_partons = pd.DataFrame({})
             process_hadrons = pd.DataFrame({})
 
-            for phi_center in phi_bin_centers:
-                phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
+            # Select jet production point
+            if not config.mode.VARY_POINT:
+                x0 = 0
+                y0 = 0
+            else:
+                newPoint = collision.generate_jet_point(event)
+                x0, y0 = newPoint[0], newPoint[1]
+
+            phi_values = phi_rng.uniform(0, 2 * np.pi, num_phi)
+            for phi_val in phi_values:
+                # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 
                 for case in [0, 1, 2]:
                     case_partons = pd.DataFrame({})
@@ -210,14 +221,6 @@ def run_event(eventNo):
                             chosen_pilot = 's'
                         elif particle_pid == -3:
                             chosen_pilot = 'sbar'
-
-                        # Select jet production point
-                        if not config.mode.VARY_POINT:
-                            x0 = 0
-                            y0 = 0
-                        else:
-                            newPoint = collision.generate_jet_point(event)
-                            x0, y0 = newPoint[0], newPoint[1]
 
                         # Select jet angle from sample
                         if jet_num == 0:

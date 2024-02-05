@@ -23,7 +23,7 @@ def frag(jet):
         return p_z
 
     # Load fragmentation function
-    loaded_ff = lhapdf.mkPDF("JAM20-SIDIS_FF_pion_nlo")
+    loaded_ff = lhapdf.mkPDF("JAM20-SIDIS_FF_hadron_nlo")
 
     # Define probability distribution of z values for given p_T^{part} and max prob.
     p_z = frag_p_z(ff=loaded_ff, pid=jet_pid, pt_part=jet_pt)

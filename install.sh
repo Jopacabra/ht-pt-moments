@@ -22,7 +22,7 @@ conda create --prefix /usr/conda/jma numpy scipy cython h5py pandas xarray pyyam
 conda activate /usr/conda/jma
 
 # Install fragmentation functions
-lhapdf install "JAM20-SIDIS_FF_pion_nlo"
+lhapdf install "JAM20-SIDIS_FF_hadron_nlo"
 
 # Debug print of working directory
 pwd

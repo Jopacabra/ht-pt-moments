@@ -135,7 +135,7 @@ def run_event(eventNo):
     # phi_res = np.pi/2
     # phi_bin_centers = np.arange(0, 2*np.pi, phi_res) + psi_2
     phi_rng = np.random.default_rng()
-    num_phi = 11  # We select a prime number so this can't (?) influence v_n =/= v_{num_phi}
+    num_phi = 101  # We select a prime number so this can't (?) influence v_n =/= v_{num_phi}
 
     # Oversample the background with jets
     for process_num in range(0, config.EBE.NUM_SAMPLES):

@@ -11,6 +11,7 @@ from utilities import tempDir
 import timekeeper
 import pythia
 import ff
+import traceback
 
 
 # Function to downcast datatypes to minimum memory size for each column
@@ -376,6 +377,7 @@ def run_event(eventNo):
         except Exception as error:
             logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError
             logging.info('- Jet Process Failed -')
+            traceback.print_exc()
 
         event_hadrons = pd.concat([event_hadrons, process_hadrons], axis=0)
         event_partons = pd.concat([event_partons, process_partons], axis=0)

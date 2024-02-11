@@ -6,6 +6,7 @@ import config
 import xarray as xr
 from scipy import interpolate
 import os
+import traceback
 
 
 def mean_eloss_rate(pT):
@@ -304,50 +305,58 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=
     logging.info('Time loop complete...')
 
     # Create momentPlasma results dataframe
-    jet_dataframe = pd.DataFrame(
-        {
-            "jetNo": [int(jet.no)],
-            "tag": [int(jet.tag)],
-            "weight": [float(jet.weight)],
-            "id": [int(jet.id)],
-            "pt_0": [float(jet.p_T0)],
-            "pt_f": [float(pT_final)],
-            "q_el": [float(q_el_total)],
-            "q_drift": [float(q_drift_total)],
-            "q_drift_abs": [float(q_drift_abs_total)],
-            "q_grad": [float(q_grad_total)],
-            "q_grad_abs": [float(q_grad_abs_total)],
-            "q_fg": [float(q_fg_total)],
-            "q_fg_abs": [float(q_fg_abs_total)],
-            "extinguished": [bool(extinguished)],
-            "x_0": [float(jet.x_0)],
-            "y_0": [float(jet.y_0)],
-            "phi_0": [float(jet.phi_0)],
-            "phi_f": [float(phi_final)],
-            "t_qgp": [float(t_qgp)],
-            "t_hrg": [float(t_hrg)],
-            "t_unhydro": [float(t_unhydro)],
-            "time_total_plasma": [float(qgp_time_total)],
-            "time_total_hrg": [float(hrg_time_total)],
-            "time_total_unhydro": [float(unhydro_time_total)],
-            "Tmax_jet": [float(maxT)],
-            "initial_time": [float(event.t0)],
-            "final_time": [float(event.tf)],
-            "tau": [float(config.jet.TAU)],
-            "Tmax_event": [float(event.max_temp())],
-            "drift": [bool(drift)],
-            "grad": [bool(grad)],
-            "el": [bool(el)],
-            "fg": [bool(fg)],
-            "exit": [int(exit_code)],
-            "g": [float(config.constants.G)]
-        }
-    )
+    try:
+        print('Making dataframe...')
+        jet_dataframe = pd.DataFrame(
+            {
+                "jetNo": [int(jet.no)],
+                "tag": [int(jet.tag)],
+                "weight": [float(jet.weight)],
+                "id": [int(jet.id)],
+                "pt_0": [float(jet.p_T0)],
+                "pt_f": [float(pT_final)],
+                "q_el": [float(q_el_total)],
+                "q_drift": [float(q_drift_total)],
+                "q_drift_abs": [float(q_drift_abs_total)],
+                "q_grad": [float(q_grad_total)],
+                "q_grad_abs": [float(q_grad_abs_total)],
+                "q_fg": [float(q_fg_total)],
+                "q_fg_abs": [float(q_fg_abs_total)],
+                "extinguished": [bool(extinguished)],
+                "x_0": [float(jet.x_0)],
+                "y_0": [float(jet.y_0)],
+                "phi_0": [float(jet.phi_0)],
+                "phi_f": [float(phi_final)],
+                "t_qgp": [float(t_qgp)],
+                "t_hrg": [float(t_hrg)],
+                "t_unhydro": [float(t_unhydro)],
+                "time_total_plasma": [float(qgp_time_total)],
+                "time_total_hrg": [float(hrg_time_total)],
+                "time_total_unhydro": [float(unhydro_time_total)],
+                "Tmax_jet": [float(maxT)],
+                "initial_time": [float(event.t0)],
+                "final_time": [float(event.tf)],
+                "tau": [float(config.jet.TAU)],
+                "Tmax_event": [float(event.max_temp())],
+                "drift": [bool(drift)],
+                "grad": [bool(grad)],
+                "el": [bool(el)],
+                "fg": [bool(fg)],
+                "exit": [int(exit_code)],
+                "g": [float(config.constants.G)]
+            }
+        )
 
-    logging.info('Pandas dataframe generated...')
+        logging.info('Pandas dataframe generated...')
+
+    except Exception as error:
+        logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError
+        logging.info('- Jet Dataframe Creation Failed -')
+        traceback.print_exc()
 
     # Create and store jet record xarray
     # define data with variable attributes
+    logging.info('Creating xarray jet record...')
     data_vars = {'x': (['time'], xpos_array,
                        {'units': 'fm',
                         'long_name': 'x position coordinate'}),

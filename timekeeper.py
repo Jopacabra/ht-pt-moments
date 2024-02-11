@@ -44,9 +44,9 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=
     t = event.t0  # Set current time in fm to initial time
 
     # Initialize counters & values
-    t_qgp = None
-    t_hrg = None
-    t_unhydro = None
+    t_qgp = -1
+    t_hrg = -1
+    t_unhydro = -1
     qgp_time_total = 0
     hrg_time_total = 0
     unhydro_time_total = 0

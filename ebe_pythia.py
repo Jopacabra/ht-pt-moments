@@ -13,6 +13,7 @@ import pythia
 import ff
 import traceback
 
+lund_string = False
 
 # Function to downcast datatypes to minimum memory size for each column
 def downcast_numerics(df, verbose=True):
@@ -52,7 +53,7 @@ def delta_R(phi1, phi2, y1, y2):
     return np.sqrt(dphi * dphi + drap * drap)
 
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
-def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep_event=False):
+def safe_exit(resultsDataFrame, temp_dir, filename, identifier, hadrons_df=None, keep_event=False):
     # Save hydro event file
     if keep_event:
         logging.info('Saving event hydro data...')
@@ -73,17 +74,25 @@ def safe_exit(resultsDataFrame, hadrons_df, temp_dir, filename, identifier, keep
 
     # Save the dataframe into the identified results folder
     logging.info('Saving progress...')
+    logging.info('Partons...')
     logging.debug(resultsDataFrame)
-    logging.debug(hadrons_df)
     logging.info('Converting datatypes to reasonable formats...')
-    hadrons_df = hadrons_df.convert_dtypes()
     resultsDataFrame = resultsDataFrame.convert_dtypes()
     logging.info('Downcasting numeric values to minimum memory size...')
-    hadrons_df = downcast_numerics(hadrons_df)
     resultsDataFrame = downcast_numerics(resultsDataFrame)
+
+    if lund_string:
+        logging.info('LS Hadrons...')
+        logging.debug(hadrons_df)
+        logging.info('Converting datatypes to reasonable formats...')
+        hadrons_df = hadrons_df.convert_dtypes()
+        logging.info('Downcasting numeric values to minimum memory size...')
+        hadrons_df = downcast_numerics(hadrons_df)
+
     logging.info('Writing pickles...')
     resultsDataFrame.to_pickle(results_path + '/{}.pickle'.format(filename))  # Save dataframe to pickle
-    hadrons_df.to_pickle(results_path + '/{}_hadrons.pickle'.format(filename))
+    if lund_string:
+        hadrons_df.to_pickle(results_path + '/{}_hadrons.pickle'.format(filename))
 
     # Return to the directory in which we ran the script.
     os.chdir(home_path)
@@ -286,91 +295,93 @@ def run_event(eventNo):
 
                         i += 1
 
-                    logging.info('Hadronizing...')
-                    # Hadronize jet pair
-                    scale = particles['scaleIn'].to_numpy()[-1]  # use last particle to set hard process scale
-                    case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, scaleIn=scale, weight=chosen_weight)
+                    if lund-string:
+                        logging.info('Hadronizing...')
+                        # Hadronize jet pair
+                        scale = particles['scaleIn'].to_numpy()[-1]  # use last particle to set hard process scale
+                        case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, scaleIn=scale, weight=chosen_weight)
 
-                    logging.info('Appending event dataframe to hadrons')
-                    # Tack case, event, and process details onto the hadron dataframe
-                    num_hadrons = len(case_hadrons)
-                    event_mult = event_dataframe['mult']
-                    event_e2 = event_dataframe['e2']
-                    event_psi_e2 = event_dataframe['psi_e2']
-                    event_v2 = event_dataframe['v_2']
-                    event_psi_2 = event_dataframe['psi_2']
-                    event_e3 = event_dataframe['e3']
-                    event_psi_e3 = event_dataframe['psi_e3']
-                    event_v3 = event_dataframe['v_3']
-                    event_psi_3 = event_dataframe['psi_3']
-                    event_b = event_dataframe['b']
-                    event_ncoll = event_dataframe['ncoll']
-                    detail_df = pd.DataFrame(
-                        {
-                            'hadron_tag': np.random.default_rng().uniform(0, 1000000000000, num_hadrons).astype(int),
-                            'drift': np.full(num_hadrons, drift),
-                            'el': np.full(num_hadrons, el),
-                            'fg': np.full(num_hadrons, fg),
-                            'grad': np.full(num_hadrons, grad),
-                            'process': np.full(num_hadrons, process_tag),
-                            'e_2': np.full(num_hadrons, event_e2),
-                            'psi_e2': np.full(num_hadrons, event_psi_e2),
-                            'v_2': np.full(num_hadrons, event_v2),
-                            'psi_2': np.full(num_hadrons, event_psi_2),
-                            'e_3': np.full(num_hadrons, event_e3),
-                            'psi_e3': np.full(num_hadrons, event_psi_e3),
-                            'v_3': np.full(num_hadrons, event_v3),
-                            'psi_3': np.full(num_hadrons, event_psi_3),
-                            'mult': np.full(num_hadrons, event_mult),
-                            'ncoll': np.full(num_hadrons, event_ncoll),
-                            'b': np.full(num_hadrons, event_b),
-                            'parent_id': np.empty(num_hadrons),
-                            'parent_pt': np.empty(num_hadrons),
-                            'parent_pt_f': np.empty(num_hadrons),
-                            'parent_phi': np.empty(num_hadrons),
-                            'parent_tag': np.empty(num_hadrons),
-                            'z': np.empty(num_hadrons)
-                        }
-                    )
-                    case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
+                        logging.info('Appending event dataframe to hadrons')
+                        # Tack case, event, and process details onto the hadron dataframe
+                        num_hadrons = len(case_hadrons)
+                        event_mult = event_dataframe['mult']
+                        event_e2 = event_dataframe['e2']
+                        event_psi_e2 = event_dataframe['psi_e2']
+                        event_v2 = event_dataframe['v_2']
+                        event_psi_2 = event_dataframe['psi_2']
+                        event_e3 = event_dataframe['e3']
+                        event_psi_e3 = event_dataframe['psi_e3']
+                        event_v3 = event_dataframe['v_3']
+                        event_psi_3 = event_dataframe['psi_3']
+                        event_b = event_dataframe['b']
+                        event_ncoll = event_dataframe['ncoll']
+                        detail_df = pd.DataFrame(
+                            {
+                                'hadron_tag': np.random.default_rng().uniform(0, 1000000000000, num_hadrons).astype(int),
+                                'drift': np.full(num_hadrons, drift),
+                                'el': np.full(num_hadrons, el),
+                                'fg': np.full(num_hadrons, fg),
+                                'grad': np.full(num_hadrons, grad),
+                                'process': np.full(num_hadrons, process_tag),
+                                'e_2': np.full(num_hadrons, event_e2),
+                                'psi_e2': np.full(num_hadrons, event_psi_e2),
+                                'v_2': np.full(num_hadrons, event_v2),
+                                'psi_2': np.full(num_hadrons, event_psi_2),
+                                'e_3': np.full(num_hadrons, event_e3),
+                                'psi_e3': np.full(num_hadrons, event_psi_e3),
+                                'v_3': np.full(num_hadrons, event_v3),
+                                'psi_3': np.full(num_hadrons, event_psi_3),
+                                'mult': np.full(num_hadrons, event_mult),
+                                'ncoll': np.full(num_hadrons, event_ncoll),
+                                'b': np.full(num_hadrons, event_b),
+                                'parent_id': np.empty(num_hadrons),
+                                'parent_pt': np.empty(num_hadrons),
+                                'parent_pt_f': np.empty(num_hadrons),
+                                'parent_phi': np.empty(num_hadrons),
+                                'parent_tag': np.empty(num_hadrons),
+                                'z': np.empty(num_hadrons)
+                            }
+                        )
+                        case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
 
-                    logging.info('Hadron z_mean value')
-                    # Compute a rough z value for each hadron
-                    mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
-                    case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
+                        logging.info('Hadron z_mean value')
+                        # Compute a rough z value for each hadron
+                        mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
+                        case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
 
-                    logging.info('Hadron phi value')
-                    # Compute a phi angle for each hadron
-                    case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'].to_numpy().astype(float),
-                                                       case_hadrons['px'].to_numpy().astype(float)) + np.pi
+                        logging.info('Hadron phi value')
+                        # Compute a phi angle for each hadron
+                        case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'].to_numpy().astype(float),
+                                                           case_hadrons['px'].to_numpy().astype(float)) + np.pi
 
-                    logging.info('CA-type parent finder')
-                    # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
-                    for index in case_hadrons.index:
-                        min_dR = 10000
-                        parent = None
+                        logging.info('CA-type parent finder')
+                        # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
+                        for index in case_hadrons.index:
+                            min_dR = 10000
+                            parent = None
 
-                        # Check the Delta R to each jet
-                        # Set parent to the minimum Delta R jet
-                        for jet in [jet1, jet2]:
-                            jet_rho, jet_phi = jet.polar_mom_coords()
-                            dR = delta_R(phi1=case_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
-                                         y1=case_hadrons.loc[index, 'y'], y2=0)
-                            if dR < min_dR:
-                                min_dR = dR
-                                parent = jet
+                            # Check the Delta R to each jet
+                            # Set parent to the minimum Delta R jet
+                            for jet in [jet1, jet2]:
+                                jet_rho, jet_phi = jet.polar_mom_coords()
+                                dR = delta_R(phi1=case_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
+                                             y1=case_hadrons.loc[index, 'y'], y2=0)
+                                if dR < min_dR:
+                                    min_dR = dR
+                                    parent = jet
 
-                        # Save parent info to hadron dataframe
-                        case_hadrons.at[index, 'parent_id'] = parent.id
-                        case_hadrons.at[index, 'parent_pt'] = parent.p_T0
-                        case_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
-                        parent_rho, parent_phi = parent.polar_mom_coords()
-                        case_hadrons.at[index, 'parent_phi'] = parent_phi
-                        case_hadrons.at[index, 'parent_tag'] = parent.tag
-                        case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
+                            # Save parent info to hadron dataframe
+                            case_hadrons.at[index, 'parent_id'] = parent.id
+                            case_hadrons.at[index, 'parent_pt'] = parent.p_T0
+                            case_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
+                            parent_rho, parent_phi = parent.polar_mom_coords()
+                            case_hadrons.at[index, 'parent_phi'] = parent_phi
+                            case_hadrons.at[index, 'parent_tag'] = parent.tag
+                            case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
 
                     logging.info('Appending case results to process results')
-                    process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
+                    if lund_string:
+                        process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
                     process_partons = pd.concat([process_partons, case_partons], axis=0)
                     process_run += 1
 
@@ -379,7 +390,8 @@ def run_event(eventNo):
             logging.info('- Jet Process Failed -')
             traceback.print_exc()
 
-        event_hadrons = pd.concat([event_hadrons, process_hadrons], axis=0)
+        if lund_string:
+            event_hadrons = pd.concat([event_hadrons, process_hadrons], axis=0)
         event_partons = pd.concat([event_partons, process_partons], axis=0)
 
         # Declare jet complete
@@ -436,7 +448,8 @@ try:
         # Append returned dataframe to current dataframe
         event_results, event_hadrons = run_event(eventNo=int(identifierString))
         results = pd.concat([results, event_results], axis=0)
-        hadrons = pd.concat([hadrons, event_hadrons], axis=0)
+        if lund_string:
+            hadrons = pd.concat([hadrons, event_hadrons], axis=0)
 
         # Exits directory, saves all current data, and dumps temporary files.
         safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,

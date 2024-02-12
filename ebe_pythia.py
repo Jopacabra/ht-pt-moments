@@ -295,7 +295,7 @@ def run_event(eventNo):
 
                         i += 1
 
-                    if lund-string:
+                    if lund_string:
                         logging.info('Hadronizing...')
                         # Hadronize jet pair
                         scale = particles['scaleIn'].to_numpy()[-1]  # use last particle to set hard process scale

@@ -171,7 +171,13 @@ def run_event(eventNo):
                 x0, y0 = newPoint[0], newPoint[1]
 
             process_run = 0
-            phi_values = phi_rng.uniform(0, 2 * np.pi, num_phi)
+
+            # Random azimuthal sampling
+            # phi_values = phi_rng.uniform(0, 2 * np.pi, num_phi)
+
+            # Uniform azimuthal sampling
+            phi_values = np.linspace(start=0, stop=2*np.pi, num=num_phi, endpoint=False)
+
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 

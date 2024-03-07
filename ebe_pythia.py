@@ -176,7 +176,7 @@ def run_event(eventNo):
             # phi_values = phi_rng.uniform(0, 2 * np.pi, num_phi)
 
             # Uniform azimuthal sampling
-            phi_values = np.linspace(start=0, stop=2*np.pi, num=num_phi, endpoint=False)
+            phi_values = np.linspace(start=0, stop=2*np.pi, num=num_phi, endpoint=False) + psi_2
 
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)

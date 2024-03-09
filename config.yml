@@ -7,7 +7,7 @@ mode:  # Operation mode flags
     NUM_SAMPLES: 100  # Number of hard jet production processes to run in each event
     KEEP_EVENT: False  # Keep plasma data for future analysis
 transport:  # Parameters for the jets to be run
-    TAU_FS: 0.5  # freestreaming time in fm. Default 0.5 fm.
+    TAU_FS: 0.37  # freestreaming time in fm. Default 0.5 fm.
     GRID_STEP: 0.1  # Hydro / Trento grid step in fm. Default 0.15*NUCLEON_WIDTH from DukeQCD BA
     TIME_STEP: 0.05  # Hydro / Trento time step in fm. Default 0.25*GRID_STEP fm from DukeQCD BA
     GRID_MAX_TARGET: 15  # Maximum hydro grid width.

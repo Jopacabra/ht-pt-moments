@@ -291,6 +291,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 
             X.tofile(fmt.format(*a) + '.dat')
 
+    dt = time_step
 
     if maxTime is not None:
         print('Limiting time...')

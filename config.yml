@@ -15,13 +15,18 @@ transport:  # Parameters for the jets to be run
     T_HRG: 0.155  # Temperature in GeV at which to consider the medium hadronized
     T_UNHYDRO: 0.150  # Temperature in GeV at which to consider the medium unhydrodynamic
 trento:
-    NORM: 5.84  # Overall normalization factor for reduced thickness function (and thereby multiplicity)
+    NORM: 20.2  # Overall normalization factor for reduced thickness function (and thereby multiplicity)
     PROJ1: 'Pb'  # Collisions species 1
     PROJ2: 'Pb'  # Collisions species 2
-    NUCLEON_WIDTH: 0.5  # Gaussian nucleon width in fm. Default 0.5 fm from DukeQCD BA
+    NUCLEON_WIDTH: 0.92  # Gaussian nucleon width in fm. Default 0.5 fm from DukeQCD BA
     CROSS_SECTION: 7.0  # Inelastic nucleon-nucleon cross section sigma_{NN} in fm^2
     BMIN: None  # Minimum impact parameter. For no limits, set None.
     BMAX: None  # Maximum impact parameter. For no limits, set None.
+    P: 0  # Nuclear overlap power parameter (default 0)
+    K: 0.19  # Gamma distribution shape parameter k for nucleon fluctuations
+    V: 0.43  # Gaussian constituent width in fm
+    NC: 6  # Number of nucleon constituents
+    DMIN: 0.81  # Minimum nucleon distance in fm
 jet:  # Parameters for the jets to be run
     JET_ENERGY: 22.5  # Jet energy in GeV - corresponds to TOTAL jet E, not just charged particle E
     E_FLUCT: True  # Vary jet energy EBE? - If True, JET_ENERGY does nothing.

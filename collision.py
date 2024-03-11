@@ -78,6 +78,11 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     trentoCmd.append('--normalization {}'.format(config.transport.trento.NORM))
     trentoCmd.append('--cross-section {}'.format(config.transport.trento.CROSS_SECTION))
     trentoCmd.append('--nucleon-width {}'.format(config.transport.trento.NUCLEON_WIDTH))
+    trentoCmd.append('--reduced-thickness {}'.format(config.transport.trento.P))
+    trentoCmd.append('--fluctuation {}'.format(config.transport.trento.K))
+    trentoCmd.append('--constit-width {}'.format(config.transport.trento.V))
+    trentoCmd.append('--constit-number {}'.format(config.transport.trento.NC))
+    trentoCmd.append('--nucleon-min-dist {}'.format(config.transport.trento.DMIN))
     trentoCmd.append('--ncoll')
 
 

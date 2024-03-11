@@ -41,6 +41,11 @@ class transport:
         PROJ2 = str(cfg['trento']['PROJ2'])
         NUCLEON_WIDTH = float(cfg['trento']['NUCLEON_WIDTH'])
         CROSS_SECTION = float(cfg['trento']['CROSS_SECTION'])
+        P = float(cfg['trento']['P'])
+        K = float(cfg['trento']['K'])
+        V = float(cfg['trento']['V'])
+        NC = int(cfg['trento']['NC'])
+        DMIN = float(cfg['trento']['DMIN'])
 
         try:
             BMIN = float(cfg['trento']['BMIN'])

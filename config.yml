@@ -14,6 +14,12 @@ transport:  # Parameters for the jets to be run
     T_END: 0.110  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
     T_HRG: 0.155  # Temperature in GeV at which to consider the medium hadronized
     T_UNHYDRO: 0.150  # Temperature in GeV at which to consider the medium unhydrodynamic
+    ETAS_MIN: 0.11  # eta/s at T0
+    ETAS_SLOPE: 1.6  # slope of (eta/s)(T) above T0 [GeV^-1]
+    ETAS_CURV: -0.29  # curvature of (eta/s)(T) above T0 (see osu-hydro readme)
+    ETAS_MAX: 0.032  # maximum value of zeta/s (at T0)
+    ETAS_WIDTH: 0.024  # width of (zeta/s)(T) [GeV]
+    ETAS_T0: 0.175  # peak location of Cauchy (zeta/s)(T) [GeV]
 trento:
     NORM: 20.2  # Overall normalization factor for reduced thickness function (and thereby multiplicity)
     PROJ1: 'Pb'  # Collisions species 1

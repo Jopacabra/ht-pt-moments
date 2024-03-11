@@ -291,14 +291,27 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 
             X.tofile(fmt.format(*a) + '.dat')
 
-    dt = time_step
 
     if maxTime is not None:
         print('Limiting time...')
-        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} maxt={}'.format(tau_fs, dt, dxy, ls, maxTime)]\
-                   + hydro_args
+        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
+                                                                            tau_fs, dt, dxy, ls,
+                                                                            config.transport.hydro.ETAS_MIN,
+                                                                            config.transport.hydro.ETAS_SLOPE,
+                                                                            config.transport.hydro.ETAS_CURV,
+                                                                            config.transport.hydro.ETAS_MAX)
+                                + 'visbulkwidth={} visbulkt0={} time_stepmaxt={}'.format(config.transport.hydro.ETAS_WIDTH,
+                                                                        config.transport.hydro.ETAS_T0,
+                                                                        maxTime)] + hydro_args
     else:
-        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={}'.format(tau_fs, dt, dxy, ls)] + hydro_args
+        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
+                                                                            tau_fs, dt, dxy, ls,
+                                                                            config.transport.hydro.ETAS_MIN,
+                                                                            config.transport.hydro.ETAS_SLOPE,
+                                                                            config.transport.hydro.ETAS_CURV,
+                                                                            config.transport.hydro.ETAS_MAX)
+                                + 'visbulkwidth={} visbulkt0={}'.format(config.transport.hydro.ETAS_WIDTH,
+                                                                        config.transport.hydro.ETAS_T0)] + hydro_args
 
     hydroProc, hydroOutput = utilities.run_cmd(*hydroCmd, quiet=False)
 

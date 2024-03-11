@@ -61,6 +61,12 @@ class transport:
         T_END = float(cfg['transport']['T_END'])
         T_HRG = float(cfg['transport']['T_HRG'])
         T_UNHYDRO = float(cfg['transport']['T_UNHYDRO'])
+        ETAS_MIN = float(cfg['transport']['ETAS_MIN'])
+        ETAS_SLOPE = float(cfg['transport']['ETAS_SLOPE'])
+        ETAS_CURV = float(cfg['transport']['ETAS_CURV'])
+        ETAS_MAX = float(cfg['transport']['ETAS_MAX'])
+        ETAS_WIDTH = float(cfg['transport']['ETAS_WIDTH'])
+        ETAS_T0 = float(cfg['transport']['ETAS_T0'])
 
     class afterburner:
         USE = False

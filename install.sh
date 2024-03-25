@@ -93,3 +93,22 @@ make install
 cd ..
 cd ..
 
+# Build UrQMD
+cd urqmd-afterburner
+# Remove the build, if present
+if [[ -d build ]]; then
+      rm -rf build
+fi
+# Create and enter build directory
+mkdir build && cd build
+# Generate cmake business
+# Note that we install as root but run in the read-only file system without root.
+# We install into /usr so we can access the binaries
+# We select to set native architecture optimization off.
+# This causes problems with many osg job sites.
+cmake3 -DCMAKE_INSTALL_PREFIX=/usr -DNATIVE=OFF ..
+# Install the module
+make install
+cd ..
+cd ..
+

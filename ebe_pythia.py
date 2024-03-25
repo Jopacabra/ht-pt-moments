@@ -72,6 +72,14 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, hadrons_df=None,
         except FileNotFoundError:
             logging.error('Failed to copy surface file -- file not found')
 
+    try:
+        utilities.run_cmd(*['mv', '*.npy',
+                            results_path + '/*.npy'],
+                          quiet=False)
+    except Exception as error:
+        logging.info("Failed to copy UrQMD file: {}".format(type(error).__name__))  # An error occurred: NameError
+        traceback.print_exc()
+
     # Save the dataframe into the identified results folder
     logging.info('Saving progress...')
     logging.info('Partons...')

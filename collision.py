@@ -530,7 +530,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     #results['nsamples'] = nsamples
 
     # hadronic afterburner
-    utilities.run_cmd(*['afterburner', 'particles_in.dat', 'particles_out.dat'], quiet=True)
+    utilities.run_cmd(*['afterburner', 'particles_in.dat', 'particles_out.dat'], quiet=False)
 
     # read final particle data
     with open('particles_out.dat', 'rb') as f:

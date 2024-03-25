@@ -13,3 +13,6 @@
 [submodule "hic"]
 	path = hic
 	url = https://github.com/Duke-QCD/hic
+[submodule "urqmd-afterburner"]
+	path = urqmd-afterburner
+	url = https://github.com/jbernhard/urqmd-afterburner/

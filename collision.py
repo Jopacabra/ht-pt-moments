@@ -356,6 +356,53 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         grid_step, grid_n, grid_max
     )
 
+    ############################
+    # Dump DukeQCD definitions #
+    ############################
+    # species (name, ID) for identified particle observables
+    species = [
+        ('pion', 211),
+        ('kaon', 321),
+        ('proton', 2212),
+        ('Lambda', 3122),
+        ('Sigma0', 3212),
+        ('Xi', 3312),
+        ('Omega', 3334),
+    ]
+
+    # fully specify numeric data types, including endianness and size, to
+    # ensure consistency across all machines
+    float_t = '<f8'
+    int_t = '<i8'
+    complex_t = '<c16'
+
+    # results "array" (one element)
+    # to be overwritten for event observables
+    results = np.empty((), dtype=[
+        ('initial_entropy', float_t),
+        ('nsamples', int_t),
+        ('dNch_deta', float_t),
+        ('dET_deta', float_t),
+        ('dN_dy', [(s, float_t) for (s, _) in species]),
+        ('mean_pT', [(s, float_t) for (s, _) in species]),
+        ('pT_fluct', [('N', int_t), ('sum_pT', float_t), ('sum_pTsq', float_t)]),
+        ('flow', [('N', int_t), ('Qn', complex_t, 8)]),
+    ])
+    results.fill(0)
+
+    # UrQMD raw particle format
+    parts_dtype = [
+        ('sample', int),
+        ('ID', int),
+        ('charge', int),
+        ('pT', float),
+        ('ET', float),
+        ('mT', float),
+        ('phi', float),
+        ('y', float),
+        ('eta', float)
+    ]
+
     ##########
     # Trento #
     ##########
@@ -394,6 +441,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # Freestream initial conditions
     logging.info('Freestreaming Trento conditions...')
     fs = freestream.FreeStreamer(initial=ic, grid_max=grid_max, time=tau_fs)
+
+    # Compute initial entropy
+    results['initial_entropy'] = ic.sum() * grid_step ** 2
 
     # Important to close the hdf5 file.
     del ic
@@ -440,6 +490,112 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     hydro_dict = run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
               hydro_args=hydro_args, time_step=time_step, maxTime=maxTime)
 
+    ##################
+    # Frzout & UrQMD #
+    ##################
+
+    # Compute flow coefficients v_n:
+    # Create event surface object from hydro surface file dictionary
+    event_surface = frzout.Surface(**hydro_dict, ymax=2)
+    logging.info('%d freeze-out cells', len(event_surface))
+
+    minsamples, maxsamples = 10, 1000  # reasonable range for nsamples
+    minparts = 10 ** 5  # min number of particles to sample
+    nparts = 0  # for tracking total number of sampled particles
+
+    logging.info('sampling surface with frzout')
+
+    # sample particles and write to file
+    with open('particles_in.dat', 'w') as f:
+        for nsamples in range(1, maxsamples + 1):
+            parts = frzout.sample(event_surface, hrg)
+            if parts.size == 0:
+                continue
+            nparts += parts.size
+            print('#', parts.size, file=f)
+            for p in parts:
+                print(p['ID'], *p['x'], *p['p'], file=f)
+            if nparts >= minparts and nsamples >= minsamples:
+                break
+
+    logging.info('produced %d particles in %d samples', nparts, nsamples)
+
+    if nparts == 0:
+        raise StopEvent('no particles produced')
+
+    # # try to free some memory
+    # # (up to ~a few hundred MiB for ultracentral collisions)
+    # del surface
+
+    #results['nsamples'] = nsamples
+
+    # hadronic afterburner
+    utilities.run_cmd(*['afterburner', 'particles_in.dat', 'particles_out.dat'], quiet=True)
+
+    # read final particle data
+    with open('particles_out.dat', 'rb') as f:
+
+        # partition UrQMD file into oversamples
+        groups = groupby(f, key=lambda l: l.startswith(b'#'))
+        samples = filter(lambda g: not g[0], groups)
+
+        # iterate over particles and oversamples
+        parts_iter = (
+            tuple((nsample, *l.split()))
+            for nsample, (header, sample) in enumerate(samples, start=1)
+            for l in sample
+        )
+
+        parts = np.fromiter(parts_iter, dtype=parts_dtype)
+
+    # # save raw particle data (optional)
+    # # save event to hdf5 data set
+    # logging.info('saving raw particle data')
+    #
+    # particles_file.create_dataset(
+    #     'event_{}'.format(event_number),
+    #     data=parts, compression='lzf'
+    # )
+
+    logging.info('computing observables')
+    charged = (parts['charge'] != 0)
+    abs_eta = np.fabs(parts['eta'])
+
+    results['dNch_deta'] = \
+        np.count_nonzero(charged & (abs_eta < .5)) / nsamples
+
+    ET_eta = .6
+    results['dET_deta'] = \
+        parts['ET'][abs_eta < ET_eta].sum() / (2 * ET_eta) / nsamples
+
+    abs_ID = np.abs(parts['ID'])
+    midrapidity = (np.fabs(parts['y']) < .5)
+
+    pT = parts['pT']
+    phi = parts['phi']
+
+    for name, i in species:
+        cut = (abs_ID == i) & midrapidity
+        N = np.count_nonzero(cut)
+        results['dN_dy'][name] = N / nsamples
+        results['mean_pT'][name] = (0. if N == 0 else pT[cut].mean())
+
+    pT_alice = pT[charged & (abs_eta < .8) & (.15 < pT) & (pT < 2.)]
+    results['pT_fluct']['N'] = pT_alice.size
+    results['pT_fluct']['sum_pT'] = pT_alice.sum()
+    results['pT_fluct']['sum_pTsq'] = np.inner(pT_alice, pT_alice)
+
+    phi_alice = phi[charged & (abs_eta < .8) & (.2 < pT) & (pT < 5.)]
+    results['flow']['N'] = phi_alice.size
+    results['flow']['Qn'] = [
+        np.exp(1j * n * phi_alice).sum()
+        for n in range(1, results.dtype['flow']['Qn'].shape[0] + 1)
+    ]
+
+    # Save DukeQCD results file
+    np.save('{}_observables.npy'.format(seed), results)
+    ##################
+
     logging.info('Event generation complete')
     logging.info('Analyzing event geometry...')
 
@@ -451,11 +607,6 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     event_dataframe['e3'] = np.sqrt(event_dataframe['e3_re'] ** 2 + event_dataframe['e3_im'] ** 2)
     event_dataframe['e4'] = np.sqrt(event_dataframe['e4_re'] ** 2 + event_dataframe['e4_im'] ** 2)
     event_dataframe['e5'] = np.sqrt(event_dataframe['e5_re'] ** 2 + event_dataframe['e5_im'] ** 2)
-
-    # Compute flow coefficients v_n:
-    # Create event surface object from hydro surface file dictionary
-    event_surface = frzout.Surface(**hydro_dict, ymax=2)
-    logging.info('%d freeze-out cells', len(event_surface))
 
     # Perform 1000 samples of frzout surface and take mean of computed v_2 and v_3
     logging.info('Sampling freezeout surface to compute v_n')

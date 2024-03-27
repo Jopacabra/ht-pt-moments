@@ -227,11 +227,11 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outp
 # Define function to generate initial conditions object as for freestream input from trento file
 def toFsIc(initial_file='initial.hdf', quiet=False):
     if not quiet:
-        print('Packaging initial conditions array for: {}'.format(initial_file))
+        logging.info('Packaging initial conditions array for: {}'.format(initial_file))
 
     with h5py.File(initial_file, 'r') as f:
         for dset in f.values():
-            print(dset)
+            logging.info(dset)
             ic = np.array(dset)
     return ic
 
@@ -295,7 +295,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
     dt = time_step
 
     if maxTime is not None:
-        print('Limiting time...')
+        logging.info('Limiting time...')
         hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
                                                                             tau_fs, dt, dxy, ls,
                                                                             config.transport.hydro.ETAS_MIN,
@@ -318,7 +318,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
     hydroProc, hydroOutput = utilities.run_cmd(*hydroCmd, quiet=False)
 
     if not quiet:
-        print('format: ITime, Time, Max Energy Density, Max Temp, iRegulateCounter, iRegulateCounterBulkPi')
+        logging.info('format: ITime, Time, Max Energy Density, Max Temp, iRegulateCounter, iRegulateCounterBulkPi')
 
     surface = np.fromfile('surface.dat', dtype='f8').reshape(-1, 16)
 
@@ -420,8 +420,8 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         trento_ic_path = 'initial.hdf'
 
     # Debug pwd
-    print('Running trento in...')
-    print(os.getcwd())
+    logging.info('Running trento in...')
+    logging.info(os.getcwd())
 
     # Generate trento event
     event_dataframe, trento_output_file, trento_subprocess = runTrento(outputFile=True, randomSeed=seed,
@@ -429,8 +429,8 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
                                                                     filename=trento_ic_path)
 
     # Debug pwd
-    print('Running freestream in...')
-    print(os.getcwd())
+    logging.info('Running freestream in...')
+    logging.info(os.getcwd())
 
     # Format trento data into initial conditions for freestream
     logging.info('Packaging trento initial conditions into array...')
@@ -513,9 +513,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
             if parts.size == 0:
                 continue
             nparts += parts.size
-            print('#', parts.size, file=f)
+            logging.info('#', parts.size, file=f)
             for p in parts:
-                print(p['ID'], *p['x'], *p['p'], file=f)
+                logging.info(p['ID'], *p['x'], *p['p'], file=f)
             if nparts >= minparts and nsamples >= minsamples:
                 break
 
@@ -596,7 +596,16 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # Save DukeQCD results file
     logging.info('Saving event UrQMD observables...')
     utilities.run_cmd(*['pwd'], quiet=False)
+    logging.info(os.getcwd())
+    logging.info(results)
     np.save('{}_observables.npy'.format(seed), results)
+    try:
+        logging.info('Checking UrQMD observables file...')
+        check_results = np.load('{}_observables.npy'.format(seed))
+        logging.info(check_results)
+    except Exception as error:
+        logging.info("UrQMD observables file check failed: {}".format(type(error).__name__))  # An error occurred: NameError
+        traceback.print_exc()
     ##################
 
     logging.info('Event generation complete')
@@ -831,10 +840,10 @@ def temp_6th_sample(event, maxAttempts=5, time='i', batch=1000):
                 # print("Random height: " + str(zPoints[i]))
                 # print("Target <= height: " + str(float(targetTemp)))
                 return point[0:2]
-        print("Jet Production Sampling Attempt: " + str(attempt) + " failed.")
+        logging.info("Jet Production Sampling Attempt: " + str(attempt) + " failed.")
         attempt += 1
-    print("Catastrophic error in jet production point sampling!")
-    print("AHHHHHHHHHHHHHHH!!!!!!!!!!!")
+    logging.info("Catastrophic error in jet production point sampling!")
+    logging.info("AHHHHHHHHHHHHHHH!!!!!!!!!!!")
     return np.array([0,0,0])
 
 
@@ -1308,7 +1317,7 @@ def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, alpha=0, name
     x_vel_values = np.multiply(temp_values, x_vel_func(t_coords, x_coords, y_coords))
     y_vel_values = np.multiply(temp_values, y_vel_func(t_coords, x_coords, y_coords))
 
-    print(np.ndim(temp_values))
+    logging.info(np.ndim(temp_values))
     # Compute gradients
     temp_grad_x_values = np.gradient(temp_values, grid_step, axis=1)
     temp_grad_y_values = np.gradient(temp_values, grid_step, axis=2)

@@ -15,6 +15,7 @@ import config
 from hic import flow
 from utilities import cube_random
 import plasma
+from itertools import chain, groupby, repeat
 
 try:
     import freestream
@@ -527,7 +528,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # # (up to ~a few hundred MiB for ultracentral collisions)
     # del surface
 
-    #results['nsamples'] = nsamples
+    results['nsamples'] = nsamples
 
     # hadronic afterburner
     utilities.run_cmd(*['afterburner', 'particles_in.dat', 'particles_out.dat'], quiet=False)

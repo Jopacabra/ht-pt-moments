@@ -73,6 +73,8 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, hadrons_df=None,
             logging.error('Failed to copy surface file -- file not found')
 
     try:
+        logging.info('Moving event UrQMD observables...')
+        utilities.run_cmd(*['pwd'], quiet=False)
         utilities.run_cmd(*['mv', '*.npy',
                             results_path + '/*.npy'],
                           quiet=False)

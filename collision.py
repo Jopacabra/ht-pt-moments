@@ -483,7 +483,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # Dump the coarse run event data
     logging.info('Dumping coarse run hydro data')
     utilities.run_cmd(*['rm', 'viscous_14_moments_evo.dat'],
-                      quiet=True)
+                      quiet=False)
 
 
     # Fine run
@@ -594,6 +594,8 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     ]
 
     # Save DukeQCD results file
+    logging.info('Saving event UrQMD observables...')
+    utilities.run_cmd(*['pwd'], quiet=False)
     np.save('{}_observables.npy'.format(seed), results)
     ##################
 

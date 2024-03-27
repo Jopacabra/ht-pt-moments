@@ -513,9 +513,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
             if parts.size == 0:
                 continue
             nparts += parts.size
-            logging.info('#', parts.size, file=f)
+            print('#', parts.size, file=f)
             for p in parts:
-                logging.info(p['ID'], *p['x'], *p['p'], file=f)
+                print(p['ID'], *p['x'], *p['p'], file=f)
             if nparts >= minparts and nsamples >= minsamples:
                 break
 

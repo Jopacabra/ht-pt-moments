@@ -593,19 +593,19 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         for n in range(1, results.dtype['flow']['Qn'].shape[0] + 1)
     ]
 
-    # Save DukeQCD results file
-    logging.info('Saving event UrQMD observables...')
-    utilities.run_cmd(*['pwd'], quiet=False)
-    logging.info(os.getcwd())
-    logging.info(results)
-    np.save('{}_observables.npy'.format(seed), results)
-    try:
-        logging.info('Checking UrQMD observables file...')
-        check_results = np.load('{}_observables.npy'.format(seed))
-        logging.info(check_results)
-    except Exception as error:
-        logging.info("UrQMD observables file check failed: {}".format(type(error).__name__))  # An error occurred: NameError
-        traceback.print_exc()
+    # # Save DukeQCD results file
+    # logging.info('Saving event UrQMD observables...')
+    # utilities.run_cmd(*['pwd'], quiet=False)
+    # logging.info(os.getcwd())
+    # logging.info(results)
+    # np.save('{}_observables.npy'.format(seed), results)
+    # try:
+    #     logging.info('Checking UrQMD observables file...')
+    #     check_results = np.load('{}_observables.npy'.format(seed))
+    #     logging.info(check_results)
+    # except Exception as error:
+    #     logging.info("UrQMD observables file check failed: {}".format(type(error).__name__))  # An error occurred: NameError
+    #     traceback.print_exc()
     ##################
 
     logging.info('Event generation complete')
@@ -685,9 +685,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
 
 
     if get_rmax is True:
-        return event_dataframe, rmax
+        return event_dataframe, results, rmax
     else:
-        return event_dataframe
+        return event_dataframe, results
 
 
 # Function that defines a normalized 2D PDF array for a given interpolated temperature

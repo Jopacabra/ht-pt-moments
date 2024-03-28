@@ -53,7 +53,7 @@ def delta_R(phi1, phi2, y1, y2):
     return np.sqrt(dphi * dphi + drap * drap)
 
 # Exits temporary directory, saves dataframe to pickle, and dumps all temporary data.
-def safe_exit(resultsDataFrame, temp_dir, filename, identifier, hadrons_df=None, keep_event=False):
+def safe_exit(resultsDataFrame, event_obs, temp_dir, filename, identifier, hadrons_df=None, keep_event=False):
     # Save hydro event file
     if keep_event:
         logging.info('Saving event hydro data...')
@@ -73,12 +73,8 @@ def safe_exit(resultsDataFrame, temp_dir, filename, identifier, hadrons_df=None,
             logging.error('Failed to copy surface file -- file not found')
 
     try:
-        logging.info('Moving event UrQMD observables...')
-        utilities.run_cmd(*['pwd'], quiet=False)
-        print(os.getcwd())
-        utilities.run_cmd(*['mv', '*.npy',
-                            results_path + '/*.npy'],
-                          quiet=False)
+        logging.info('Saving event UrQMD observables...')
+        np.save(results_path + '/{}_observables.npy'.format(filename), event_obs)
     except Exception as error:
         logging.info("Failed to copy UrQMD file: {}".format(type(error).__name__))  # An error occurred: NameError
         traceback.print_exc()
@@ -132,7 +128,7 @@ def run_event(eventNo):
 
     # Run event generation using config setttings
     # Note that we need write permissions in the working directory
-    event_dataframe = collision.generate_event(working_dir=None)
+    event_dataframe, event_observables = collision.generate_event(working_dir=None)
     rmax = event_dataframe.iloc[0]['rmax']
 
     # Record seed selected
@@ -414,7 +410,7 @@ def run_event(eventNo):
         # Declare jet complete
         logging.info('- Jet Process ' + str(process_num) + ' Complete -')
 
-    return event_partons, event_hadrons
+    return event_partons, event_hadrons, event_observables
 
 
 ################
@@ -463,13 +459,14 @@ try:
 
         # Generate a new HIC event and sample config.NUM_SAMPLES jets in it
         # Append returned dataframe to current dataframe
-        event_results, event_hadrons = run_event(eventNo=int(identifierString))
+        event_results, event_hadrons, event_observables = run_event(eventNo=int(identifierString))
         results = pd.concat([results, event_results], axis=0)
         if lund_string:
             hadrons = pd.concat([hadrons, event_hadrons], axis=0)
 
         # Exits directory, saves all current data, and dumps temporary files.
-        safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
+        safe_exit(resultsDataFrame=results, hadrons_df=hadrons, event_obs=event_observables, temp_dir=temp_dir,
+                  filename=resultsFilename, identifier=identifierString,
                   keep_event=config.mode.KEEP_EVENT)
 
         if len(results) > 10000:

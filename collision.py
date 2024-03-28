@@ -593,6 +593,23 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         for n in range(1, results.dtype['flow']['Qn'].shape[0] + 1)
     ]
 
+    # Add soft observables to pandas dataframe for ease of access
+    for i in np.arange(0, len(results['flow']['N'])):  # Add in all flow vectors
+        event_dataframe['urqmd_q_{}'.format(i)] = results['flow']['N'][i]
+    event_dataframe['urqmd_flow_N'] = results['flow']['N']  # Total number of particles for flow sum
+    event_dataframe['urqmd_dNch_deta'] = results['dNch_deta']  # Number of charged particles diff in pseudorapidity
+    event_dataframe['initial_entropy'] = results['initial_entropy']  # Initial entropy from Trento
+    event_dataframe['urqmd_nsamples'] = results['nsamples']  # Number of Cooper-Frye samples
+    for name, i in species:
+        event_dataframe['dN_dy_{}'.format(name)] = results['dN_dy'][name]
+        event_dataframe['mean_pT_{}'.format(name)] = results['mean_pT'][name]
+
+    event_dataframe['urqmd_pT_fluct_N'] = results['pT_fluct']['N']
+    event_dataframe['urqmd_pT_fluct_sum_pT'] = results['pT_fluct']['sum_pT']
+    event_dataframe['urqmd_pT_fluct_sum_pTsq'] = results['pT_fluct']['sum_pTsq']
+    event_dataframe['urqmd_dET_deta'] = results['dET_deta']
+
+
     # # Save DukeQCD results file
     # logging.info('Saving event UrQMD observables...')
     # utilities.run_cmd(*['pwd'], quiet=False)

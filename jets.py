@@ -82,7 +82,7 @@ class jet:
 
     # Method to obtain the current polar coordinates of the jet
     def polar_mom_coords(self):
-        phi = np.mod(np.arctan2(self.p_y, self.p_x), 2 * np.pi)
+        phi = np.mod(np.arctan2(float(self.p_y), float(self.p_x)), 2 * np.pi)
         rho = np.sqrt(self.p_x ** 2 + self.p_y ** 2)
         return np.array([rho, phi])
 

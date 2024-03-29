@@ -594,8 +594,8 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     ]
 
     # Add soft observables to pandas dataframe for ease of access
-    for i in np.arange(0, len(results['flow']['N'])):  # Add in all flow vectors
-        event_dataframe['urqmd_q_{}'.format(i)] = results['flow']['N'][i]
+    for i in np.arange(0, len(results['flow']['Qn'])):  # Add in all flow vectors
+        event_dataframe['urqmd_q_{}'.format(i)] = results['flow']['Qn'][i]
     event_dataframe['urqmd_flow_N'] = results['flow']['N']  # Total number of particles for flow sum
     event_dataframe['urqmd_dNch_deta'] = results['dNch_deta']  # Number of charged particles diff in pseudorapidity
     event_dataframe['initial_entropy'] = results['initial_entropy']  # Initial entropy from Trento

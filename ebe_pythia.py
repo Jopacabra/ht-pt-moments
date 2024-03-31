@@ -83,10 +83,10 @@ def safe_exit(resultsDataFrame, event_obs, temp_dir, filename, identifier, hadro
     logging.info('Saving progress...')
     logging.info('Partons...')
     logging.debug(resultsDataFrame)
-    logging.info('Converting datatypes to reasonable formats...')
-    resultsDataFrame = resultsDataFrame.convert_dtypes()
-    logging.info('Downcasting numeric values to minimum memory size...')
-    resultsDataFrame = downcast_numerics(resultsDataFrame)
+    # logging.info('Converting datatypes to reasonable formats...')
+    # resultsDataFrame = resultsDataFrame.convert_dtypes()
+    # logging.info('Downcasting numeric values to minimum memory size...')
+    # resultsDataFrame = downcast_numerics(resultsDataFrame)
 
     if lund_string:
         logging.info('LS Hadrons...')

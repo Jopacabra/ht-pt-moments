@@ -14,12 +14,12 @@ class jet:
         logging.info('Creating new jet...')
 
         # Initialize basic parameters
-        self.phi_0 = phi_0
-        self.p_T0 = p_T0  # in GeV
-        self.x_0 = x_0
-        self.y_0 = y_0
-        self.part = part
-        self.weight = weight
+        self.phi_0 = float(phi_0)
+        self.p_T0 = float(p_T0)  # in GeV
+        self.x_0 = float(x_0)
+        self.y_0 = float(y_0)
+        self.part = str(part)
+        self.weight = float(weight)
 
         # If no particle type supplied, particle is a gluon (most common case).
         if self.part is None:

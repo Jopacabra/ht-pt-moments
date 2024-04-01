@@ -301,19 +301,19 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
                                                                             config.transport.hydro.ETAS_MIN,
                                                                             config.transport.hydro.ETAS_SLOPE,
                                                                             config.transport.hydro.ETAS_CURV,
-                                                                            config.transport.hydro.ETAS_MAX)
-                                + 'visbulkwidth={} visbulkt0={} time_stepmaxt={}'.format(config.transport.hydro.ETAS_WIDTH,
-                                                                        config.transport.hydro.ETAS_T0,
-                                                                        maxTime)] + hydro_args
+                                                                            config.transport.hydro.ZETAS_MAX)
+                                + 'visbulkwidth={} visbulkt0={} time_stepmaxt={}'.format(config.transport.hydro.ZETAS_WIDTH,
+                                                                                         config.transport.hydro.ZETAS_T0,
+                                                                                         maxTime)] + hydro_args
     else:
         hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
                                                                             tau_fs, dt, dxy, ls,
                                                                             config.transport.hydro.ETAS_MIN,
                                                                             config.transport.hydro.ETAS_SLOPE,
                                                                             config.transport.hydro.ETAS_CURV,
-                                                                            config.transport.hydro.ETAS_MAX)
-                                + 'visbulkwidth={} visbulkt0={}'.format(config.transport.hydro.ETAS_WIDTH,
-                                                                        config.transport.hydro.ETAS_T0)] + hydro_args
+                                                                            config.transport.hydro.ZETAS_MAX)
+                    + 'visbulkwidth={} visbulkt0={}'.format(config.transport.hydro.ZETAS_WIDTH,
+                                                            config.transport.hydro.ZETAS_T0)] + hydro_args
 
     hydroProc, hydroOutput = utilities.run_cmd(*hydroCmd, quiet=False)
 
@@ -344,7 +344,7 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
 # Function to generate a new HIC event and dump the files in the current working directory.
 def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=config.transport.GRID_STEP,
                    time_step=config.transport.TIME_STEP, tau_fs=config.transport.hydro.TAU_FS,
-                   t_end=config.transport.hydro.T_END, seed=None, get_rmax=False, working_dir=None):
+                   t_end=config.transport.hydro.T_SWITCH, seed=None, get_rmax=False, working_dir=None):
 
     # the "target" grid max: the grid shall be at least as large as the target
     # By defualt grid_max_target = config.transport.GRID_MAX_TARGET

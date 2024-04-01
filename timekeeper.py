@@ -138,7 +138,7 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=
             phase = 'qgp'
         elif temp < temp_hrg and temp > temp_unh:
             phase = 'hrg'
-        elif temp < temp_unh and temp > config.transport.hydro.T_END:
+        elif temp < temp_unh and temp > config.transport.hydro.T_SWITCH:
             phase = 'unh'
         else:
             phase = 'vac'

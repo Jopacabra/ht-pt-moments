@@ -20,7 +20,7 @@ class osu_hydro_file:
         print('Reading osu-hydro file ... event: ' + str(self.name))
 
         # Store grid data
-        self.grid_data = pd.read_table(file_path, header=None, delim_whitespace=True, dtype=np.float64,
+        self.grid_data = pd.read_table(file_path, header=None, sep='\s+', dtype=np.float64,
                                        names=['time', 'xpos', 'ypos', 'temp', 'xvel', 'yvel'])
 
         # Initialize all the ordinary grid parameters

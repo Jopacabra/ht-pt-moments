@@ -237,7 +237,7 @@ def toFsIc(initial_file='initial.hdf', quiet=False):
 
 # Function adapted from DukeQCD to run osu-hydro from the freestreamed initial conditions yielded by freestream
 # Result files SHOULD be placed in the active folder.
-def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_args=None, quiet=False,
+def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, eswitch=0.110, coarse=False, hydro_args=None, quiet=False,
               time_step=0.1, maxTime=None):
     """
     The handling of osu-hydro implemented here is adapted directly from DukeQCD's hic-eventgen package.
@@ -302,9 +302,9 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
                                                                             config.transport.hydro.ETAS_SLOPE,
                                                                             config.transport.hydro.ETAS_CURV,
                                                                             config.transport.hydro.ZETAS_MAX)
-                    + 'visbulkwidth={} visbulkt0={} time_stepmaxt={}'.format(config.transport.hydro.ZETAS_WIDTH,
+                    + 'visbulkwidth={} visbulkt0={} time_stepmaxt={} edec={}'.format(config.transport.hydro.ZETAS_WIDTH,
                                                                              config.transport.hydro.ZETAS_T0,
-                                                                             maxTime)] + hydro_args
+                                                                             maxTime, eswitch)] + hydro_args
     else:
         hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
                                                                             tau_fs, dt, dxy, ls,
@@ -312,8 +312,8 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
                                                                             config.transport.hydro.ETAS_SLOPE,
                                                                             config.transport.hydro.ETAS_CURV,
                                                                             config.transport.hydro.ZETAS_MAX)
-                    + 'visbulkwidth={} visbulkt0={}'.format(config.transport.hydro.ZETAS_WIDTH,
-                                                            config.transport.hydro.ZETAS_T0)] + hydro_args
+                    + 'visbulkwidth={} visbulkt0={} edec={}'.format(config.transport.hydro.ZETAS_WIDTH,
+                                                            config.transport.hydro.ZETAS_T0, eswitch)] + hydro_args
 
     hydroProc, hydroOutput = utilities.run_cmd(*hydroCmd, quiet=False)
 
@@ -459,16 +459,18 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # create frzout HRG object (to be reused for all events) representing a hadron resonance gas at given temperature
     hrg_kwargs = dict(species='urqmd', res_width=True)
     hrg = frzout.HRG(t_end, **hrg_kwargs)
+    hrg_coarse = frzout.HRG(0.110, **hrg_kwargs)
 
     # append switching energy density to hydro arguments
     # We use frzout's hrg class to compute an energy density based on the desired freezeout temperature
     eswitch = hrg.energy_density()
-    hydro_args = ['edec={}'.format(eswitch)]
+    eswitch_coarse = hrg_coarse.energy_density()
+
 
     # Coarse run to determine maximum radius
     logging.info('Running coarse hydro...')
     coarseHydroDict = run_hydro(fs, event_size=27, coarse=3, grid_step=grid_step,
-                                tau_fs=tau_fs, hydro_args=hydro_args,
+                                tau_fs=tau_fs, eswitch=eswitch_coarse,
                                 time_step=time_step)
     rmax = math.sqrt((
                              coarseHydroDict['x'][:, 1:3] ** 2
@@ -489,7 +491,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # Fine run
     logging.info('Running fine hydro...')
     hydro_dict = run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
-              hydro_args=hydro_args, time_step=time_step)
+              eswitch=eswitch, time_step=time_step)
 
     ##################
     # Frzout & UrQMD #

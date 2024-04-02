@@ -86,7 +86,8 @@ class osu_hydro_file:
 
         # Reshape this nonsense into an array with first index time, then x, then y.
         # You can get the temperature at the grid indexes (ix,iy) at timestep 'it' as temp_array[it,ix,iy].
-        temp_data = np.transpose(np.reshape(temp_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
+        logging.debug('Transposing temperatures and multiplying by HbarC to convert fm^-1 to GeV')
+        temp_data = 0.1973269788 * np.transpose(np.reshape(temp_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
 
         return temp_data
 

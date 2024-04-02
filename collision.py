@@ -294,26 +294,30 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, eswitch=0.110, coarse=F
 
     dt = time_step
 
-    if maxTime is not None:
-        logging.info('Limiting time...')
-        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
-                                                                            tau_fs, dt, dxy, ls,
-                                                                            config.transport.hydro.ETAS_MIN,
-                                                                            config.transport.hydro.ETAS_SLOPE,
-                                                                            config.transport.hydro.ETAS_CURV,
-                                                                            config.transport.hydro.ZETAS_MAX)
-                    + 'visbulkwidth={} visbulkt0={} time_stepmaxt={} edec={}'.format(config.transport.hydro.ZETAS_WIDTH,
-                                                                             config.transport.hydro.ZETAS_T0,
-                                                                             maxTime, eswitch)] + hydro_args
+    if coarse:
+        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} edec={}'.format(tau_fs, dt, dxy, ls, eswitch),
+                    'etas_hrg=0 etas_min=0 etas_slope=0 zetas_max=0 zetas_width=0']
     else:
-        hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
-                                                                            tau_fs, dt, dxy, ls,
-                                                                            config.transport.hydro.ETAS_MIN,
-                                                                            config.transport.hydro.ETAS_SLOPE,
-                                                                            config.transport.hydro.ETAS_CURV,
-                                                                            config.transport.hydro.ZETAS_MAX)
-                    + 'visbulkwidth={} visbulkt0={} edec={}'.format(config.transport.hydro.ZETAS_WIDTH,
-                                                            config.transport.hydro.ZETAS_T0, eswitch)] + hydro_args
+        if maxTime is not None:
+            logging.info('Limiting time...')
+            hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
+                                                                                tau_fs, dt, dxy, ls,
+                                                                                config.transport.hydro.ETAS_MIN,
+                                                                                config.transport.hydro.ETAS_SLOPE,
+                                                                                config.transport.hydro.ETAS_CURV,
+                                                                                config.transport.hydro.ZETAS_MAX)
+                        + 'visbulkwidth={} visbulkt0={} time_stepmaxt={} edec={}'.format(config.transport.hydro.ZETAS_WIDTH,
+                                                                                 config.transport.hydro.ZETAS_T0,
+                                                                                 maxTime, eswitch)] + hydro_args
+        else:
+            hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
+                                                                                tau_fs, dt, dxy, ls,
+                                                                                config.transport.hydro.ETAS_MIN,
+                                                                                config.transport.hydro.ETAS_SLOPE,
+                                                                                config.transport.hydro.ETAS_CURV,
+                                                                                config.transport.hydro.ZETAS_MAX)
+                        + 'visbulkwidth={} visbulkt0={} edec={}'.format(config.transport.hydro.ZETAS_WIDTH,
+                                                                config.transport.hydro.ZETAS_T0, eswitch)] + hydro_args
 
     hydroProc, hydroOutput = utilities.run_cmd(*hydroCmd, quiet=False)
 

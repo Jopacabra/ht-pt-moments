@@ -302,9 +302,9 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, coarse=False, hydro_arg
                                                                             config.transport.hydro.ETAS_SLOPE,
                                                                             config.transport.hydro.ETAS_CURV,
                                                                             config.transport.hydro.ZETAS_MAX)
-                                + 'visbulkwidth={} visbulkt0={} time_stepmaxt={}'.format(config.transport.hydro.ZETAS_WIDTH,
-                                                                                         config.transport.hydro.ZETAS_T0,
-                                                                                         maxTime)] + hydro_args
+                    + 'visbulkwidth={} visbulkt0={} time_stepmaxt={}'.format(config.transport.hydro.ZETAS_WIDTH,
+                                                                             config.transport.hydro.ZETAS_T0,
+                                                                             maxTime)] + hydro_args
     else:
         hydroCmd = ['osu-hydro', 't0={} dt={} dxy={} nls={} vismin={} visslope={} viscrv={} visbulkmax={} '.format(
                                                                             tau_fs, dt, dxy, ls,
@@ -489,7 +489,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     # Fine run
     logging.info('Running fine hydro...')
     hydro_dict = run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
-              hydro_args=hydro_args, time_step=time_step, maxTime=maxTime)
+              hydro_args=hydro_args, time_step=time_step)
 
     ##################
     # Frzout & UrQMD #

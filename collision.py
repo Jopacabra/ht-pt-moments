@@ -500,9 +500,9 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     hydro_dict = run_hydro(fs, event_size=rmax, grid_step=grid_step, tau_fs=tau_fs,
               eswitch=eswitch, time_step=time_step)
 
-    ##################
-    # Frzout & UrQMD #
-    ##################
+    ##########
+    # Frzout #
+    ##########
 
     # Compute flow coefficients v_n:
     # Create event surface object from hydro surface file dictionary
@@ -529,18 +529,83 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
                 break
 
     logging.info('produced %d particles in %d samples', nparts, nsamples)
+    results['nsamples'] = nsamples
 
     if nparts == 0:
         raise StopEvent('no particles produced')
+
+    ###################################
+    # Pre-Hadronic Transport Analysis #
+    ###################################
+
+    logging.info('Analyzing event geometry...')
+
+    # Perform pre-urqmd flow measurements
+    particle_phi_array = np.array([])
+    for part in parts:
+        p = part['p']  # a single particle's position vector
+        px = float(p[1])
+        py = float(p[2])
+        phi = np.arctan2(py, px)  # angle in xy-plane
+        particle_phi_array = np.append(particle_phi_array, phi)
+
+    # Compute flow vectors
+    q_2 = flow.qn(particle_phi_array, 2)
+    q_3 = flow.qn(particle_phi_array, 3)
+    q_4 = flow.qn(particle_phi_array, 4)
+
+    # Compute cumulant
+    vnk = flow.Cumulant(len(particle_phi_array), q2=q_2, q3=q_3, q4=q_4)
+
+    # Compute flow coefficients v_2{2} and v_3{2}
+    v_2 = vnk.flow(2, 2, imaginary='negative')
+    v_3 = vnk.flow(3, 2, imaginary='negative')
+
+    logging.info('Flow coefficients computed using {} samples of frzout surface'.format(nsamples))
+    logging.info('q_2 = {}'.format(q_2))
+    logging.info('q_3 = {}'.format(q_3))
+    logging.info('v_2 = {}'.format(v_2))
+    logging.info('v_3 = {}'.format(v_3))
+
+    psi_2 = np.angle(q_2)
+    psi_3 = np.angle(q_3)
+
+    event_dataframe['frzout_particles'] = np.real(q_2)
+    event_dataframe['q_2_re'] = np.real(q_2)
+    event_dataframe['q_2_re'] = np.real(q_2)
+    event_dataframe['q_2_im'] = np.imag(q_2)
+    event_dataframe['psi_2'] = psi_2
+    event_dataframe['q_3_re'] = np.real(q_3)
+    event_dataframe['q_3_im'] = np.imag(q_3)
+    event_dataframe['psi_3'] = psi_3
+    event_dataframe['v_2'] = v_2
+    event_dataframe['v_3'] = v_3
+
+    # Add rmax to event_dataframe
+    event_dataframe['rmax'] = rmax
+
+    # Compute trento ic eccentricities
+    event_dataframe['e2'] = np.sqrt(event_dataframe['e2_re'] ** 2 + event_dataframe['e2_im'] ** 2)
+    event_dataframe['e3'] = np.sqrt(event_dataframe['e3_re'] ** 2 + event_dataframe['e3_im'] ** 2)
+    event_dataframe['e4'] = np.sqrt(event_dataframe['e4_re'] ** 2 + event_dataframe['e4_im'] ** 2)
+    event_dataframe['e5'] = np.sqrt(event_dataframe['e5_re'] ** 2 + event_dataframe['e5_im'] ** 2)
+
+    logging.info('Event geometry analysis complete')
 
     # # try to free some memory
     # # (up to ~a few hundred MiB for ultracentral collisions)
     # del surface
 
-    results['nsamples'] = nsamples
+    #########
+    # UrQMD #
+    #########
 
     # hadronic afterburner
     utilities.run_cmd(*['afterburner', 'particles_in.dat', 'particles_out.dat'], quiet=False)
+
+    ####################################
+    # Post-Hadronic Transport Analysis #
+    ####################################
 
     # read final particle data
     with open('particles_out.dat', 'rb') as f:
@@ -635,80 +700,6 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     ##################
 
     logging.info('Event generation complete')
-    logging.info('Analyzing event geometry...')
-
-    # Add rmax to event_dataframe
-    event_dataframe['rmax'] = rmax
-
-    # Compute trento ic eccentricities
-    event_dataframe['e2'] = np.sqrt(event_dataframe['e2_re'] ** 2 + event_dataframe['e2_im'] ** 2)
-    event_dataframe['e3'] = np.sqrt(event_dataframe['e3_re'] ** 2 + event_dataframe['e3_im'] ** 2)
-    event_dataframe['e4'] = np.sqrt(event_dataframe['e4_re'] ** 2 + event_dataframe['e4_im'] ** 2)
-    event_dataframe['e5'] = np.sqrt(event_dataframe['e5_re'] ** 2 + event_dataframe['e5_im'] ** 2)
-
-    # Perform 1000 samples of frzout surface and take mean of computed v_2 and v_3
-    logging.info('Sampling freezeout surface to compute v_n')
-    q_2_array = np.array([])
-    q_3_array = np.array([])
-    v_2_array = np.array([])
-    v_3_array = np.array([])
-    num_frzout_samples = 10000
-    for sample in np.arange(0, num_frzout_samples):
-        
-        # Sample particle production with frzout
-        particles = frzout.sample(event_surface, hrg)
-        
-        # compute particle angle array
-        particle_phi_array = np.array([])
-        for part in particles:
-            p = part['p']  # a single particle's position vector
-            px = float(p[1])
-            py = float(p[2])
-            phi = np.arctan2(py, px)  # angle in xy-plane
-            particle_phi_array = np.append(particle_phi_array, phi)
-        
-        # Compute flow vectors
-        q_2 = flow.qn(particle_phi_array, 2)
-        q_3 = flow.qn(particle_phi_array, 3)
-        q_4 = flow.qn(particle_phi_array, 4)
-        
-        q_2_array = np.append(q_2_array, q_2)
-        q_3_array = np.append(q_3_array, q_3)        
-        
-        # Compute cumulant
-        vnk = flow.Cumulant(len(particle_phi_array), q2=q_2, q3=q_3, q4=q_4)
-        
-        # Compute flow coefficients v_2{2} and v_3{2}
-        v_2 = vnk.flow(2, 2, imaginary='negative')
-        v_3 = vnk.flow(3, 2, imaginary='negative')
-    
-        v_2_array = np.append(v_2_array, v_2)
-        v_3_array = np.append(v_3_array, v_3)
-    
-    q_2 = np.mean(q_2_array)
-    psi_2 = np.angle(q_2)
-    q_3 = np.mean(q_3_array)
-    psi_3 = np.angle(q_3)
-    v_2 = np.mean(v_2_array)
-    v_3 = np.mean(v_3_array)
-
-    logging.info('Flow coefficients computed using {} samples of frzout surface'.format(num_frzout_samples))
-    logging.info('q_2 = {}'.format(q_2))
-    logging.info('q_3 = {}'.format(q_3))
-    logging.info('v_2 = {}'.format(v_2))
-    logging.info('v_3 = {}'.format(v_3))
-
-    event_dataframe['q_2_re'] = np.real(q_2)
-    event_dataframe['q_2_im'] = np.imag(q_2)
-    event_dataframe['psi_2'] = psi_2
-    event_dataframe['q_3_re'] = np.real(q_3)
-    event_dataframe['q_3_im'] = np.imag(q_3)
-    event_dataframe['psi_3'] = psi_3
-    event_dataframe['v_2'] = v_2
-    event_dataframe['v_3'] = v_3
-
-    logging.info('Event geometry analysis complete')
-
 
     if get_rmax is True:
         return event_dataframe, results, rmax

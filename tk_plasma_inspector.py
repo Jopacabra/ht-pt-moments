@@ -118,9 +118,9 @@ class MainPage(tk.Frame):
 
         # Integration options
         self.tempHRG = tk.DoubleVar()
-        self.tempHRG.set(config.transport.hydro.T_HRG)
+        self.tempHRG.set(config.jet.T_HRG)
         self.tempUnhydro = tk.DoubleVar()
-        self.tempUnhydro.set(config.transport.hydro.T_UNHYDRO)
+        self.tempUnhydro.set(config.jet.T_UNHYDRO)
 
         # Plotting options
         self.plot_temp = tk.BooleanVar()

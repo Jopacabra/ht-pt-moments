@@ -82,7 +82,7 @@ def jet_drift_integrand(event, jet, time):
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
     FmGeV = 0.19732687
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return ((1 / FmGeV) * (1 / jet.p_T()) * config.constants.K_DRIFT
+    return ((1 / FmGeV) * (1 / jet.p_T()) * config.jet.K_F_DRIFT
            * ((event.i_int_factor(jet=jet, point=jet_point))
               * (event.u_perp(point=jet_point, phi=jet_p_phi) / (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
               * (event.mu(point=jet_point)**2)
@@ -112,7 +112,7 @@ def flowgrad_drift_integrand(event, jet, time, tau):
     g = config.constants.G
     pt = jet.p_T()
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return - ((1 / FmGeV) * (g**2 / pt) * config.constants.K_FG_DRIFT * (3 / 2)
+    return - ((1 / FmGeV) * (g**2 / pt) * config.jet.K_FG_DRIFT * (3 / 2)
         * (time - event.t0) * inv_lambda(event=event, jet=jet, point=jet_point)
         * ((grad_perp_temp) * (uperp/((1 - upar)**2)) * (3 * T * np.log(pt / (g * T)) - T )
         + grad_perp_u_tau * (2/((1 - upar)**3))  * uperp * (T**2) * np.log(pt / (g * T))
@@ -163,7 +163,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
     # Select energy loss model and return appropriate energy loss
     if model == 'BBMG':
         # Note that we apply FERMItoGeV twice... Once for the t factor, once for the (int dt).
-        return (config.constants.K_BBMG * (-1) * ((1 / FmGeV) ** 2) * time * event.temp(jet_point) ** 3
+        return (config.jet.K_BBMG * (-1) * ((1 / FmGeV) ** 2) * time * event.temp(jet_point) ** 3
                 * zeta(q=-1) * (1 / np.sqrt(1 - event.vel(point=jet_point)**2))
                 * (1))
     elif model == 'Vitev_hack':

@@ -1,31 +1,14 @@
 mode:  # Operation mode flags
-    RANDOM_EVENT: True  # Determines if we select a random event or iterate through each
-    RANDOM_ANGLE: True  # Determines if we select a random angle or do a complete sweep
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
-    WEIGHT_POINT: True  # Determines if we weight point selection by T^6 in event - Needs VARYPOINT.
     NUM_EVENTS: 1  # Number of events to generate -- 0 runs events until interrupt.
     NUM_SAMPLES: 100  # Number of hard jet production processes to run in each event
     KEEP_EVENT: False  # Keep plasma data for future analysis
-transport:  # Parameters for the jets to be run
-    TAU_FS: 0.37  # freestreaming time in fm. Default 0.5 fm.
-    GRID_STEP: 0.1  # Hydro / Trento grid step in fm. Default 0.15*NUCLEON_WIDTH from DukeQCD BA
-    TIME_STEP: 0.05  # Hydro / Trento time step in fm. Default 0.25*GRID_STEP fm from DukeQCD BA
-    GRID_MAX_TARGET: 15  # Maximum hydro grid width.
-    T_SWITCH: 0.151  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
-    T_HRG: 0.155  # Temperature in GeV at which to consider the medium hadronized
-    T_UNHYDRO: 0.150  # Temperature in GeV at which to consider the medium unhydrodynamic
-    ETAS_MIN: 0.11  # eta/s at T0
-    ETAS_SLOPE: 1.6  # slope of (eta/s)(T) above T0 [GeV^-1]
-    ETAS_CURV: -0.29  # curvature of (eta/s)(T) above T0 (see osu-hydro readme)
-    ZETAS_MAX: 0.032  # maximum value of zeta/s (at T0)
-    ZETAS_WIDTH: 0.024  # width of (zeta/s)(T) [GeV]
-    ZETAS_T0: 0.175  # peak location of Cauchy (zeta/s)(T) [GeV]
 trento:
     NORM: 20  # Overall normalization factor for reduced thickness function (and thereby multiplicity)
     PROJ1: 'Pb'  # Collisions species 1
     PROJ2: 'Pb'  # Collisions species 2
     NUCLEON_WIDTH: 0.92  # Gaussian nucleon width in fm. Default 0.5 fm from DukeQCD BA
-    CROSS_SECTION: 7.0  # Inelastic nucleon-nucleon cross section sigma_{NN} in fm^2
+    CROSS_SECTION: 7.0  # Inelastic nucleon-nucleon cross section sigma_{NN} in fm^2 - Changes w/ beam energy
     BMIN: None  # Minimum impact parameter. For no limits, set None.
     BMAX: None  # Maximum impact parameter. For no limits, set None.
     P: 0  # Nuclear overlap power parameter (default 0)
@@ -33,18 +16,26 @@ trento:
     V: 0.43  # Gaussian constituent width in fm
     NC: 6  # Number of nucleon constituents
     DMIN: 0.81  # Minimum nucleon distance in fm
+transport:  # Parameters for the hybrid transport medium model - freestreaming, hydro, frzout, & UrQMD
+    TAU_FS: 0.37  # freestreaming time in fm. Default 0.5 fm.
+    GRID_STEP: 0.1  # Hydro / Trento grid step in fm. Default 0.15*NUCLEON_WIDTH from DukeQCD BA
+    TIME_STEP: 0.05  # Hydro / Trento time step in fm. Default 0.25*GRID_STEP fm from DukeQCD BA
+    GRID_MAX_TARGET: 15  # Maximum hydro grid width.
+    T_SWITCH: 0.151  # Minimum temperature in GeV of all cells at which to cut off hydro evolution.
+    ETAS_MIN: 0.11  # eta/s at T0
+    ETAS_SLOPE: 1.6  # slope of (eta/s)(T) above T0 [GeV^-1]
+    ETAS_CURV: -0.29  # curvature of (eta/s)(T) above T0 (see osu-hydro readme)
+    ZETAS_MAX: 0.032  # maximum value of zeta/s (at T0)
+    ZETAS_WIDTH: 0.024  # width of (zeta/s)(T) [GeV]
+    ZETAS_T0: 0.175  # peak location of Cauchy (zeta/s)(T) [GeV]
 jet:  # Parameters for the jets to be run
-    JET_ENERGY: 22.5  # Jet energy in GeV - corresponds to TOTAL jet E, not just charged particle E
-    E_FLUCT: True  # Vary jet energy EBE? - If True, JET_ENERGY does nothing.
-    E_IS: True  # Importance sample jet energy - uses uniform approximate distribution
-    MIN_JET_ENERGY: 1  # Minimum jet energy in GeV to use if jet energy fluctuates. - Min 1.25 if RHIC sampling
-    MAX_JET_ENERGY: 60
-    TAU: 0.1  # Timestep used for jet propagation -- plasma properties assumed constant over dtau
+    DTAU: 0.1  # Timestep used for jet propagation -- plasma properties assumed constant over dtau
     RECORD: False  # Save xarray jet record?
+    T_HRG: 0.155  # Temperature in GeV at which to consider the medium hadronized - cuts off el & drift
+    T_UNHYDRO: 0.150  # Temperature in GeV at which to consider the medium unhydrodynamic
+    K_F_DRIFT: 1  # Scale factor for flow drift effect - default realistic estimate is 1
+    K_FG_DRIFT: 1  # Scale factor for flow-gradient drift effects - default realistic estimate is 1
 global_constants:  # Physical constants to be set by the user.
     G: 2  # Coupling constant for IN-MEDIUM strong interaction
     G_MU: 2  # Coupling constant for debye mass strong interaction
-    K_BBMG: 250  # Coupling constant for BBMG energy loss - Current default 250 ???
-    K_DRIFT: 1  # Scale factor for flow drift effect - default realistic estimate is 1
-    K_FG_DRIFT: 1  # Scale factor for flow-gradient drift effects - default realistic estimate is 1
-    ROOT_S: 5020  # sqrt(s) in GeV of collision system - used for scale running calculations
+    ROOT_S: 5020  # sqrt(s) in GeV of collision system - also change Trento cross-section!

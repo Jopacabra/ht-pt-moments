@@ -1,6 +1,7 @@
 import pythia8
 import numpy as np
 import pandas as pd
+import config
 
 # Function to generate a pp hard scattering at sqrt(s) = 5.02 TeV
 def scattering(pThatmin=1, pThatmax=100):
@@ -61,7 +62,7 @@ def scattering(pThatmin=1, pThatmax=100):
     pythia_process.readString("Random:seed = 0")
 
     # # Set beam energy - in GeV
-    pythia_process.readString("Beams:eCM = 5020.")
+    pythia_process.readString("Beams:eCM = {}".format(config.constants.ROOT_S))
 
     # Set particles in each beam - defaults to proton (2212), if nothing set
     pythia_process.readString("Beams:idA = 2212")

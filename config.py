@@ -23,10 +23,7 @@ class EBE:
 
 # Mode configuration
 class mode:
-    RANDOM_EVENT = bool(cfg['mode']['RANDOM_EVENT'])
-    RANDOM_ANGLE = bool(cfg['mode']['RANDOM_ANGLE'])
     VARY_POINT = bool(cfg['mode']['VARY_POINT'])
-    WEIGHT_POINT = bool(cfg['mode']['WEIGHT_POINT'])
     KEEP_EVENT = bool(cfg['mode']['KEEP_EVENT'])
 
 
@@ -59,8 +56,6 @@ class transport:
     class hydro:
         TAU_FS = float(cfg['transport']['TAU_FS'])
         T_SWITCH = float(cfg['transport']['T_SWITCH'])
-        T_HRG = float(cfg['transport']['T_HRG'])
-        T_UNHYDRO = float(cfg['transport']['T_UNHYDRO'])
         ETAS_MIN = float(cfg['transport']['ETAS_MIN'])
         ETAS_SLOPE = float(cfg['transport']['ETAS_SLOPE'])
         ETAS_CURV = float(cfg['transport']['ETAS_CURV'])
@@ -68,27 +63,20 @@ class transport:
         ZETAS_WIDTH = float(cfg['transport']['ZETAS_WIDTH'])
         ZETAS_T0 = float(cfg['transport']['ZETAS_T0'])
 
-    class afterburner:
-        USE = False
-
 
 # Jet configuration
 class jet:
-    JET_ENERGY = int(cfg['jet']['JET_ENERGY'])
-    E_FLUCT = bool(cfg['jet']['E_FLUCT'])
-    E_IS = bool(cfg['jet']['E_IS'])
-    MIN_JET_ENERGY = float(cfg['jet']['MIN_JET_ENERGY'])
-    MAX_JET_ENERGY = float(cfg['jet']['MAX_JET_ENERGY'])
-    TAU = float(cfg['jet']['TAU'])
+    DTAU = float(cfg['jet']['DTAU'])
     RECORD = bool(cfg['jet']['RECORD'])
-
+    T_HRG = float(cfg['jet']['T_HRG'])
+    T_UNHYDRO = float(cfg['jet']['T_UNHYDRO'])
+    K_F_DRIFT = float(cfg['jet']['K_F_DRIFT'])
+    K_FG_DRIFT = float(cfg['jet']['K_FG_DRIFT'])
+    K_BBMG = 1  #float(cfg['jet']['K_BBMG'])
 
 
 # Global constants
 class constants:
     G = float(cfg['global_constants']['G'])
     G_MU = float(cfg['global_constants']['G_MU'])
-    K_BBMG = float(cfg['global_constants']['K_BBMG'])
-    K_DRIFT = float(cfg['global_constants']['K_DRIFT'])
-    K_FG_DRIFT = float(cfg['global_constants']['K_FG_DRIFT'])
     ROOT_S = float(cfg['global_constants']['ROOT_S'])

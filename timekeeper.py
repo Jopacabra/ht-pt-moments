@@ -35,12 +35,12 @@ def mean_eloss_rate(pT):
         return mean_eloss_rate_val
 
 def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=1, scale_grad=1, scale_el=1, el_model='SGLV',
-              temp_hrg=config.transport.hydro.T_HRG, temp_unh=config.transport.hydro.T_UNHYDRO):
+              temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
     #############
     # Time Loop #
     #############
     # Set loop parameters
-    tau = config.jet.TAU  # dt for time loop in fm
+    tau = config.jet.DTAU  # dt for time loop in fm
     t = event.t0  # Set current time in fm to initial time
 
     # Initialize counters & values
@@ -336,7 +336,7 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, scale_drift=
                 "Tmax_jet": [float(maxT)],
                 "initial_time": [float(event.t0)],
                 "final_time": [float(event.tf)],
-                "tau": [float(config.jet.TAU)],
+                "tau": [float(config.jet.DTAU)],
                 "Tmax_event": [float(event.max_temp())],
                 "drift": [bool(drift)],
                 "grad": [bool(grad)],

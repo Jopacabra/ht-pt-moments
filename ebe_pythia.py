@@ -84,7 +84,7 @@ def safe_exit(resultsDataFrame, event_obs, temp_dir, filename, identifier, hadro
     logging.info('Partons...')
     logging.debug(resultsDataFrame)
     logging.info('Converting datatypes to reasonable formats...')
-    resultsDataFrame = resultsDataFrame.convert_dtypes(convert_floating=False)
+    resultsDataFrame = resultsDataFrame.convert_dtypes()
     logging.info('Downcasting numeric values to minimum memory size...')
     resultsDataFrame = downcast_numerics(resultsDataFrame)
 

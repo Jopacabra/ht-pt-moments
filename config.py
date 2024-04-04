@@ -25,6 +25,7 @@ class EBE:
 class mode:
     VARY_POINT = bool(cfg['mode']['VARY_POINT'])
     KEEP_EVENT = bool(cfg['mode']['KEEP_EVENT'])
+    KEEP_RECORD = bool(cfg['mode']['RECORD'])
 
 
 class transport:
@@ -66,8 +67,9 @@ class transport:
 
 # Jet configuration
 class jet:
+    PTHATMIN = float(cfg['jet']['PTHATMIN'])
+    PTHATMAX = float(cfg['jet']['PTHATMAX'])
     DTAU = float(cfg['jet']['DTAU'])
-    RECORD = bool(cfg['jet']['RECORD'])
     T_HRG = float(cfg['jet']['T_HRG'])
     T_UNHYDRO = float(cfg['jet']['T_UNHYDRO'])
     K_F_DRIFT = float(cfg['jet']['K_F_DRIFT'])

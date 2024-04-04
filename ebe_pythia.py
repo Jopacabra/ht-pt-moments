@@ -277,7 +277,7 @@ def run_event(eventNo):
 
                         # Save the xarray trajectory file
                         # Note we are currently in a temp directory... Save record in directory above.
-                        if config.jet.RECORD:
+                        if config.mode.KEEP_RECORD:
                             jet_xarray.to_netcdf('../{}_record.nc'.format(process_tag))
 
                         # Add scattering process tag

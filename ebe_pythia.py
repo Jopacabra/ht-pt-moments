@@ -188,7 +188,7 @@ def run_event(eventNo):
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 
-                for case in [0, 1, 2]:
+                for case in [0, 2, 4, 5]:
                     case_partons = pd.DataFrame({})
                     # Determine case details
                     if case == 0:
@@ -196,26 +196,43 @@ def run_event(eventNo):
                         fg = False
                         grad = False
                         el = True
+                        fgqhat = False
                     elif case == 1:
                         drift = True
                         fg = False
                         grad = False
                         el = True
+                        fgqhat = False
                     elif case == 2:
                         drift = True
                         fg = True
                         grad = False
                         el = True
+                        fgqhat = False
                     elif case == 3:
                         drift = True
                         fg = True
                         grad = True
                         el = True
+                        fgqhat = False
+                    elif case == 4:
+                        drift = False
+                        fg = False
+                        grad = False
+                        el = True
+                        fgqhat = True
+                    elif case == 5:
+                        drift = True
+                        fg = True
+                        grad = False
+                        el = True
+                        fgqhat = True
                     else:
                         drift = True
                         fg = True
                         grad = False
                         el = True
+                        fgqhat = False
 
                     i = 0
                     jet_num = -1
@@ -258,7 +275,7 @@ def run_event(eventNo):
                         # Yell about your selected jet
                         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-                        el_model = 'SGLV'
+                        el_model = 'GLV'
 
                         # Log jet number and case description
                         logging.info('Running Jet {}, case {}'.format(str(process_num), case))
@@ -272,7 +289,8 @@ def run_event(eventNo):
                         pp_frag_z = ff.frag(jet)
 
                         # Run the time loop
-                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el, grad=grad, fg=fg,
+                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el,
+                                                                         grad=grad, fg=fg, fgqhat=fgqhat,
                                                                          el_model=el_model)
 
                         # Save the xarray trajectory file

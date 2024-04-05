@@ -155,7 +155,7 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 # Integrand for parameterized energy loss over coupling
 # Note - includes coupling constant to approximate scale of
 # nuclear modification factor (R_AA) from data
-def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
+def energy_loss_integrand(event, jet, time, tau, model='BBMG', fgqhat=False, mean_el_rate=0):
     jet_point = jet.coords3(time=time)
     jet_p_phi = jet.polar_mom_coords()[1]
     FmGeV = 0.19732687
@@ -169,7 +169,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
     elif model == 'Vitev_hack':
         # Note that we do not apply FERMItoGeV, since this rate is in GeV / fm
         return (-1) * sample_eloss_rate(mean_rate=mean_el_rate, num_samples=None)
-    elif model == 'SGLV':
+    elif model == 'GLV':
         # https://inspirehep.net/literature/539404
         # Note that we apply FERMItoGeV twice... Once for the t factor, once for the (int dt).
         # Set C_R, "quadratic Casimir of the representation R of SU(3) for the jet"
@@ -184,7 +184,7 @@ def energy_loss_integrand(event, jet, time, tau, model='BBMG', mean_el_rate=0):
         # "For alpha_s the scale runs, but ballpark you can guess 0.3" - Dr. Sievert
         alphas = (config.constants.G**2) / (4*np.pi)
 
-        # Calculate and return energy loss of this step.
+        # Calculate and return energy loss per unit length of this step.
         return (-1)*(CR * alphas / 2) * (((1 / FmGeV) ** 2)
                                     * (time - event.t0)
                                     * (event.mu(point=jet_point)**2)
@@ -242,6 +242,41 @@ def grad_integrand(event, jet, time, tau):
                 / (2 * jet.p_T() * (event.rho(jet_point, med_parton='g'))))
 
     return np.cbrt(first_order_q + first_order_g + second_order_q + second_order_g)
+
+# Integrand for parameterized energy loss over coupling
+# Note - includes coupling constant to approximate scale of
+# nuclear modification factor (R_AA) from data
+def fg_qhat_mod_factor(event, jet, time):
+    jet_point = jet.coords3(time=time)
+    jet_p_rho, jet_p_phi = jet.polar_mom_coords()
+    FmGeV = 0.19732687
+    T = event.temp(jet_point)
+    uperp = event.u_perp(point=jet_point, phi=jet_p_phi)
+    upar = event.u_par(point=jet_point, phi=jet_p_phi)
+    ux = event.x_vel(jet_point)
+    uy = event.y_vel(jet_point)
+    grad_x_temp = event.temp_grad_x(jet_point)
+    grad_y_temp = event.temp_grad_y(jet_point)
+    grad_perp_temp = np.cos(jet_p_phi + (np.pi / 2)) * grad_x_temp + np.sin(jet_p_phi + (np.pi / 2)) * grad_y_temp
+    grad_x_u_x = event.grad_x_u_x(jet_point)
+    grad_x_u_y = event.grad_x_u_y(jet_point)
+    grad_y_u_x = event.grad_y_u_x(jet_point)
+    grad_y_u_y = event.grad_y_u_y(jet_point)
+    grad_perp_u_tau = ((np.cos(jet_p_phi + (np.pi / 2)) ** 2) * grad_x_u_x + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(
+        jet_p_phi + (np.pi / 2)) * grad_x_u_y
+                       + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(jet_p_phi + (np.pi / 2)) * grad_y_u_x + (
+                                   np.sin(jet_p_phi + (np.pi / 2)) ** 2) * grad_y_u_y)
+    grad_perp_u_perp = ((np.cos(jet_p_phi + (np.pi / 2)) ** 2) * grad_x_u_x + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(
+        jet_p_phi + (np.pi / 2)) * grad_x_u_y
+                        + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(jet_p_phi + (np.pi / 2)) * grad_y_u_x + (
+                                    np.sin(jet_p_phi + (np.pi / 2)) ** 2) * grad_y_u_y)
+    g = config.constants.G
+    pt = jet.p_T()
+    mu = event.mu(point=jet_point)
+    return (-1) * ((grad_perp_temp * (uperp / (1-upar)) * (1/mu)
+                        * (3 - 1*(1/(np.log(pt/mu)))))
+                    + (grad_perp_u_tau * (uperp / ((1-upar)**2)))
+                    + (grad_perp_u_perp * (1 / (1-upar))))
 
 
 

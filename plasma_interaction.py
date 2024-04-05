@@ -273,7 +273,7 @@ def fg_qhat_mod_factor(event, jet, time):
     g = config.constants.G
     pt = jet.p_T()
     mu = event.mu(point=jet_point)
-    return (-1) * ((grad_perp_temp * (uperp / (1-upar)) * (1/mu)
+    return (-1) * (time - event.t0) * ((grad_perp_temp * (uperp / (1-upar)) * (1/mu)
                         * (3 - 1*(1/(np.log(pt/mu)))))
                     + (grad_perp_u_tau * (uperp / ((1-upar)**2)))
                     + (grad_perp_u_perp * (1 / (1-upar))))

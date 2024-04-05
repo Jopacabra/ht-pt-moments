@@ -25,7 +25,7 @@ class EBE:
 class mode:
     VARY_POINT = bool(cfg['mode']['VARY_POINT'])
     KEEP_EVENT = bool(cfg['mode']['KEEP_EVENT'])
-    KEEP_RECORD = bool(cfg['mode']['RECORD'])
+    KEEP_RECORD = bool(cfg['mode']['KEEP_RECORD'])
 
 
 class transport:

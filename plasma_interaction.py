@@ -240,6 +240,7 @@ def fg_qhat_mod_factor(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
     # FmGeV = 0.19732687
+    T = event.temp(jet_point)
     uperp = event.u_perp(point=jet_point, phi=jet_p_phi)
     upar = event.u_par(point=jet_point, phi=jet_p_phi)
     grad_perp_temp = event.grad_perp_T(jet_point, jet_p_phi)
@@ -248,7 +249,7 @@ def fg_qhat_mod_factor(event, jet, time):
     # g = config.constants.G
     pt = jet.p_T()
     mu = event.mu(point=jet_point)
-    return (-1) * (time - event.t0) * ((grad_perp_temp * (uperp / (1-upar)) * (1/mu)
+    return (-1) * (time - event.t0) * ((grad_perp_temp * (uperp / (1-upar)) * (1/T)
                         * (3 - 1*(1/(np.log(pt/mu)))))
                     + (grad_perp_u_tau * (uperp / ((1-upar)**2)))
                     + (grad_perp_u_perp * (1 / (1-upar))))

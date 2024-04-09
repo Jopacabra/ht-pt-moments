@@ -106,7 +106,7 @@ def flowgrad_drift_integrand(event, jet, time):
         * (time - event.t0) * inv_lambda(event=event, jet=jet, point=jet_point)
         * ((grad_perp_temp) * (uperp/((1 - upar)**2)) * (3 * T * np.log(pt / (g * T)) - T )
         + grad_perp_u_tau * (2/((1 - upar)**3))  * uperp * (T**2) * np.log(pt / (g * T))
-        * grad_perp_u_perp * (2 * uperp/((1 - upar)**2)) * (T**2) * np.log(pt / (g * T))))
+        + grad_perp_u_perp * (2 * uperp/((1 - upar)**2)) * (T**2) * np.log(pt / (g * T))))
 
 # Function to sample ebe fluctuation zeta parameter for energy loss integral
 def zeta(q=0, maxAttempts=5, batch=1000):

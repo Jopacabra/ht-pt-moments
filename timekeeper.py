@@ -187,7 +187,7 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
 
             if fg:
                 # Compute mixed flow-gradient drift integrand in this timestep
-                int_fg = pi.flowgrad_drift_integrand(event=event, jet=jet, time=t, tau=tau)
+                int_fg = pi.flowgrad_drift_integrand(event=event, jet=jet, time=t)
 
                 # Compute momentum transferred to jet
                 q_fg = float(jet.beta() * tau * int_fg)

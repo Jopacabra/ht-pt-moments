@@ -464,32 +464,34 @@ class plasma_event:
     # at a particular point perpendicular to a given angle phi.
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
     def grad_perp_T(self, point, phi):
-        # Compute x and y temperature gradient at given point
+        # Compute x and y temperature gradient at given point, make grad vector
         grad_x = self.temp_grad_x(point)
         grad_y = self.temp_grad_y(point)
+        grad_T = np.array([grad_x, grad_y])
 
         # Compute unit vector perpendicular to given phi
-        e_perp = np.array([np.cos(phi + (np.pi / 2)), np.sin(phi + (np.pi / 2))])
+        e_perp = np.array([-np.sin(phi), np.cos(phi)])
 
         # Compute temperature gradient perp to given phi
-        grad_perp_T = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
+        grad_perp_T = np.dot(e_perp, grad_T)  #(grad_x * e_perp[0]) + (grad_y * e_perp[1])
 
         return grad_perp_T
 
-    # Method to return gradient of the flow
-    # at a particular point perpendicular to a given angle phi.
-    def grad_perp_flow(self, point, phi):
-        # Compute x and y temperature gradient at given point
-        grad_x = self.flow_grad_x(point)
-        grad_y = self.flow_grad_y(point)
+    # Method to return perp grad u perp, relative to given angle
+    def grad_perp_u_perp(self, point, phi):
+        # This is (eperp . grad) * (eperp . u)
+        return (self.grad_x_u_x(point) * (np.sin(phi)**2)
+                - self.grad_y_u_x(point) * np.sin(phi)*np.cos(phi)
+                - self.grad_x_u_y(point) * np.sin(phi)*np.cos(phi)
+                + self.grad_y_u_y(point) * (np.cos(phi)**2))
 
-        # Compute unit vector perpendicular to given phi
-        e_perp = np.array([np.cos(phi + (np.pi / 2)), np.sin(phi + (np.pi / 2))])
-
-        # Compute temperature gradient perp to given phi
-        grad_perp_flow = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
-
-        return grad_perp_flow
+    # Method to return perp grad u par, relative to given angle
+    def grad_perp_u_par(self, point, phi):
+        # This is (eperp . grad) * (epar . u)
+        return (- self.grad_x_u_x(point) * np.sin(phi) * np.cos(phi)
+                + self.grad_y_u_x(point) * (np.cos(phi)**2)
+                - self.grad_x_u_y(point) * (np.sin(phi)**2)
+                + self.grad_y_u_y(point) * np.sin(phi) * np.cos(phi))
 
     # Method to return gradient of the flow
     # at a particular point parallel to a given angle phi.

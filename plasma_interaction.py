@@ -89,26 +89,16 @@ def jet_drift_integrand(event, jet, time):
               * inv_lambda(event=event, jet=jet, point=jet_point)))
 
 # Define integrand for mean q_drift (k=0 moment)
-def flowgrad_drift_integrand(event, jet, time, tau):
+def flowgrad_drift_integrand(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
     FmGeV = 0.19732687
     T = event.temp(jet_point)
     uperp = event.u_perp(point=jet_point, phi=jet_p_phi)
     upar = event.u_par(point=jet_point, phi=jet_p_phi)
-    ux = event.x_vel(jet_point)
-    uy = event.y_vel(jet_point)
-    grad_x_temp = event.temp_grad_x(jet_point)
-    grad_y_temp = event.temp_grad_y(jet_point)
-    grad_perp_temp = np.cos(jet_p_phi + (np.pi/2))*grad_x_temp + np.sin(jet_p_phi + (np.pi/2))*grad_y_temp
-    grad_x_u_x = event.grad_x_u_x(jet_point)
-    grad_x_u_y = event.grad_x_u_y(jet_point)
-    grad_y_u_x = event.grad_y_u_x(jet_point)
-    grad_y_u_y = event.grad_y_u_y(jet_point)
-    grad_perp_u_tau = ( (np.cos(jet_p_phi + (np.pi/2))**2 )*grad_x_u_x + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_x_u_y
-                      + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_y_u_x + (np.sin(jet_p_phi + (np.pi/2))**2 )*grad_y_u_y)
-    grad_perp_u_perp = ( (np.cos(jet_p_phi + (np.pi/2))**2 )*grad_x_u_x + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_x_u_y
-                      + np.cos(jet_p_phi + (np.pi/2))*np.sin(jet_p_phi + (np.pi/2))*grad_y_u_x + (np.sin(jet_p_phi + (np.pi/2))**2 )*grad_y_u_y)
+    grad_perp_temp = event.grad_perp_T(jet_point, jet_p_phi)
+    grad_perp_u_perp = event.grad_perp_u_perp(jet_point, jet_p_phi)
+    grad_perp_u_tau = event.grad_perp_u_par(jet_point, jet_p_phi)
     g = config.constants.G
     pt = jet.p_T()
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
@@ -249,34 +239,16 @@ def grad_integrand(event, jet, time, tau):
 def fg_qhat_mod_factor(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
-    FmGeV = 0.19732687
-    T = event.temp(jet_point)
+    # FmGeV = 0.19732687
     uperp = event.u_perp(point=jet_point, phi=jet_p_phi)
     upar = event.u_par(point=jet_point, phi=jet_p_phi)
-    ux = event.x_vel(jet_point)
-    uy = event.y_vel(jet_point)
-    grad_x_temp = event.temp_grad_x(jet_point)
-    grad_y_temp = event.temp_grad_y(jet_point)
-    grad_perp_temp = np.cos(jet_p_phi + (np.pi / 2)) * grad_x_temp + np.sin(jet_p_phi + (np.pi / 2)) * grad_y_temp
-    grad_x_u_x = event.grad_x_u_x(jet_point)
-    grad_x_u_y = event.grad_x_u_y(jet_point)
-    grad_y_u_x = event.grad_y_u_x(jet_point)
-    grad_y_u_y = event.grad_y_u_y(jet_point)
-    grad_perp_u_tau = ((np.cos(jet_p_phi + (np.pi / 2)) ** 2) * grad_x_u_x + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(
-        jet_p_phi + (np.pi / 2)) * grad_x_u_y
-                       + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(jet_p_phi + (np.pi / 2)) * grad_y_u_x + (
-                                   np.sin(jet_p_phi + (np.pi / 2)) ** 2) * grad_y_u_y)
-    grad_perp_u_perp = ((np.cos(jet_p_phi + (np.pi / 2)) ** 2) * grad_x_u_x + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(
-        jet_p_phi + (np.pi / 2)) * grad_x_u_y
-                        + np.cos(jet_p_phi + (np.pi / 2)) * np.sin(jet_p_phi + (np.pi / 2)) * grad_y_u_x + (
-                                    np.sin(jet_p_phi + (np.pi / 2)) ** 2) * grad_y_u_y)
-    g = config.constants.G
+    grad_perp_temp = event.grad_perp_T(jet_point, jet_p_phi)
+    grad_perp_u_perp = event.grad_perp_u_perp(jet_point, jet_p_phi)
+    grad_perp_u_tau = event.grad_perp_u_par(jet_point, jet_p_phi)
+    # g = config.constants.G
     pt = jet.p_T()
     mu = event.mu(point=jet_point)
     return (-1) * (time - event.t0) * ((grad_perp_temp * (uperp / (1-upar)) * (1/mu)
                         * (3 - 1*(1/(np.log(pt/mu)))))
                     + (grad_perp_u_tau * (uperp / ((1-upar)**2)))
                     + (grad_perp_u_perp * (1 / (1-upar))))
-
-
-

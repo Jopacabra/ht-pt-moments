@@ -733,7 +733,9 @@ class MainPage(tk.Frame):
 
                 # Set moment display
                 self.momentDisplay.set('Total F Drift: {} GeV'.format(np.sum(q_drift_array)))
-                self.ELDisplay.set('Total EL: {} GeV'.format(np.sum(q_EL_array)))
+                self.ELDisplay.set('Total EL: {} (el) + {} (fgqhat) = {} GeV'.format(np.sum(q_EL_array),
+                                                                       np.sum(q_fgqhat_array),
+                                                                       np.sum(q_EL_array) + np.sum(q_fgqhat_array)))
                 self.momentHRGDisplay.set('Total FG Drift: {} GeV'.format(np.sum(q_fg_T_array)
                                                                           + np.sum(q_fg_utau_array)
                                                                           + np.sum(q_fg_uperp_array)))
@@ -835,7 +837,7 @@ class MainPage(tk.Frame):
                     axis.axhline(y=0, color='black', linestyle=':', lw=gridLineWidth)
 
             # Plot horizontal gridline at temp minTemp for temp plot
-            self.propertyAxes[1, 0].axhline(y=self.tempHRG.get(), color='black', linestyle=':', lw=gridLineWidth)
+            #self.propertyAxes[1, 0].axhline(y=self.tempHRG.get(), color='black', linestyle=':', lw=gridLineWidth)
 
             # Plot vertical gridline at current time from slider
             for axisList in self.propertyAxes:  # Iterate through medium property plots
@@ -843,7 +845,7 @@ class MainPage(tk.Frame):
                     axis.axvline(x=self.time.get(), color='black', ls=':', lw=gridLineWidth)
 
             # Plot tick at temp minTemp for temp plot
-            self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempHRG.get()])
+            #self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempHRG.get()])
 
             # Plot property titles
             self.propertyAxes[0, 0].set_title(r"$u_\tau$", fontsize=plotFontSize)

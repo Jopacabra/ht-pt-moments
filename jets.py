@@ -50,6 +50,7 @@ class jet:
             self.id = 21
         else:
             self.m = 0  # Default to massless gluon properties
+            self.id = 21
 
         if tag is not None:
             self.tag = tag

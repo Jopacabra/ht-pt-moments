@@ -51,8 +51,15 @@ class jet:
         else:
             self.m = 0  # Default to massless gluon properties
 
-        self.tag = tag
-        self.no = no
+        if tag is not None:
+            self.tag = tag
+        else:
+            self.tag = 0
+        if no is not None:
+            self.no = no
+        else:
+            self.no = 0
+
         self.record = None
 
         # Muck about with your coordinates

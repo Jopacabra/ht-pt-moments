@@ -34,7 +34,7 @@ def mean_eloss_rate(pT):
 
         return mean_eloss_rate_val
 
-def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drift=1, scale_el=1, el_model='SGLV',
+def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drift=1, scale_el=1, el_model='GLV',
               temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
     #############
     # Time Loop #

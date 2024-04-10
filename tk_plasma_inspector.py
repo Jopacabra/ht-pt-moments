@@ -114,7 +114,7 @@ class MainPage(tk.Frame):
         self.el = tk.BooleanVar()
         self.el.set(True)
         self.el_model = tk.StringVar()
-        self.el_model.set('SGLV')
+        self.el_model.set('GLV')
 
         # Integration options
         self.tempHRG = tk.DoubleVar()
@@ -884,7 +884,8 @@ class MainPage(tk.Frame):
                                                                        el=self.el.get(),
                                                                        fg=self.fg.get(),
                                                                        temp_hrg=self.tempHRG.get(),
-                                                                       temp_unh=self.tempUnhydro.get())
+                                                                       temp_unh=self.tempUnhydro.get(),
+                                                                       el_model=self.el_model.get())
 
             print('Jet trajectory complete.')
             self.calculated.set(True)

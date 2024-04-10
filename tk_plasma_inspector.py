@@ -778,7 +778,7 @@ class MainPage(tk.Frame):
                         self.propertyAxes[2, 1].plot(time_array[i], grad_perp_utau_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 2].plot(time_array[i], q_fg_total_array[i], 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 0].plot(time_array[i], grad_perp_uperp_array, 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 0].plot(time_array[i], grad_perp_uperp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 3].plot(time_array[i], q_fg_T_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 3].plot(time_array[i], q_fg_utau_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 3].plot(time_array[i], q_fg_uperp_array[i], 'o', color=color_array[i], markersize=markSize)

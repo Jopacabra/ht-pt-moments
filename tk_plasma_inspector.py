@@ -631,7 +631,7 @@ class MainPage(tk.Frame):
     def update_jet(self, value=None):
         # Set current_jet object to current slider parameters
         self.current_jet = jets.jet(x_0=self.x0.get(), y_0=self.y0.get(),
-                                    phi_0=self.theta0.get(), p_T0=self.jetE.get(), tag=None)
+                                    phi_0=self.theta0.get(), p_T0=self.jetE.get())
         self.not_calculated(0)
 
     # Define the update function
@@ -711,7 +711,7 @@ class MainPage(tk.Frame):
                 xpos_array = self.jet_xarray['x'].to_numpy()
                 ypos_array = self.jet_xarray['y'].to_numpy()
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
-                q_EL_array = self.jet_xarray['q_EL'].to_numpy()
+                q_EL_array = self.jet_xarray['q_el'].to_numpy()
                 q_fg_T_array = self.jet_xarray['q_fg_T'].to_numpy()
                 q_fg_utau_array = self.jet_xarray['q_fg_utau'].to_numpy()
                 q_fg_uperp_array = self.jet_xarray['q_fg_uperp'].to_numpy()

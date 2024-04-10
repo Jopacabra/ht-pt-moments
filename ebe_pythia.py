@@ -289,8 +289,8 @@ def run_event(eventNo):
                         pp_frag_z = ff.frag(jet)
 
                         # Run the time loop
-                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift, el=el,
-                                                                         grad=grad, fg=fg, fgqhat=fgqhat,
+                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift,
+                                                                         el=el, fg=fg, fgqhat=fgqhat,
                                                                          el_model=el_model)
 
                         # Save the xarray trajectory file

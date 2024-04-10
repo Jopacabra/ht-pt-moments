@@ -34,7 +34,7 @@ def mean_eloss_rate(pT):
 
         return mean_eloss_rate_val
 
-def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True, scale_drift=1, scale_grad=1, scale_el=1, el_model='SGLV',
+def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=True, scale_drift=1, scale_el=1, el_model='SGLV',
               temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
     #############
     # Time Loop #
@@ -54,10 +54,12 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
     q_el_total = 0
     q_drift_total = 0
     q_drift_abs_total = 0
-    q_grad_total = 0
-    q_grad_abs_total = 0
-    q_fg_total = 0
-    q_fg_abs_total = 0
+    q_fg_T_total = 0
+    q_fg_T_abs_total = 0
+    q_fg_utau_total = 0
+    q_fg_utau_abs_total = 0
+    q_fg_uperp_total = 0
+    q_fg_uperp_abs_total = 0
     q_fgqhat_total = 0
     q_fgqhat_abs_total = 0
 
@@ -74,13 +76,16 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
     xpos_array = np.array([])
     ypos_array = np.array([])
     q_drift_array = np.array([])
-    q_grad_array = np.array([])
     q_el_array = np.array([])
-    q_fg_array = np.array([])
+    q_fg_T_array = np.array([])
+    q_fg_utau_array = np.array([])
+    q_fg_uperp_array = np.array([])
     q_fgqhat_array = np.array([])
     pT_array = np.array([])
     temp_seen_array = np.array([])
     grad_perp_T_seen_array = np.array([])
+    grad_perp_utau_seen_array = np.array([])
+    grad_perp_uperp_seen_array = np.array([])
     u_perp_array = np.array([])
     u_par_array = np.array([])
     u_array = np.array([])
@@ -129,6 +134,8 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
         jet_p_rho, jet_p_phi = jet.polar_mom_coords()
         temp = event.temp(jet_point)
         grad_perp_T = event.grad_perp_T(point=jet_point, phi=jet_p_phi)
+        grad_perp_utau = event.grad_perp_u_par(point=jet_point, phi=jet_p_phi)
+        grad_perp_uperp = event.grad_perp_u_perp(point=jet_point, phi=jet_p_phi)
         u_perp = event.u_perp(point=jet_point, phi=jet_p_phi)
         u_par = event.u_par(point=jet_point, phi=jet_p_phi)
         u = event.vel(jet_point)
@@ -160,18 +167,6 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
                 int_drift = 0
                 q_drift = 0
 
-            # Compute gradient drift, if enabled
-            if grad:
-                # Compute gradient drift integrand in this timestep
-                int_grad = pi.grad_integrand(event=event, jet=jet, time=t, tau=tau)
-
-                # Compute Jet gradient drift momentum transferred to jet
-                q_grad = float(jet.beta() * tau * int_grad * scale_grad)
-            else:
-                # Set gradient drift integral and momentum transfer to zero
-                int_grad = 0
-                q_grad = 0
-
             # Compute energy loss, if enabled
             if el:
                 # Compute energy loss integrand in this timestep
@@ -187,14 +182,22 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
 
             if fg:
                 # Compute mixed flow-gradient drift integrand in this timestep
-                int_fg = pi.flowgrad_drift_integrand(event=event, jet=jet, time=t)
+                int_fg_T = pi.flowgrad_T_integrand(event=event, jet=jet, time=t)
+                int_fg_utau = pi.flowgrad_utau_integrand(event=event, jet=jet, time=t)
+                int_fg_uperp = pi.flowgrad_uperp_integrand(event=event, jet=jet, time=t)
 
-                # Compute momentum transferred to jet
-                q_fg = float(jet.beta() * tau * int_fg)
+                # Compute momentums transferred to jet
+                q_fg_T = float(jet.beta() * tau * int_fg_T)
+                q_fg_utau = float(jet.beta() * tau * int_fg_utau)
+                q_fg_uperp = float(jet.beta() * tau * int_fg_uperp)
             else:
                 # Set flow-gradient effects and integral to zero
-                int_fg = 0
-                q_fg = 0
+                int_fg_T = 0
+                int_fg_utau = 0
+                int_fg_uperp = 0
+                q_fg_T = 0
+                q_fg_utau = 0
+                q_fg_uperp = 0
 
             if fgqhat:
                 # Compute correction to energy loss due to flow-gradient modification
@@ -208,16 +211,20 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
         else:
             # If not in QGP, don't compute any jet-medium interactions
             # If you wanted to add some effects in other phases, they should be computed here
-            int_drift = 0
-            int_grad = 0
             int_el = 0
-            int_fg = 0
-            int_fgqhat = 0
-            q_drift = 0
-            q_grad = 0
             q_el = 0
-            q_fg = 0
 
+            int_drift = 0
+            q_drift = 0
+
+            int_fg_T = 0
+            int_fg_utau = 0
+            int_fg_uperp = 0
+            q_fg_T = 0
+            q_fg_utau = 0
+            q_fg_uperp = 0
+
+            int_fgqhat = 0
             q_fgqhat = 0
 
         ###################
@@ -227,10 +234,12 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
         q_el_total += q_el
         q_drift_total += q_drift
         q_drift_abs_total += np.abs(q_drift)
-        q_grad_total += q_grad
-        q_grad_abs_total += np.abs(q_grad)
-        q_fg_total += q_fg
-        q_fg_abs_total += np.abs(q_fg)
+        q_fg_T_total += q_fg_T
+        q_fg_T_abs_total += np.abs(q_fg_T)
+        q_fg_utau_total += q_fg_utau
+        q_fg_utau_abs_total += np.abs(q_fg_utau)
+        q_fg_uperp_total += q_fg_uperp
+        q_fg_uperp_abs_total += np.abs(q_fg_uperp)
         q_fgqhat_total += q_fgqhat
         q_fgqhat_abs_total += np.abs(q_fgqhat)
 
@@ -266,13 +275,16 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
         xpos_array = np.append(xpos_array, jet.x)
         ypos_array = np.append(ypos_array, jet.y)
         q_drift_array = np.append(q_drift_array, q_drift)
-        q_grad_array = np.append(q_grad_array, q_grad)
         q_el_array = np.append(q_el_array, q_el)
-        q_fg_array = np.append(q_fg_array, q_fg)
+        q_fg_T_array = np.append(q_fg_T_array, q_fg_T)
+        q_fg_utau_array = np.append(q_fg_utau_array, q_fg_utau)
+        q_fg_uperp_array = np.append(q_fg_uperp_array, q_fg_uperp)
         q_fgqhat_array = np.append(q_fgqhat_array, q_fgqhat)
         pT_array = np.append(pT_array, jet.p_T())
         temp_seen_array = np.append(temp_seen_array, temp)
         grad_perp_T_seen_array = np.append(grad_perp_T_seen_array, grad_perp_T)
+        grad_perp_utau_seen_array = np.append(grad_perp_utau_seen_array, grad_perp_utau)
+        grad_perp_uperp_seen_array = np.append(grad_perp_uperp_seen_array, grad_perp_uperp)
         u_perp_array = np.append(u_perp_array, u_perp)
         u_par_array = np.append(u_par_array, u_par)
         u_array = np.append(u_array, u)
@@ -291,8 +303,9 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
         # Change jet momentum to reflect drift effects
         # If not computed, q values go to zero.
         jet.add_q_perp(q_perp=q_drift)
-        jet.add_q_perp(q_perp=q_grad)
-        jet.add_q_perp(q_perp=q_fg)
+        jet.add_q_perp(q_perp=q_fg_T)
+        jet.add_q_perp(q_perp=q_fg_utau)
+        jet.add_q_perp(q_perp=q_fg_uperp)
 
         # Check if the jet would be extinguished (prevents flipping directions
         # when T >> p_T, since q_el has no p_T dependence):
@@ -331,10 +344,12 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
                 "q_el": [float(q_el_total)],
                 "q_drift": [float(q_drift_total)],
                 "q_drift_abs": [float(q_drift_abs_total)],
-                "q_grad": [float(q_grad_total)],
-                "q_grad_abs": [float(q_grad_abs_total)],
-                "q_fg": [float(q_fg_total)],
-                "q_fg_abs": [float(q_fg_abs_total)],
+                "q_fg_T": [float(q_fg_T_total)],
+                "q_fg_T_abs": [float(q_fg_T_abs_total)],
+                "q_fg_utau": [float(q_fg_utau_total)],
+                "q_fg_utau_abs": [float(q_fg_utau_abs_total)],
+                "q_fg_uperp": [float(q_fg_uperp_total)],
+                "q_fg_uperp_abs": [float(q_fg_uperp_abs_total)],
                 "q_fgqhat": [float(q_fgqhat_total)],
                 "q_fgqhat_abs": [float(q_fgqhat_abs_total)],
                 "extinguished": [bool(extinguished)],
@@ -354,7 +369,6 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
                 "tau": [float(config.jet.DTAU)],
                 "Tmax_event": [float(event.max_temp())],
                 "drift": [bool(drift)],
-                "grad": [bool(grad)],
                 "el": [bool(el)],
                 "fg": [bool(fg)],
                 "fgqhat": [bool(fgqhat)],
@@ -382,12 +396,15 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
                  'q_drift': (['time'], q_drift_array,
                              {'units': 'GeV',
                               'long_name': 'Momentum obtained by the jet at this timestep due to flow drift'}),
-                 'q_grad': (['time'], q_grad_array,
-                             {'units': 'GeV',
-                              'long_name': 'Momentum obtained by the jet at this timestep due to gradient drift'}),
-                 'q_fg': (['time'], q_fg_array,
+                 'q_fg_T': (['time'], q_fg_T_array,
                           {'units': 'GeV',
-                           'long_name': 'Momentum obtained by the jet at this timestep due to flow-gradient drift'}),
+                           'long_name': 'Momentum obtained by the jet at this timestep due to flow-grad_T drift'}),
+                 'q_fg_utau': (['time'], q_fg_utau_array,
+                          {'units': 'GeV',
+                           'long_name': 'Momentum obtained by the jet at this timestep due to flow-grad_utau drift'}),
+                 'q_fg_uperp': (['time'], q_fg_uperp_array,
+                          {'units': 'GeV',
+                           'long_name': 'Momentum obtained by the jet at this timestep due to flow-grad_uperp drift'}),
                  'q_el': (['time'], q_fgqhat_array,
                             {'units': 'GeV',
                              'long_name': 'Momentum obtained by the jet at this timestep due to energy loss'}),
@@ -403,6 +420,12 @@ def time_loop(event, jet, drift=True, grad=False, el=True, fg=True, fgqhat=True,
                  'grad_perp_temp': (['time'], grad_perp_T_seen_array,
                           {'units': 'GeV/fm',
                            'long_name': 'Gradient of Temperature perp. to jet seen by the jet at this timestep'}),
+                 'grad_perp_utau': (['time'], grad_perp_utau_seen_array,
+                                    {'units': 'GeV/fm',
+                                     'long_name': 'Gradient of utau perp. to jet seen by the jet at this timestep'}),
+                 'grad_perp_uperp': (['time'], grad_perp_uperp_seen_array,
+                                    {'units': 'GeV/fm',
+                                     'long_name': 'Gradient of uperp perp. to jet seen by the jet at this timestep'}),
                  'u_perp': (['time'], u_perp_array,
                             {'units': 'GeV',
                              'long_name': 'Temperature seen by the jet at this timestep'}),

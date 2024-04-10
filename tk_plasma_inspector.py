@@ -879,7 +879,6 @@ class MainPage(tk.Frame):
                                                                        jet=self.current_jet,
                                                                        drift=self.drift.get(),
                                                                        el=self.el.get(),
-                                                                       grad=self.grad.get(),
                                                                        fg=self.fg.get(),
                                                                        temp_hrg=self.tempHRG.get(),
                                                                        temp_unh=self.tempUnhydro.get())

@@ -11,7 +11,7 @@ import logging
 
 
 class osu_hydro_file:
-    def __init__(self, file_path, event_name=None):
+    def __init__(self, file_path, event_name=None, temp_conv_factor=0.1973269788):
         # Store your original file location and event number
         self.file_path = file_path
         self.name = event_name
@@ -78,6 +78,9 @@ class osu_hydro_file:
         self.t0 = np.amin(self.tspace)
         self.tf = np.amax(self.tspace)
 
+        # Record conversion factor for temperature
+        self.temp_conv_factor = temp_conv_factor
+
     # Method to get raw temp data
     def temp_array(self):
         # Cut temp data out and convert to numpy array
@@ -87,7 +90,7 @@ class osu_hydro_file:
         # Reshape this nonsense into an array with first index time, then x, then y.
         # You can get the temperature at the grid indexes (ix,iy) at timestep 'it' as temp_array[it,ix,iy].
         logging.debug('Transposing temperatures and multiplying by HbarC to convert fm^-1 to GeV')
-        temp_data = 0.1973269788 * np.transpose(np.reshape(temp_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
+        temp_data = self.temp_conv_factor * np.transpose(np.reshape(temp_data, [self.NT, self.grid_width, self.grid_width]), axes=[0, 2, 1])
 
         return temp_data
 

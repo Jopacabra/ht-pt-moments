@@ -712,14 +712,15 @@ class MainPage(tk.Frame):
                 ypos_array = self.jet_xarray['y'].to_numpy()
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
                 q_EL_array = self.jet_xarray['q_EL'].to_numpy()
-                q_grad_array = self.jet_xarray['q_grad'].to_numpy()
-                q_fg_array = self.jet_xarray['q_fg'].to_numpy()
-                int_drift_array = self.jet_xarray['int_drift'].to_numpy()
-                int_EL_array = self.jet_xarray['int_EL'].to_numpy()
-                int_grad_array = self.jet_xarray['int_grad'].to_numpy()
+                q_fg_T_array = self.jet_xarray['q_fg_T'].to_numpy()
+                q_fg_utau_array = self.jet_xarray['q_fg_utau'].to_numpy()
+                q_fg_uperp_array = self.jet_xarray['q_fg_uperp'].to_numpy()
+                q_fg_total_array = q_fg_T_array + q_fg_utau_array + q_fg_uperp_array
                 pT_array = self.jet_xarray['pT'].to_numpy()
                 temp_seen_array = self.jet_xarray['temp'].to_numpy()
                 grad_perp_temp_array = self.jet_xarray['grad_perp_temp'].to_numpy()
+                grad_perp_utau_array = self.jet_xarray['grad_perp_utau'].to_numpy()
+                grad_perp_uperp_array = self.jet_xarray['grad_perp_uperp'].to_numpy()
                 u_perp_array = self.jet_xarray['u_perp'].to_numpy()
                 u_par_array = self.jet_xarray['u_par'].to_numpy()
                 u_array = self.jet_xarray['u'].to_numpy()
@@ -732,7 +733,9 @@ class MainPage(tk.Frame):
                 # Set moment display
                 self.momentDisplay.set('Total F Drift: {} GeV'.format(np.sum(q_drift_array)))
                 self.ELDisplay.set('Total EL: {} GeV'.format(np.sum(q_EL_array)))
-                self.momentHRGDisplay.set('Total FG Drift: {} GeV'.format(np.sum(q_fg_array)))
+                self.momentHRGDisplay.set('Total FG Drift: {} GeV'.format(np.sum(q_fg_T_array)
+                                                                          + np.sum(q_fg_utau_array)
+                                                                          + np.sum(q_fg_uperp_array)))
                 self.momentUnhydroDisplay.set('...')
 
                 # Select medium properties figure as current figure
@@ -744,13 +747,13 @@ class MainPage(tk.Frame):
                 self.propertyAxes[1, 0].plot(time_array, temp_seen_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 1].plot(time_array, grad_perp_temp_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 2].plot(time_array, q_EL_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 1].plot(time_array, pT_array, ls=connectorLineStyle)
-                self.propertyAxes[0, 2].plot(time_array, q_grad_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 1].plot(time_array, grad_perp_utau_array, ls=connectorLineStyle)
+                self.propertyAxes[0, 2].plot(time_array, q_fg_total_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 0].plot(time_array, (u_perp_array / (1 - u_par_array)), ls=connectorLineStyle)
-                self.propertyAxes[0, 3].plot(time_array, int_grad_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 3].plot(time_array, int_EL_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 3].plot(time_array, int_drift_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 0].plot(time_array, grad_perp_uperp_array, ls=connectorLineStyle)
+                self.propertyAxes[0, 3].plot(time_array, q_fg_T_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 3].plot(time_array, q_fg_utau_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 3].plot(time_array, q_fg_uperp_array, ls=connectorLineStyle)
 
                 if self.plotColors.get():
                     # Determine colors from temp seen by jet at each time.
@@ -772,13 +775,13 @@ class MainPage(tk.Frame):
                         self.propertyAxes[1, 0].plot(time_array[i], temp_seen_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 1].plot(time_array[i], grad_perp_temp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 2].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 1].plot(time_array[i], pT_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[0, 2].plot(time_array[i], q_grad_array[i], 'o', color=color_array[i] , markersize=markSize)
+                        self.propertyAxes[2, 1].plot(time_array[i], grad_perp_utau_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 2].plot(time_array[i], q_fg_total_array[i], 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 0].plot(time_array[i], (u_perp_array[i] / (1 - u_par_array[i])), 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[0, 3].plot(time_array[i], int_grad_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 3].plot(time_array[i], int_EL_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 3].plot(time_array[i], int_drift_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 0].plot(time_array[i], grad_perp_uperp_array, 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[0, 3].plot(time_array[i], q_fg_T_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 3].plot(time_array[i], q_fg_utau_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 3].plot(time_array[i], q_fg_uperp_array[i], 'o', color=color_array[i], markersize=markSize)
 
                         # # PERFORMANCE ISSUES:
                         # # Fill under the drift integrand curve for qgp phase
@@ -842,18 +845,18 @@ class MainPage(tk.Frame):
             self.propertyAxes[1, 0].set_yticks(list(self.propertyAxes[1, 0].get_yticks()) + [self.tempHRG.get()])
 
             # Plot property titles
-            self.propertyAxes[0, 0].set_title(r"$u_\perp$", fontsize=plotFontSize)
+            self.propertyAxes[0, 0].set_title(r"$u_\tau$", fontsize=plotFontSize)
             self.propertyAxes[0, 1].set_title(r"$u_\parallel$", fontsize=plotFontSize)
             self.propertyAxes[1, 0].set_title(r"$T$ (GeV)", fontsize=plotFontSize)
             self.propertyAxes[1, 1].set_title(r"$\nabla_{\perp} T$", fontsize=plotFontSize)
             self.propertyAxes[1, 2].set_title(r"$q_{EL}$", fontsize=plotFontSize)
-            self.propertyAxes[2, 1].set_title(r"$p_T$", fontsize=plotFontSize)
+            self.propertyAxes[2, 1].set_title(r"$\nabla_{\perp} u_{\tau}$", fontsize=plotFontSize)
             self.propertyAxes[0, 2].set_title(r"$q_{grad}$", fontsize=plotFontSize)
             self.propertyAxes[2, 2].set_title(r"$q_{drift}$", fontsize=plotFontSize)
-            self.propertyAxes[2, 0].set_title(r"$u_\perp / (1-u_\parallel)$", fontsize=plotFontSize)
-            self.propertyAxes[0, 3].set_title(r"Gradient Integrand", fontsize=plotFontSize)
-            self.propertyAxes[1, 3].set_title(r"EL Integrand", fontsize=plotFontSize)
-            self.propertyAxes[2, 3].set_title(r"Drift Integrand", fontsize=plotFontSize)
+            self.propertyAxes[2, 0].set_title(r"$\nabla_{\perp} u_{\perp}$", fontsize=plotFontSize)
+            self.propertyAxes[0, 3].set_title(r"$q_{fgT}$", fontsize=plotFontSize)
+            self.propertyAxes[1, 3].set_title(r"$q_{fgutau}$", fontsize=plotFontSize)
+            self.propertyAxes[2, 3].set_title(r"$q_{fguperp}$", fontsize=plotFontSize)
 
 
 

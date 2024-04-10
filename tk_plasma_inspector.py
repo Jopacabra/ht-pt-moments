@@ -107,8 +107,8 @@ class MainPage(tk.Frame):
         self.calculated.set(False)
         self.drift = tk.BooleanVar()
         self.drift.set(True)
-        self.grad = tk.BooleanVar()
-        self.grad.set(False)
+        self.fgqhat = tk.BooleanVar()
+        self.fgqhat.set(False)
         self.fg = tk.BooleanVar()
         self.fg.set(True)
         self.el = tk.BooleanVar()
@@ -280,22 +280,22 @@ class MainPage(tk.Frame):
         physicsMenu = tk.Menu(parent.menubar, tearoff=0)
         # drift submenu
         driftMenu = tk.Menu(physicsMenu, tearoff=0)
-        physicsMenu.add_cascade(label='Drift', menu=driftMenu)
+        physicsMenu.add_cascade(label='Flow Drift', menu=driftMenu)
         driftMenu.add_radiobutton(label='On', variable=self.drift, value=True,
                                 command=self.not_calculated)
         driftMenu.add_radiobutton(label='Off', variable=self.drift, value=False,
                                   command=self.not_calculated)
-        # Gradients submenu
-        gradMenu = tk.Menu(physicsMenu, tearoff=0)
-        physicsMenu.add_cascade(label='Gradients', menu=gradMenu)
-        gradMenu.add_radiobutton(label='On', variable=self.grad, value=True,
+        # Flow-Gradient q-hat mod submenu
+        flowgradqhatMenu = tk.Menu(physicsMenu, tearoff=0)
+        physicsMenu.add_cascade(label='Flow-Gradient qhat Mod', menu=flowgradqhatMenu)
+        flowgradqhatMenu.add_radiobutton(label='On', variable=self.fgqhat, value=True,
                                   command=self.not_calculated)
-        gradMenu.add_radiobutton(label='Off', variable=self.grad, value=False,
+        flowgradqhatMenu.add_radiobutton(label='Off', variable=self.fgqhat, value=False,
                                   command=self.not_calculated)
 
         # Flow-Gradients submenu
         flowgradMenu = tk.Menu(physicsMenu, tearoff=0)
-        physicsMenu.add_cascade(label='Flow-Gradient', menu=flowgradMenu)
+        physicsMenu.add_cascade(label='Flow-Gradient Drift', menu=flowgradMenu)
         flowgradMenu.add_radiobutton(label='On', variable=self.fg, value=True,
                                  command=self.not_calculated)
         flowgradMenu.add_radiobutton(label='Off', variable=self.fg, value=False,
@@ -716,6 +716,7 @@ class MainPage(tk.Frame):
                 q_fg_utau_array = self.jet_xarray['q_fg_utau'].to_numpy()
                 q_fg_uperp_array = self.jet_xarray['q_fg_uperp'].to_numpy()
                 q_fg_total_array = q_fg_T_array + q_fg_utau_array + q_fg_uperp_array
+                q_fgqhat_array = self.jet_xarray['q_fgqhat'].to_numpy()
                 pT_array = self.jet_xarray['pT'].to_numpy()
                 temp_seen_array = self.jet_xarray['temp'].to_numpy()
                 grad_perp_temp_array = self.jet_xarray['grad_perp_temp'].to_numpy()
@@ -744,7 +745,7 @@ class MainPage(tk.Frame):
                 # Plot connector lines for properties
                 self.propertyAxes[0, 0].plot(time_array, u_perp_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 0].plot(time_array, temp_seen_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 0].plot(time_array, q_fgqhat_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 1].plot(time_array, grad_perp_temp_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 2].plot(time_array, q_EL_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 1].plot(time_array, grad_perp_utau_array, ls=connectorLineStyle)
@@ -772,7 +773,7 @@ class MainPage(tk.Frame):
                     for i in range(0, len(time_array)):
                         self.propertyAxes[0, 0].plot(time_array[i], u_perp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 0].plot(time_array[i], temp_seen_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 0].plot(time_array[i], q_fgqhat_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 1].plot(time_array[i], grad_perp_temp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 2].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 1].plot(time_array[i], grad_perp_utau_array[i], 'o', color=color_array[i], markersize=markSize)
@@ -847,7 +848,7 @@ class MainPage(tk.Frame):
             # Plot property titles
             self.propertyAxes[0, 0].set_title(r"$u_\tau$", fontsize=plotFontSize)
             self.propertyAxes[0, 1].set_title(r"$u_\parallel$", fontsize=plotFontSize)
-            self.propertyAxes[1, 0].set_title(r"$T$ (GeV)", fontsize=plotFontSize)
+            self.propertyAxes[1, 0].set_title(r"$q_{fgqhat}$ (GeV)", fontsize=plotFontSize)
             self.propertyAxes[1, 1].set_title(r"$\nabla_{\perp} T$", fontsize=plotFontSize)
             self.propertyAxes[1, 2].set_title(r"$q_{EL}$", fontsize=plotFontSize)
             self.propertyAxes[2, 1].set_title(r"$\nabla_{\perp} u_{\tau}$", fontsize=plotFontSize)
@@ -883,6 +884,7 @@ class MainPage(tk.Frame):
                                                                        drift=self.drift.get(),
                                                                        el=self.el.get(),
                                                                        fg=self.fg.get(),
+                                                                       fgqhat=self.fgqhat.get(),
                                                                        temp_hrg=self.tempHRG.get(),
                                                                        temp_unh=self.tempUnhydro.get(),
                                                                        el_model=self.el_model.get())

@@ -82,7 +82,7 @@ def jet_drift_integrand(event, jet, time):
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
     FmGeV = 0.19732687
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return 3*((1 / FmGeV) * (1 / jet.p_T()) * config.jet.K_F_DRIFT
+    return ((1 / FmGeV) * (1 / jet.p_T()) * config.jet.K_F_DRIFT
            * ((event.i_int_factor(jet=jet, point=jet_point))
               * (event.u_perp(point=jet_point, phi=jet_p_phi) / (1 - event.u_par(point=jet_point, phi=jet_p_phi)))
               * (event.mu(point=jet_point)**2)

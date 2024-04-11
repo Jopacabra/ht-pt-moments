@@ -188,49 +188,37 @@ def run_event(eventNo):
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 
-                for case in [0, 1, 2, 4, 5]:
+                for case in [0, 1, 2, 3, 4]:
                     case_partons = pd.DataFrame({})
                     # Determine case details
                     if case == 0:
                         drift = False
                         fg = False
-                        grad = False
                         el = True
                         fgqhat = False
                     elif case == 1:
                         drift = True
                         fg = False
-                        grad = False
                         el = True
                         fgqhat = False
                     elif case == 2:
                         drift = True
                         fg = True
-                        grad = False
                         el = True
                         fgqhat = False
                     elif case == 3:
-                        drift = True
-                        fg = True
-                        grad = True
-                        el = True
-                        fgqhat = False
-                    elif case == 4:
                         drift = False
                         fg = False
-                        grad = False
                         el = True
                         fgqhat = True
-                    elif case == 5:
+                    elif case == 4:
                         drift = True
                         fg = True
-                        grad = False
                         el = True
                         fgqhat = True
                     else:
                         drift = True
                         fg = True
-                        grad = False
                         el = True
                         fgqhat = False
 
@@ -279,7 +267,8 @@ def run_event(eventNo):
 
                         # Log jet number and case description
                         logging.info('Running Jet {}, case {}'.format(str(process_num), case))
-                        logging.info('Energy Loss: {}, Vel Drift: {}, Grad Drift: {}'.format(el, drift, grad))
+                        logging.info('Energy Loss: {}, Vel Drift: {}, FG Drift: {}, FG Qhat: {}'.format(el, drift, fg,
+                                                                                                        fgqhat))
 
                         # Create the jet object
                         jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_num, part=chosen_pilot,
@@ -352,7 +341,6 @@ def run_event(eventNo):
                                 'drift': np.full(num_hadrons, drift),
                                 'el': np.full(num_hadrons, el),
                                 'fg': np.full(num_hadrons, fg),
-                                'grad': np.full(num_hadrons, grad),
                                 'process': np.full(num_hadrons, process_tag),
                                 'e_2': np.full(num_hadrons, event_e2),
                                 'psi_e2': np.full(num_hadrons, event_psi_e2),

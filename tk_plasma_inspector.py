@@ -235,7 +235,7 @@ class MainPage(tk.Frame):
                                      from_=0, to=2*np.pi, length=200, resolution=0.1, label='theta0 (rad)')
         # Create jetE slider
         self.jetESlider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.jetE,
-                                   from_=0.1, to=20, length=200, resolution=0.1, label='jetE (GeV)')
+                                   from_=0.1, to=100, length=200, resolution=0.1, label='jetE (GeV)')
         # Create tempHRG slider
         self.tempCutoffSlider = tk.Scale(self, orient=tk.HORIZONTAL,
                                          variable=self.tempHRG, from_=0, to=1, length=200, resolution=0.01,

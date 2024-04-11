@@ -490,7 +490,7 @@ except KeyboardInterrupt as error:
 
     # Clean up and get everything sorted
     safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
-              keep_event=config.mode.KEEP_EVENT)
+              keep_event=config.mode.KEEP_EVENT, event_obs=event_observables)
 
 except collision.StopEvent as error:
     logging.exception('HIC event error: {}'.format(str(error)))
@@ -498,7 +498,7 @@ except collision.StopEvent as error:
 
     # Clean up and get everything sorted
     safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
-              keep_event=config.mode.KEEP_EVENT)
+              keep_event=config.mode.KEEP_EVENT, event_obs=event_observables)
 
 except MemoryError as error:
     logging.exception('Memory error: {}'.format(str(error)))
@@ -506,7 +506,7 @@ except MemoryError as error:
 
     # Clean up and get everything sorted
     safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
-              keep_event=config.mode.KEEP_EVENT)
+              keep_event=config.mode.KEEP_EVENT, event_obs=event_observables)
 
 except BaseException as error:
     logging.exception('Unhandled error: {}'.format(str(error)))
@@ -514,7 +514,7 @@ except BaseException as error:
 
     # Clean up and get everything sorted
     safe_exit(resultsDataFrame=results, hadrons_df=hadrons, temp_dir=temp_dir, filename=resultsFilename, identifier=identifierString,
-              keep_event=config.mode.KEEP_EVENT)
+              keep_event=config.mode.KEEP_EVENT, event_obs=event_observables)
 
 logging.info('Results identifier: {}'.format(identifierString))
 logging.info('Successful clean exit!')

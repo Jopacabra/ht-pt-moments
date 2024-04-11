@@ -777,11 +777,11 @@ class MainPage(tk.Frame):
                     for i in range(0, len(time_array)):
                         self.propertyAxes[0, 0].plot(time_array[i], u_perp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 0].plot(time_array[i], q_fg_utau_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 0].plot(time_array[i], q_fg_utau_qhat_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 1].plot(time_array[i], grad_perp_temp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 2].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 1].plot(time_array[i], grad_perp_utau_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[0, 2].plot(time_array[i], q_fg_uperp_array[i], 'o', color=color_array[i] , markersize=markSize)
+                        self.propertyAxes[0, 2].plot(time_array[i], q_fg_uperp_qhat_array[i], 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 0].plot(time_array[i], grad_perp_uperp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 3].plot(time_array[i], pT_array[i], 'o', color=color_array[i], markersize=markSize)

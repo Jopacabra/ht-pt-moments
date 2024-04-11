@@ -749,11 +749,11 @@ class MainPage(tk.Frame):
                 # Plot connector lines for properties
                 self.propertyAxes[0, 0].plot(time_array, u_perp_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 0].plot(time_array, q_fg_utau_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 0].plot(time_array, q_fg_utau_qhat_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 1].plot(time_array, grad_perp_temp_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 2].plot(time_array, q_EL_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 1].plot(time_array, grad_perp_utau_array, ls=connectorLineStyle)
-                self.propertyAxes[0, 2].plot(time_array, q_fg_uperp_array, ls=connectorLineStyle)
+                self.propertyAxes[0, 2].plot(time_array, q_fg_uperp_qhat_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 0].plot(time_array, grad_perp_uperp_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 3].plot(time_array, pT_array, ls=connectorLineStyle)

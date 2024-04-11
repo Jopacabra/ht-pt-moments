@@ -712,10 +712,9 @@ class MainPage(tk.Frame):
                 ypos_array = self.jet_xarray['y'].to_numpy()
                 q_drift_array = self.jet_xarray['q_drift'].to_numpy()
                 q_EL_array = self.jet_xarray['q_el'].to_numpy()
-                q_fg_T_array = self.jet_xarray['q_fg_T'].to_numpy()
                 q_fg_utau_array = self.jet_xarray['q_fg_utau'].to_numpy()
                 q_fg_uperp_array = self.jet_xarray['q_fg_uperp'].to_numpy()
-                q_fg_total_array = q_fg_T_array + q_fg_utau_array + q_fg_uperp_array
+                q_fg_total_array = q_fg_utau_array + q_fg_uperp_array
                 q_fg_utau_qhat_array = self.jet_xarray['q_fg_utau_qhat'].to_numpy()
                 q_fg_uperp_qhat_array = self.jet_xarray['q_fg_uperp_qhat'].to_numpy()
                 pT_array = self.jet_xarray['pT'].to_numpy()

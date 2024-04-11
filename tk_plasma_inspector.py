@@ -716,7 +716,8 @@ class MainPage(tk.Frame):
                 q_fg_utau_array = self.jet_xarray['q_fg_utau'].to_numpy()
                 q_fg_uperp_array = self.jet_xarray['q_fg_uperp'].to_numpy()
                 q_fg_total_array = q_fg_T_array + q_fg_utau_array + q_fg_uperp_array
-                q_fgqhat_array = self.jet_xarray['q_fgqhat'].to_numpy()
+                q_fg_utau_qhat_array = self.jet_xarray['q_fg_utau_qhat'].to_numpy()
+                q_fg_uperp_qhat_array = self.jet_xarray['q_fg_uperp_qhat'].to_numpy()
                 pT_array = self.jet_xarray['pT'].to_numpy()
                 temp_seen_array = self.jet_xarray['temp'].to_numpy()
                 grad_perp_temp_array = self.jet_xarray['grad_perp_temp'].to_numpy()
@@ -733,9 +734,12 @@ class MainPage(tk.Frame):
 
                 # Set moment display
                 self.momentDisplay.set('Total F Drift: {} GeV'.format(np.sum(q_drift_array)))
-                self.ELDisplay.set('Total EL: {} (el) + {} (fgqhat) = {} GeV'.format(np.sum(q_EL_array),
-                                                                       np.sum(q_fgqhat_array),
-                                                                       np.sum(q_EL_array) + np.sum(q_fgqhat_array)))
+                self.ELDisplay.set('Total EL: {} (el) + {} (fg_utau) + {} (fg_uperp) = {} GeV'.format(np.sum(q_EL_array),
+                                                                       np.sum(q_fg_utau_qhat_array),
+                                                                       np.sum(q_fg_uperp_qhat_array),
+                                                                       (np.sum(q_EL_array)
+                                                                        + np.sum(q_fg_utau_qhat_array)
+                                                                        + np.sum(q_fg_uperp_qhat_array))))
                 self.momentHRGDisplay.set('Total FG Drift: {} GeV'.format(np.sum(q_fg_T_array)
                                                                           + np.sum(q_fg_utau_array)
                                                                           + np.sum(q_fg_uperp_array)))
@@ -747,11 +751,11 @@ class MainPage(tk.Frame):
                 # Plot connector lines for properties
                 self.propertyAxes[0, 0].plot(time_array, u_perp_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 0].plot(time_array, q_fgqhat_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 0].plot(time_array, q_fg_utau_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 1].plot(time_array, grad_perp_temp_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 2].plot(time_array, q_EL_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 1].plot(time_array, grad_perp_utau_array, ls=connectorLineStyle)
-                self.propertyAxes[0, 2].plot(time_array, q_fg_total_array, ls=connectorLineStyle)
+                self.propertyAxes[0, 2].plot(time_array, q_fg_uperp_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 0].plot(time_array, grad_perp_uperp_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 3].plot(time_array, q_fg_T_array, ls=connectorLineStyle)
@@ -775,11 +779,11 @@ class MainPage(tk.Frame):
                     for i in range(0, len(time_array)):
                         self.propertyAxes[0, 0].plot(time_array[i], u_perp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 0].plot(time_array[i], q_fgqhat_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 0].plot(time_array[i], q_fg_utau_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 1].plot(time_array[i], grad_perp_temp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 2].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 1].plot(time_array[i], grad_perp_utau_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[0, 2].plot(time_array[i], q_fg_total_array[i], 'o', color=color_array[i] , markersize=markSize)
+                        self.propertyAxes[0, 2].plot(time_array[i], q_fg_uperp_array[i], 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 0].plot(time_array[i], grad_perp_uperp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 3].plot(time_array[i], q_fg_T_array[i], 'o', color=color_array[i], markersize=markSize)
@@ -850,16 +854,16 @@ class MainPage(tk.Frame):
             # Plot property titles
             self.propertyAxes[0, 0].set_title(r"$u_\tau$", fontsize=plotFontSize)
             self.propertyAxes[0, 1].set_title(r"$u_\parallel$", fontsize=plotFontSize)
-            self.propertyAxes[1, 0].set_title(r"$q_{fgqhat}$ (GeV)", fontsize=plotFontSize)
+            self.propertyAxes[1, 0].set_title(r"$q_{\nabla_\perp u_\tau \hat{q}}$ (GeV)", fontsize=plotFontSize)
             self.propertyAxes[1, 1].set_title(r"$\nabla_{\perp} T$", fontsize=plotFontSize)
             self.propertyAxes[1, 2].set_title(r"$q_{EL}$", fontsize=plotFontSize)
             self.propertyAxes[2, 1].set_title(r"$\nabla_{\perp} u_{\tau}$", fontsize=plotFontSize)
-            self.propertyAxes[0, 2].set_title(r"$q_{grad}$", fontsize=plotFontSize)
+            self.propertyAxes[0, 2].set_title(r"$q_{\nabla_\perp u_\perp \hat{q}}$", fontsize=plotFontSize)
             self.propertyAxes[2, 2].set_title(r"$q_{drift}$", fontsize=plotFontSize)
             self.propertyAxes[2, 0].set_title(r"$\nabla_{\perp} u_{\perp}$", fontsize=plotFontSize)
-            self.propertyAxes[0, 3].set_title(r"$q_{fgT}$", fontsize=plotFontSize)
-            self.propertyAxes[1, 3].set_title(r"$q_{fgutau}$", fontsize=plotFontSize)
-            self.propertyAxes[2, 3].set_title(r"$q_{fguperp}$", fontsize=plotFontSize)
+            self.propertyAxes[0, 3].set_title(r"$q_{\nabla_\perp T}$", fontsize=plotFontSize)
+            self.propertyAxes[1, 3].set_title(r"$q_{\nabla_\perp u_\tau}$", fontsize=plotFontSize)
+            self.propertyAxes[2, 3].set_title(r"$q_{\nabla_\perp u_\perp}$", fontsize=plotFontSize)
 
 
 

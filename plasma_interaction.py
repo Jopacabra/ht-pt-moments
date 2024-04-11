@@ -193,9 +193,7 @@ def zeta(q=0, maxAttempts=5, batch=1000):
     return 0
 
 
-# Integrand for parameterized energy loss over coupling
-# Note - includes coupling constant to approximate scale of
-# nuclear modification factor (R_AA) from data
+# Integrand for energy loss
 def energy_loss_integrand(event, jet, time, tau, model='BBMG', fgqhat=False, mean_el_rate=0):
     jet_point = jet.coords3(time=time)
     jet_p_phi = jet.polar_mom_coords()[1]
@@ -284,10 +282,8 @@ def grad_integrand(event, jet, time, tau):
 
     return np.cbrt(first_order_q + first_order_g + second_order_q + second_order_g)
 
-# Integrand for parameterized energy loss over coupling
-# Note - includes coupling constant to approximate scale of
-# nuclear modification factor (R_AA) from data
-def fg_qhat_mod_factor(event, jet, time):
+# Modification factor for energy loss due to gradients of temperature
+def fg_T_qhat_mod_factor(event, jet, time):
     jet_point = jet.coords3(time=time)
     jet_p_rho, jet_p_phi = jet.polar_mom_coords()
     # FmGeV = 0.19732687
@@ -300,7 +296,37 @@ def fg_qhat_mod_factor(event, jet, time):
     # g = config.constants.G
     pt = jet.p_T()
     mu = event.mu(point=jet_point)
-    return (-1) * (time - event.t0) * (
-                    (3 * grad_perp_temp * (uperp / (1-upar)) * (1/T))
-                    + (grad_perp_u_tau * (uperp / ((1-upar)**2)))
-                    + (grad_perp_u_perp * (1 / (1-upar))))
+    return (-1) * (time - event.t0) * (3 * grad_perp_temp * (uperp / (1-upar)) * (1/T))
+
+
+# Modification factor for energy loss due to gradients of utau
+def fg_utau_qhat_mod_factor(event, jet, time):
+    jet_point = jet.coords3(time=time)
+    jet_p_rho, jet_p_phi = jet.polar_mom_coords()
+    # FmGeV = 0.19732687
+    T = event.temp(jet_point)
+    uperp = event.u_perp(point=jet_point, phi=jet_p_phi)
+    upar = event.u_par(point=jet_point, phi=jet_p_phi)
+    grad_perp_temp = event.grad_perp_T(jet_point, jet_p_phi)
+    grad_perp_u_perp = event.grad_perp_u_perp(jet_point, jet_p_phi)
+    grad_perp_u_tau = event.grad_perp_u_par(jet_point, jet_p_phi)
+    # g = config.constants.G
+    pt = jet.p_T()
+    mu = event.mu(point=jet_point)
+    return (-1) * (time - event.t0) * (grad_perp_u_tau * (uperp / ((1-upar)**2)))
+
+# Modification factor for energy loss due to gradients of uperp
+def fg_uperp_qhat_mod_factor(event, jet, time):
+    jet_point = jet.coords3(time=time)
+    jet_p_rho, jet_p_phi = jet.polar_mom_coords()
+    # FmGeV = 0.19732687
+    T = event.temp(jet_point)
+    uperp = event.u_perp(point=jet_point, phi=jet_p_phi)
+    upar = event.u_par(point=jet_point, phi=jet_p_phi)
+    grad_perp_temp = event.grad_perp_T(jet_point, jet_p_phi)
+    grad_perp_u_perp = event.grad_perp_u_perp(jet_point, jet_p_phi)
+    grad_perp_u_tau = event.grad_perp_u_par(jet_point, jet_p_phi)
+    # g = config.constants.G
+    pt = jet.p_T()
+    mu = event.mu(point=jet_point)
+    return (-1) * (time - event.t0) * (grad_perp_u_perp * (1 / (1-upar)))

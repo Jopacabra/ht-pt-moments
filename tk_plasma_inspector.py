@@ -905,7 +905,7 @@ class MainPage(tk.Frame):
     def sample_event(self):
         if self.file_selected:
             # Sample T^6 dist. and get point
-            sampledPoint = collision.generate_jet_point(self.current_event, 1)
+            sampledPoint = collision.generate_jet_seed_point(self.current_event, 1)
 
             # Uniform sample an angle
             sampledAngle = float(np.random.uniform(0, 2*np.pi, 1))

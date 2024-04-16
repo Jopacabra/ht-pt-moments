@@ -145,20 +145,20 @@ def run_event(eventNo):
     # This asks the hydro file object to interpolate the relevant functions and pass them on to the plasma object.
     event = plasma.plasma_event(event=file, name=eventNo, rmax=rmax)
 
-    ################
-    # Jet Analysis #
-    ################
+    ##################
+    # "Jet" Analysis #
+    ##################
     # Select angular bin centers fixed at elliptic flow attractors and repulsors.
     # phi_res = np.pi/2
     # phi_bin_centers = np.arange(0, 2*np.pi, phi_res) + psi_2
     phi_rng = np.random.default_rng()
     num_phi = 11  # We select a prime number so this can't (?) influence v_n =/= v_{num_phi}
 
-    # Oversample the background with jets
+    # Oversample the background with jet seeds
     for process_num in range(0, config.EBE.NUM_SAMPLES):
-        # Create unique jet tag
+        # Create unique jet seed tag
         process_tag = int(np.random.uniform(0, 1000000000000))
-        logging.info('- Jet Process {} Start -'.format(process_num))
+        logging.info('- Jet Seed Process {} Start -'.format(process_num))
 
         try:
             #########################
@@ -169,12 +169,12 @@ def run_event(eventNo):
             process_partons = pd.DataFrame({})
             process_hadrons = pd.DataFrame({})
 
-            # Select jet production point
+            # Select jet seed production point
             if not config.mode.VARY_POINT:
                 x0 = 0
                 y0 = 0
             else:
-                newPoint = collision.generate_jet_point(event)
+                newPoint = collision.generate_jet_seed_point(event)
                 x0, y0 = newPoint[0], newPoint[1]
 
             process_run = 0
@@ -223,7 +223,7 @@ def run_event(eventNo):
                         fgqhat = False
 
                     i = 0
-                    jet_num = -1
+                    jet_seed_num = -1
                     for index, particle in particles.iterrows():
                         # Only do the things for the particle output
                         particle_status = particle['status']
@@ -231,8 +231,8 @@ def run_event(eventNo):
                         if particle_status != 23:
                             i += 1
                             continue
-                        jet_num += 1
-                        # Read jet properties
+                        jet_seed_num += 1
+                        # Read jet seed particle properties
                         chosen_e = particle['pt']
                         chosen_weight = weight
                         particle_pid = particle['id']
@@ -251,8 +251,8 @@ def run_event(eventNo):
                         elif particle_pid == -3:
                             chosen_pilot = 'sbar'
 
-                        # Select jet angle from sample
-                        if jet_num == 0:
+                        # Select jet seed particle angle from sample
+                        if jet_seed_num == 0:
                             phi_0 = phi_val
                         else:
                             phi_0 = np.mod(phi_val + np.pi, 2*np.pi)
@@ -271,7 +271,7 @@ def run_event(eventNo):
                                                                                                         fgqhat))
 
                         # Create the jet object
-                        jet = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_num, part=chosen_pilot,
+                        jet = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_seed_num, part=chosen_pilot,
                                           weight=chosen_weight)
 
                         # Perform pp-level fragmentation

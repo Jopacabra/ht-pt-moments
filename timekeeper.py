@@ -9,31 +9,6 @@ import os
 import traceback
 
 
-def mean_eloss_rate(pT):
-    # Set constants
-    mpl = 2.27  # Ballpark value for mean jet path length in QGP
-
-    if pT < 2 or pT > 190:
-        return 0.375 * pT / mpl
-
-    else:
-        # Get project directory
-        project_path = os.path.dirname(os.path.realpath(__file__))
-
-        # Load deltaE / E curve data
-        tester_x = np.loadtxt(project_path + '/eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=0, delimiter=',')
-        tester_y = np.loadtxt(project_path + '/eoe_data/deltaEoE_thieved_points_PbPb.txt', skiprows=1, usecols=1, delimiter=',')
-
-        # Interpolate data
-        # This is the delta E / E curve
-        interp_func = interpolate.interp1d(x=tester_x, y=tester_y, fill_value="extrapolate")
-
-        # Compute mean energy loss per unit pathlength
-        # We take delta E / E, multiply by E, then divide by the mean path length
-        mean_eloss_rate_val = interp_func(pT) * pT / mpl
-
-        return mean_eloss_rate_val
-
 def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drift=1, scale_el=1, el_model='GLV',
               temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
     jet_dataframe = pd.DataFrame({})  # Empty dataframe to return in case of issue.
@@ -41,8 +16,8 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
     # Time Loop #
     #############
     # Set loop parameters
-    tau = config.jet.DTAU  # dt for time loop in fm
-    t = event.t0  # Set current time in fm to initial time
+    dtau = config.jet.DTAU  # dt for time loop in fm
+    tau = event.t0  # Set current time in fm to initial time
 
     # Initialize counters & values
     t_qgp = -1
@@ -97,8 +72,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
     phi_final = 0
     pT_final = 0
 
-    # Set mean energy loss rate for Vitev hack
-    mean_el_rate = mean_eloss_rate(jet.p_T())
+
 
     # Initiate loop
     logging.info('Initiating time loop...')
@@ -119,7 +93,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
             logging.info('Jet escaped event space...')
             exit_code = 0
             break
-        elif t > event.tf:
+        elif tau > event.tf:
             logging.info('Jet escaped event time...')
             if phase == 'qgp':
                 exit_code = 3
@@ -131,7 +105,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         jet_og_p_T = jet.p_T()
 
         # For timekeeping in phases, we approximate all time in one step as in one phase
-        jet_point = jet.coords3(time=t)
+        jet_point = jet.coords3(time=tau)
         jet_p_rho, jet_p_phi = jet.polar_mom_coords()
         temp = event.temp(jet_point)
         grad_perp_T = event.grad_perp_T(point=jet_point, phi=jet_p_phi)
@@ -159,10 +133,10 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
             # Compute drift, if enabled
             if drift:
                 # Compute jet drift integrand in this timestep
-                int_drift = pi.jet_drift_integrand(event=event, jet=jet, time=t)
+                int_drift = pi.drift_integrand(event=event, parton=jet, time=tau)
 
                 # Compute Jet drift momentum transferred to jet
-                q_drift = float(jet.beta() * tau * int_drift * scale_drift)
+                q_drift = float(jet.beta() * dtau * int_drift * scale_drift)
             else:
                 # Set drift integral and momentum transfer to zero
                 int_drift = 0
@@ -171,11 +145,11 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
             # Compute energy loss, if enabled
             if el:
                 # Compute energy loss integrand in this timestep
-                int_el = pi.energy_loss_integrand(event=event, jet=jet, time=t, tau=tau,
-                                                  model=el_model, mean_el_rate=mean_el_rate)
+                int_el = pi.energy_loss_integrand(event=event, parton=jet, time=tau, tau=dtau,
+                                                  model=el_model)
 
                 # Compute energy loss due to gluon exchange with the medium
-                q_el = float(jet.beta() * tau * int_el * scale_el)
+                q_el = float(jet.beta() * dtau * int_el * scale_el)
             else:
                 # Set energy loss and el integral to zero
                 int_el = 0
@@ -183,12 +157,12 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
 
             if fg:
                 # Compute mixed flow-gradient drift integrand in this timestep
-                int_fg_utau = pi.flowgrad_utau_integrand(event=event, jet=jet, time=t)
-                int_fg_uperp = pi.flowgrad_uperp_integrand(event=event, jet=jet, time=t)
+                int_fg_utau = pi.flowgrad_utau_integrand(event=event, parton=jet, time=tau)
+                int_fg_uperp = pi.flowgrad_uperp_integrand(event=event, parton=jet, time=tau)
 
                 # Compute momentums transferred to jet
-                q_fg_utau = float(jet.beta() * tau * int_fg_utau)
-                q_fg_uperp = float(jet.beta() * tau * int_fg_uperp)
+                q_fg_utau = float(jet.beta() * dtau * int_fg_utau)
+                q_fg_uperp = float(jet.beta() * dtau * int_fg_uperp)
             else:
                 # Set flow-gradient effects and integral to zero
                 int_fg_utau = 0
@@ -198,10 +172,10 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
 
             if fgqhat:
                 # Compute correction to energy loss due to flow-gradient modification
-                int_fg_utau_qhat = int_el * pi.fg_utau_qhat_mod_factor(event=event, jet=jet, time=t)
-                int_fg_uperp_qhat = int_el * pi.fg_uperp_qhat_mod_factor(event=event, jet=jet, time=t)
-                q_fg_utau_qhat = float(jet.beta() * tau * int_fg_utau_qhat * scale_el)
-                q_fg_uperp_qhat = float(jet.beta() * tau * int_fg_uperp_qhat * scale_el)
+                int_fg_utau_qhat = int_el * pi.fg_utau_qhat_mod_factor(event=event, parton=jet, time=tau)
+                int_fg_uperp_qhat = int_el * pi.fg_uperp_qhat_mod_factor(event=event, parton=jet, time=tau)
+                q_fg_utau_qhat = float(jet.beta() * dtau * int_fg_utau_qhat * scale_el)
+                q_fg_uperp_qhat = float(jet.beta() * dtau * int_fg_uperp_qhat * scale_el)
             else:
                 # Set correction to energy loss due to flow-gradient modification to zero
                 int_fg_utau_qhat = 0
@@ -253,28 +227,28 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         # Decide phase for categorization & timekeeping
         if phase == 'qgp':
             if qgp_first:
-                t_qgp = t
+                t_qgp = tau
                 qgp_first = False
 
-            qgp_time_total += tau
+            qgp_time_total += dtau
 
         # Decide phase for categorization & timekeeping
         if phase == 'hrg':
             if hrg_first:
-                t_hrg = t
+                t_hrg = tau
                 hrg_first = False
 
-            hrg_time_total += tau
+            hrg_time_total += dtau
 
         if phase == 'unh':
             if unhydro_first:
-                t_unhydro = t
+                t_unhydro = tau
                 unhydro_first = False
 
-            unhydro_time_total += tau
+            unhydro_time_total += dtau
 
         # Record arrays of values from this step for the jet record
-        time_array = np.append(time_array, t)
+        time_array = np.append(time_array, tau)
         xpos_array = np.append(xpos_array, jet.x)
         ypos_array = np.append(ypos_array, jet.y)
         q_drift_array = np.append(q_drift_array, q_drift)
@@ -298,7 +272,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         # Change Jet Parameters #
         #########################
         # Propagate jet position
-        jet.prop(tau=tau)
+        jet.prop(tau=dtau)
 
         # Change jet momentum to reflect energy loss
         jet.add_q_par(q_par=q_el)
@@ -327,7 +301,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         ###############
         # Timekeeping #
         ###############
-        t += tau
+        tau += dtau
 
         # Get final jet parameters
         rho_final, phi_final = jet.polar_mom_coords()

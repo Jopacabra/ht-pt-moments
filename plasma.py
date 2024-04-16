@@ -441,12 +441,12 @@ class plasma_event:
         else:
             return arctan2
 
-    # Method to return velocity perpendicular to given jet's trajectory at given time
+    # Method to return velocity perpendicular to given trajectory angle at given time
     def u_perp(self, point, phi):
         return -self.x_vel(point) * np.sin(phi) \
                + self.y_vel(np.array(point)) * np.cos(phi)
 
-    # Method to return velocity parallel to given jet's trajectory at given time
+    # Method to return velocity parallel to given trajectory angle at given time
     def u_par(self, point, phi):
         return self.x_vel(point) * np.cos(phi) \
                + self.y_vel(np.array(point)) * np.sin(phi)
@@ -536,15 +536,15 @@ class plasma_event:
         debye_mass = config.constants.G_MU * self.temp(point) * np.sqrt(1 + Nf /6)
         return debye_mass
 
-    def i_int_factor(self, jet, point, k=0):
+    def i_int_factor(self, parton, point, k=0):
         current_point = point
-        jetEnergy = jet.p_T()
+        parton_E = parton.p_T()
 
         if k == 0:
-            Ik = 3 * np.log(jetEnergy / self.mu(point=current_point))  # No idea what the error should be here
+            Ik = 3 * np.log(parton_E / self.mu(point=current_point))  # No idea what the error should be here
         else:  # Not really a thing.
             print('I(k) for k =/= 0 is not functional. Using k=0 form.')
-            Ik = 3 * np.log(jetEnergy / self.mu(point=current_point))  # No idea what the error should be here
+            Ik = 3 * np.log(parton_E / self.mu(point=current_point))  # No idea what the error should be here
 
         return Ik
 

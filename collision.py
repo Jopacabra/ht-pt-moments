@@ -867,7 +867,7 @@ def temp_6th_sample(event, maxAttempts=5, time='i', batch=1000):
 
 # Function to generate a given number of jet production points
 # sampled from the temperature^6 profile.
-def generate_jet_point(event, num=1):
+def generate_jet_seed_point(event, num=1):
     pointArray = np.array([])
     for i in np.arange(0, num):
         newPoint = temp_6th_sample(event)

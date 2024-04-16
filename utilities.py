@@ -210,7 +210,7 @@ def jet_e_sample(maxAttempts=5, batch=1000, min_e=0, max_e=100):
     return 0
 
 # Function generally used to average a medium parameter over a certain pathlength
-def dtau_avg(func, point, phi, dtau, beta, num_samples=20):
+def dtau_avg(func, point, phi, dtau, beta, num_samples=10):
     sample_coords = point
     for delta_tau in np.arange(dtau/num_samples, dtau, dtau/num_samples):
         sample_tau = point[0] + delta_tau

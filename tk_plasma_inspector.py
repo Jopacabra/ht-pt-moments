@@ -100,7 +100,7 @@ class MainPage(tk.Frame):
         self.x0 = tk.DoubleVar()
         self.y0 = tk.DoubleVar()
         self.parton_E = tk.DoubleVar()
-        self.parton_E.set(1)
+        self.parton_E.set(3)
         self.nth = tk.IntVar()
         self.nth.set(10)
         self.calculated = tk.BooleanVar()
@@ -292,6 +292,10 @@ class MainPage(tk.Frame):
         # Create physics menu cascade
         # ---
         physicsMenu = tk.Menu(parent.menubar, tearoff=0)
+        # scale submenu
+        scale_menu = tk.Menu(physicsMenu, tearoff=0)
+        physicsMenu.add_cascade(label='dtau', menu=scale_menu)
+        scale_menu.add_command(label='Set dtau', command=self.select_dtau)
         # drift submenu
         driftMenu = tk.Menu(physicsMenu, tearoff=0)
         physicsMenu.add_cascade(label='Flow Drift', menu=driftMenu)
@@ -647,6 +651,10 @@ class MainPage(tk.Frame):
         self.current_parton = jets.parton(x_0=self.x0.get(), y_0=self.y0.get(),
                                           phi_0=self.theta0.get(), p_T0=self.parton_E.get())
         self.not_calculated(0)
+
+    # Set dtau
+    def select_file(self, value=None):
+        config.jet.DTAU = askfloat("Input", "Enter parton prop. time step in fm: ", minvalue=0.0001, maxvalue=5)
 
     # Define the update function
     def update_plots(self, value=None):

@@ -271,8 +271,8 @@ def run_event(eventNo):
                                                                                                         fgqhat))
 
                         # Create the jet object
-                        jet = jets.jet(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_num, part=chosen_pilot,
-                                       weight=chosen_weight)
+                        jet = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_num, part=chosen_pilot,
+                                          weight=chosen_weight)
 
                         # Perform pp-level fragmentation
                         pp_frag_z = ff.frag(jet)

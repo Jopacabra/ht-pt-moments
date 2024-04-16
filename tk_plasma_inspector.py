@@ -630,8 +630,8 @@ class MainPage(tk.Frame):
     # Define jet update function
     def update_jet(self, value=None):
         # Set current_jet object to current slider parameters
-        self.current_jet = jets.jet(x_0=self.x0.get(), y_0=self.y0.get(),
-                                    phi_0=self.theta0.get(), p_T0=self.jetE.get())
+        self.current_jet = jets.parton(x_0=self.x0.get(), y_0=self.y0.get(),
+                                       phi_0=self.theta0.get(), p_T0=self.jetE.get())
         self.not_calculated(0)
 
     # Define the update function

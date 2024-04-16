@@ -8,7 +8,7 @@ import logging
 
 
 
-class jet:
+class parton:
     # Instantiation statement. All parameters optional.
     def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, part=None, tag=None, no=None, weight=1):
         logging.info('Creating new jet...')

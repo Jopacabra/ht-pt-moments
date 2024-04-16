@@ -653,7 +653,7 @@ class MainPage(tk.Frame):
         self.not_calculated(0)
 
     # Set dtau
-    def select_file(self, value=None):
+    def select_dtau(self, value=None):
         config.jet.DTAU = askfloat("Input", "Enter parton prop. time step in fm: ", minvalue=0.0001, maxvalue=5)
 
     # Define the update function

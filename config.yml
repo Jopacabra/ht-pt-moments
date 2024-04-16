@@ -3,7 +3,7 @@ mode:  # Operation mode flags
     NUM_EVENTS: 1  # Number of events to generate -- 0 runs events until interrupt.
     NUM_SAMPLES: 100  # Number of hard jet production processes to run in each event
     KEEP_EVENT: False  # Keep plasma data for future analysis
-    KEEP_RECORD: False  # Save xarray jet record - includes trajectory & pT history
+    KEEP_RECORD: False  # Save xarray parton record - includes trajectory & pT history
 trento:
     NORM: 20  # Overall normalization factor for reduced thickness function (and thereby multiplicity)
     PROJ1: 'Pb'  # Collisions species 1
@@ -29,10 +29,10 @@ transport:  # Parameters for the hybrid transport medium model - freestreaming, 
     ZETAS_MAX: 0.032  # maximum value of zeta/s (at T0)
     ZETAS_WIDTH: 0.024  # [GeV] width of (zeta/s)(T)
     ZETAS_T0: 0.175  # [GeV] peak location of Cauchy (zeta/s)(T)
-jet:  # Parameters for the jets to be run
+jet:  # Parameters for the jet production processes to be run
     PTHATMIN: 1  # [GeV] Minimum pTHat for jet production hard scatterings ~ min initial pT of jets
     PTHATMAX: 100  # [GeV] Maximum pTHat for jet production hard scatterings ~ max initial pT of jets
-    DTAU: 0.1  # [fm] Timestep used for jet propagation -- plasma properties assumed constant over dtau
+    DTAU: 0.1  # [fm] Timestep used for parton propagation -- plasma properties assumed constant over dtau
     T_HRG: 0.155  # [GeV] Temperature in GeV at which to consider the medium hadronized - cuts off el & drift
     T_UNHYDRO: 0.150  # [GeV] Temperature in GeV at which to consider the medium unhydrodynamic
     K_F_DRIFT: 1  # Scale factor for flow drift effect - default realistic estimate is 1

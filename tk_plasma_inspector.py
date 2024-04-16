@@ -99,8 +99,8 @@ class MainPage(tk.Frame):
         self.theta0 = tk.DoubleVar()
         self.x0 = tk.DoubleVar()
         self.y0 = tk.DoubleVar()
-        self.jetE = tk.DoubleVar()
-        self.jetE.set(1)
+        self.parton_E = tk.DoubleVar()
+        self.parton_E.set(1)
         self.nth = tk.IntVar()
         self.nth.set(10)
         self.calculated = tk.BooleanVar()
@@ -145,8 +145,8 @@ class MainPage(tk.Frame):
         self.zoom.set(1)
 
         # Moment variables
-        self.jet_dataframe = None
-        self.jet_xarray = None
+        self.parton_dataframe = None
+        self.parton_xarray = None
         self.moment = 0
         self.angleDeflection = 0
         self.momentPlasma = 0
@@ -212,10 +212,10 @@ class MainPage(tk.Frame):
                                    command=self.update_plots)
 
         # Create button to calculate and display moment
-        self.run_jet_button = ttk.Button(self, text='Run Jet',
-                                         command=self.run_jet)
+        self.run_parton_button = ttk.Button(self, text='Run Parton',
+                                            command=self.run_parton)
 
-        # Create button to sample the event and set jet initial conditions.
+        # Create button to sample the event and set parton initial conditions.
         self.sample_button = ttk.Button(self, text='Sample',
                                         command=self.sample_event)
 
@@ -233,9 +233,9 @@ class MainPage(tk.Frame):
         # Create theta0 slider
         self.theta0Slider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.theta0,
                                      from_=0, to=2*np.pi, length=200, resolution=0.1, label='theta0 (rad)')
-        # Create jetE slider
-        self.jetESlider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.jetE,
-                                   from_=0.1, to=100, length=200, resolution=0.1, label='jetE (GeV)')
+        # Create parton energy slider
+        self.parton_E_slider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.parton_E,
+                                        from_=0.1, to=100, length=200, resolution=0.1, label='Parton E (GeV)')
         # Create tempHRG slider
         self.tempCutoffSlider = tk.Scale(self, orient=tk.HORIZONTAL,
                                          variable=self.tempHRG, from_=0, to=1, length=200, resolution=0.01,
@@ -252,14 +252,14 @@ class MainPage(tk.Frame):
 
         # Register update ON RELEASE - use of command parameter applies action immediately
         #self.update_button.bind("<ButtonRelease-1>", self.update_plots)
-        self.timeSlider.bind("<ButtonRelease-1>", self.update_jet)
-        self.x0Slider.bind("<ButtonRelease-1>", self.update_jet)
-        self.y0Slider.bind("<ButtonRelease-1>", self.update_jet)
-        self.theta0Slider.bind("<ButtonRelease-1>", self.update_jet)
-        self.jetESlider.bind("<ButtonRelease-1>", self.update_jet)
-        self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_jet)
-        self.tempUnhydroSlider.bind("<ButtonRelease-1>", self.update_jet)
-        self.zoomSlider.bind("<ButtonRelease-1>", self.update_jet)
+        self.timeSlider.bind("<ButtonRelease-1>", self.update_parton)
+        self.x0Slider.bind("<ButtonRelease-1>", self.update_parton)
+        self.y0Slider.bind("<ButtonRelease-1>", self.update_parton)
+        self.theta0Slider.bind("<ButtonRelease-1>", self.update_parton)
+        self.parton_E_slider.bind("<ButtonRelease-1>", self.update_parton)
+        self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_parton)
+        self.tempUnhydroSlider.bind("<ButtonRelease-1>", self.update_parton)
+        self.zoomSlider.bind("<ButtonRelease-1>", self.update_parton)
 
         #########
         # Menus #
@@ -319,20 +319,20 @@ class MainPage(tk.Frame):
         # Create plasma plot menu cascade
         # ---
         plasmaMenu = tk.Menu(parent.menubar, tearoff=0)
-        # Jet submenu
-        jetMenu = tk.Menu(plasmaMenu, tearoff=0)
-        plasmaMenu.add_cascade(label='Jet', menu=jetMenu)
-        jetMenu.add_radiobutton(label='Coarse (Every 20th)', variable=self.nth, value=20,
+        # Parton submenu
+        parton_menu = tk.Menu(plasmaMenu, tearoff=0)
+        plasmaMenu.add_cascade(label='Parton', menu=parton_menu)
+        parton_menu.add_radiobutton(label='Coarse (Every 20th)', variable=self.nth, value=20,
                                     command=self.update_plots)
-        jetMenu.add_radiobutton(label='Medium-Coarse (Every 15th)', variable=self.nth, value=15,
+        parton_menu.add_radiobutton(label='Medium-Coarse (Every 15th)', variable=self.nth, value=15,
                                     command=self.update_plots)
-        jetMenu.add_radiobutton(label='Medium (Every 10th)', variable=self.nth, value=10,
+        parton_menu.add_radiobutton(label='Medium (Every 10th)', variable=self.nth, value=10,
                                     command=self.update_plots)
-        jetMenu.add_radiobutton(label='Medium-Fine (Every 5th)', variable=self.nth, value=5,
+        parton_menu.add_radiobutton(label='Medium-Fine (Every 5th)', variable=self.nth, value=5,
                                     command=self.update_plots)
-        jetMenu.add_radiobutton(label='Fine (Every 2nd)', variable=self.nth, value=2,
+        parton_menu.add_radiobutton(label='Fine (Every 2nd)', variable=self.nth, value=2,
                                     command=self.update_plots)
-        jetMenu.add_radiobutton(label='Ultra-Fine (1)', variable=self.nth, value=1,
+        parton_menu.add_radiobutton(label='Ultra-Fine (1)', variable=self.nth, value=1,
                                     command=self.update_plots)
         # Temperature submenu
         tempMenu = tk.Menu(plasmaMenu, tearoff=0)
@@ -420,12 +420,12 @@ class MainPage(tk.Frame):
         # Smash everything into the window
         self.update_button.grid(row=0, column=0)
         self.sample_button.grid(row=0, column=1)
-        self.run_jet_button.grid(row=0, column=2)
+        self.run_parton_button.grid(row=0, column=2)
         self.timeSlider.grid(row=1, column=0, columnspan=2)
         self.x0Slider.grid(row=1, column=2, columnspan=2)
         self.y0Slider.grid(row=1, column=4, columnspan=2)
         self.theta0Slider.grid(row=1, column=6, columnspan=2)
-        self.jetESlider.grid(row=1, column=8, columnspan=2)
+        self.parton_E_slider.grid(row=1, column=8, columnspan=2)
         self.zoomSlider.grid(row=1, column=10, columnspan=1)
         self.tempCutoffSlider.grid(row=5, column=8, columnspan=2)
         self.tempUnhydroSlider.grid(row=6, column=8, columnspan=2)
@@ -437,8 +437,8 @@ class MainPage(tk.Frame):
         self.momentUnhydroLabel.grid(row=6, column=4, columnspan=4)
         # buttonPage1.grid()  # Unused second page
 
-        # Create the jet object
-        self.update_jet(0)
+        # Create the parton object
+        self.update_parton(0)
 
     # Define the select file function
     def select_file(self, value=None):
@@ -600,7 +600,7 @@ class MainPage(tk.Frame):
         colorArray = np.array([])
         for time in t:
             # Check temperature at the given time
-            checkTemp = self.current_event.temp(self.current_jet.coords3(time))
+            checkTemp = self.current_event.temp(self.current_parton.coords3(time))
             # Assign relevant color to plot
             if self.tempHRG.get() > checkTemp > self.tempUnhydro.get():
                 # Hadron gas phase, hydrodynamic
@@ -627,11 +627,11 @@ class MainPage(tk.Frame):
     def not_calculated(self, value=None):
         self.calculated.set(False)
 
-    # Define jet update function
-    def update_jet(self, value=None):
-        # Set current_jet object to current slider parameters
-        self.current_jet = jets.parton(x_0=self.x0.get(), y_0=self.y0.get(),
-                                       phi_0=self.theta0.get(), p_T0=self.jetE.get())
+    # Define parton update function
+    def update_parton(self, value=None):
+        # Set current_parton object to current slider parameters
+        self.current_parton = jets.parton(x_0=self.x0.get(), y_0=self.y0.get(),
+                                          phi_0=self.theta0.get(), p_T0=self.parton_E.get())
         self.not_calculated(0)
 
     # Define the update function
@@ -699,33 +699,33 @@ class MainPage(tk.Frame):
             #print(self.calculated.get())
             if self.calculated.get():
 
-                # Plot jet trajectory
+                # Plot parton trajectory
                 # Select QGP figure as current figure
                 plt.figure(self.plasmaFigure.number)
                 # Plot initial trajectory
-                d_x = np.cos(self.current_jet.phi_0) * self.current_jet.beta_0 * (0.5 * self.current_event.tf)
-                d_y = np.sin(self.current_jet.phi_0) * self.current_jet.beta_0 * (0.5 * self.current_event.tf)
-                self.plasmaAxis.arrow(self.current_jet.x_0, self.current_jet.y_0, d_x, d_y, color='white', width=0.15)
+                d_x = np.cos(self.current_parton.phi_0) * self.current_parton.beta_0 * (0.5 * self.current_event.tf)
+                d_y = np.sin(self.current_parton.phi_0) * self.current_parton.beta_0 * (0.5 * self.current_event.tf)
+                self.plasmaAxis.arrow(self.current_parton.x_0, self.current_parton.y_0, d_x, d_y, color='white', width=0.15)
                 # Get trajectory points
-                time_array = self.jet_xarray['time'].to_numpy()
-                xpos_array = self.jet_xarray['x'].to_numpy()
-                ypos_array = self.jet_xarray['y'].to_numpy()
-                q_drift_array = self.jet_xarray['q_drift'].to_numpy()
-                q_EL_array = self.jet_xarray['q_el'].to_numpy()
-                q_fg_utau_array = self.jet_xarray['q_fg_utau'].to_numpy()
-                q_fg_uperp_array = self.jet_xarray['q_fg_uperp'].to_numpy()
+                time_array = self.parton_xarray['time'].to_numpy()
+                xpos_array = self.parton_xarray['x'].to_numpy()
+                ypos_array = self.parton_xarray['y'].to_numpy()
+                q_drift_array = self.parton_xarray['q_drift'].to_numpy()
+                q_EL_array = self.parton_xarray['q_el'].to_numpy()
+                q_fg_utau_array = self.parton_xarray['q_fg_utau'].to_numpy()
+                q_fg_uperp_array = self.parton_xarray['q_fg_uperp'].to_numpy()
                 q_fg_total_array = q_fg_utau_array + q_fg_uperp_array
-                q_fg_utau_qhat_array = self.jet_xarray['q_fg_utau_qhat'].to_numpy()
-                q_fg_uperp_qhat_array = self.jet_xarray['q_fg_uperp_qhat'].to_numpy()
-                pT_array = self.jet_xarray['pT'].to_numpy()
-                temp_seen_array = self.jet_xarray['temp'].to_numpy()
-                grad_perp_temp_array = self.jet_xarray['grad_perp_temp'].to_numpy()
-                grad_perp_utau_array = self.jet_xarray['grad_perp_utau'].to_numpy()
-                grad_perp_uperp_array = self.jet_xarray['grad_perp_uperp'].to_numpy()
-                u_perp_array = self.jet_xarray['u_perp'].to_numpy()
-                u_par_array = self.jet_xarray['u_par'].to_numpy()
-                u_array = self.jet_xarray['u'].to_numpy()
-                phase_array = self.jet_xarray['phase'].to_numpy()
+                q_fg_utau_qhat_array = self.parton_xarray['q_fg_utau_qhat'].to_numpy()
+                q_fg_uperp_qhat_array = self.parton_xarray['q_fg_uperp_qhat'].to_numpy()
+                pT_array = self.parton_xarray['pT'].to_numpy()
+                temp_seen_array = self.parton_xarray['temp'].to_numpy()
+                grad_perp_temp_array = self.parton_xarray['grad_perp_temp'].to_numpy()
+                grad_perp_utau_array = self.parton_xarray['grad_perp_utau'].to_numpy()
+                grad_perp_uperp_array = self.parton_xarray['grad_perp_uperp'].to_numpy()
+                u_perp_array = self.parton_xarray['u_perp'].to_numpy()
+                u_par_array = self.parton_xarray['u_par'].to_numpy()
+                u_array = self.parton_xarray['u'].to_numpy()
+                phase_array = self.parton_xarray['phase'].to_numpy()
                 rpos_array = np.sqrt(xpos_array**2 + ypos_array**2)
                 # Plot trajectory
                 self.plasmaAxis.plot(xpos_array[::self.nth.get()], ypos_array[::self.nth.get()], marker=',',
@@ -761,7 +761,7 @@ class MainPage(tk.Frame):
                 self.propertyAxes[2, 3].plot(time_array, q_fg_uperp_array, ls=connectorLineStyle)
 
                 if self.plotColors.get():
-                    # Determine colors from temp seen by jet at each time.
+                    # Determine colors from temp seen by parton at each time.
                     color_array = np.array([])
                     for phase in phase_array:
                         if phase == 'qgp':
@@ -875,33 +875,33 @@ class MainPage(tk.Frame):
     def animate_plasma(self):
         return None
 
-    def run_jet(self, value=None):
+    def run_parton(self, value=None):
         if self.file_selected:
-            # Update jet object
-            self.update_jet(0)
+            # Update parton object
+            self.update_parton(0)
 
-            # Calculate the jet trajectory
-            print('Calculating jet trajectory...')
+            # Calculate the parton trajectory
+            print('Calculating parton trajectory...')
             # Run the time loop
-            self.jet_dataframe, self.jet_xarray = timekeeper.time_loop(event=self.current_event,
-                                                                       jet=self.current_jet,
-                                                                       drift=self.drift.get(),
-                                                                       el=self.el.get(),
-                                                                       fg=self.fg.get(),
-                                                                       fgqhat=self.fgqhat.get(),
-                                                                       temp_hrg=self.tempHRG.get(),
-                                                                       temp_unh=self.tempUnhydro.get(),
-                                                                       el_model=self.el_model.get())
+            self.parton_dataframe, self.parton_xarray = timekeeper.time_loop(event=self.current_event,
+                                                                             parton=self.current_parton,
+                                                                             drift=self.drift.get(),
+                                                                             el=self.el.get(),
+                                                                             fg=self.fg.get(),
+                                                                             fgqhat=self.fgqhat.get(),
+                                                                             temp_hrg=self.tempHRG.get(),
+                                                                             temp_unh=self.tempUnhydro.get(),
+                                                                             el_model=self.el_model.get())
 
-            print('Jet trajectory complete.')
+            print('Parton trajectory complete.')
             self.calculated.set(True)
-            # Update plots to set current jet and event business.
+            # Update plots to set current parton and event business.
             self.update_plots()
 
         else:
             print('Select a file!!!')
 
-    # Method to sample the event and return new jet production point
+    # Method to sample the event and return new parton production point
     def sample_event(self):
         if self.file_selected:
             # Sample T^6 dist. and get point

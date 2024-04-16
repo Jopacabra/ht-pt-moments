@@ -27,7 +27,7 @@ except:
     logging.warning('frzout not found.')
 
 """
-This module is responsible for all processes related to jet production, event generation, & hard scattering.
+This module is responsible for all processes related to event generation & hard scattering.
 - Rejection samples initial temperature profile for jet production
 - Produces PDFs from temp backgrounds
 - Planned inclusions: Pythia handling, etc.

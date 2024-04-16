@@ -1,10 +1,10 @@
 import numpy as np
 import lhapdf
 
-def frag(jet):
+def frag(parton):
     # Get jet properties
-    jet_pt = jet.p_T()
-    jet_pid = jet.id
+    jet_pt = parton.p_T()
+    jet_pid = parton.id
 
     # Set limits on fragmentation values
     z_min = 0.01

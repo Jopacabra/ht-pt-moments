@@ -9,9 +9,9 @@ import os
 import traceback
 
 
-def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drift=1, scale_el=1, el_model='GLV',
+def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_drift=1, scale_el=1, el_model='GLV',
               temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
-    jet_dataframe = pd.DataFrame({})  # Empty dataframe to return in case of issue.
+    parton_dataframe = pd.DataFrame({})  # Empty dataframe to return in case of issue.
     #############
     # Time Loop #
     #############
@@ -89,7 +89,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         # Set Current Step Data #
         #########################
         # Decide if we're in bounds of the grid
-        if jet.x > event.xmax or jet.y > event.ymax or jet.x < event.xmin or jet.y < event.ymin:
+        if parton.x > event.xmax or parton.y > event.ymax or parton.x < event.xmin or parton.y < event.ymin:
             logging.info('Jet escaped event space...')
             exit_code = 0
             break
@@ -102,18 +102,18 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
             break
 
         # Record p_T at beginning of step for extinction check
-        jet_og_p_T = jet.p_T()
+        parton_og_p_T = parton.p_T()
 
         # For timekeeping in phases, we approximate all time in one step as in one phase
-        jet_point = jet.coords3(time=tau)
-        jet_p_rho, jet_p_phi = jet.polar_mom_coords()
-        temp = event.temp(jet_point)
-        grad_perp_T = event.grad_perp_T(point=jet_point, phi=jet_p_phi)
-        grad_perp_utau = event.grad_perp_u_par(point=jet_point, phi=jet_p_phi)
-        grad_perp_uperp = event.grad_perp_u_perp(point=jet_point, phi=jet_p_phi)
-        u_perp = event.u_perp(point=jet_point, phi=jet_p_phi)
-        u_par = event.u_par(point=jet_point, phi=jet_p_phi)
-        u = event.vel(jet_point)
+        parton_point = parton.coords3(time=tau)
+        parton_p_rho, parton_p_phi = parton.polar_mom_coords()
+        temp = event.temp(parton_point)
+        grad_perp_T = event.grad_perp_T(point=parton_point, phi=parton_p_phi)
+        grad_perp_utau = event.grad_perp_u_par(point=parton_point, phi=parton_p_phi)
+        grad_perp_uperp = event.grad_perp_u_perp(point=parton_point, phi=parton_p_phi)
+        u_perp = event.u_perp(point=parton_point, phi=parton_p_phi)
+        u_par = event.u_par(point=parton_point, phi=parton_p_phi)
+        u = event.vel(parton_point)
 
         # Decide phase
         if temp > temp_hrg:
@@ -125,18 +125,18 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         else:
             phase = 'vac'
 
-        ############################
-        # Perform jet calculations #
-        ############################
+        #################################
+        # Perform partonic calculations #
+        #################################
 
         if phase == 'qgp':
             # Compute drift, if enabled
             if drift:
                 # Compute jet drift integrand in this timestep
-                int_drift = pi.drift_integrand(event=event, parton=jet, time=tau)
+                int_drift = pi.drift_integrand(event=event, parton=parton, time=tau)
 
-                # Compute Jet drift momentum transferred to jet
-                q_drift = float(jet.beta() * dtau * int_drift * scale_drift)
+                # Compute jet drift momentum transferred to parton
+                q_drift = float(parton.beta() * dtau * int_drift * scale_drift)
             else:
                 # Set drift integral and momentum transfer to zero
                 int_drift = 0
@@ -145,11 +145,11 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
             # Compute energy loss, if enabled
             if el:
                 # Compute energy loss integrand in this timestep
-                int_el = pi.energy_loss_integrand(event=event, parton=jet, time=tau, tau=dtau,
+                int_el = pi.energy_loss_integrand(event=event, parton=parton, time=tau, tau=dtau,
                                                   model=el_model)
 
                 # Compute energy loss due to gluon exchange with the medium
-                q_el = float(jet.beta() * dtau * int_el * scale_el)
+                q_el = float(parton.beta() * dtau * int_el * scale_el)
             else:
                 # Set energy loss and el integral to zero
                 int_el = 0
@@ -157,12 +157,12 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
 
             if fg:
                 # Compute mixed flow-gradient drift integrand in this timestep
-                int_fg_utau = pi.flowgrad_utau_integrand(event=event, parton=jet, time=tau)
-                int_fg_uperp = pi.flowgrad_uperp_integrand(event=event, parton=jet, time=tau)
+                int_fg_utau = pi.flowgrad_utau_integrand(event=event, parton=parton, time=tau)
+                int_fg_uperp = pi.flowgrad_uperp_integrand(event=event, parton=parton, time=tau)
 
-                # Compute momentums transferred to jet
-                q_fg_utau = float(jet.beta() * dtau * int_fg_utau)
-                q_fg_uperp = float(jet.beta() * dtau * int_fg_uperp)
+                # Compute momentums transferred to parton
+                q_fg_utau = float(parton.beta() * dtau * int_fg_utau)
+                q_fg_uperp = float(parton.beta() * dtau * int_fg_uperp)
             else:
                 # Set flow-gradient effects and integral to zero
                 int_fg_utau = 0
@@ -172,10 +172,10 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
 
             if fgqhat:
                 # Compute correction to energy loss due to flow-gradient modification
-                int_fg_utau_qhat = int_el * pi.fg_utau_qhat_mod_factor(event=event, parton=jet, time=tau)
-                int_fg_uperp_qhat = int_el * pi.fg_uperp_qhat_mod_factor(event=event, parton=jet, time=tau)
-                q_fg_utau_qhat = float(jet.beta() * dtau * int_fg_utau_qhat * scale_el)
-                q_fg_uperp_qhat = float(jet.beta() * dtau * int_fg_uperp_qhat * scale_el)
+                int_fg_utau_qhat = int_el * pi.fg_utau_qhat_mod_factor(event=event, parton=parton, time=tau)
+                int_fg_uperp_qhat = int_el * pi.fg_uperp_qhat_mod_factor(event=event, parton=parton, time=tau)
+                q_fg_utau_qhat = float(parton.beta() * dtau * int_fg_utau_qhat * scale_el)
+                q_fg_uperp_qhat = float(parton.beta() * dtau * int_fg_uperp_qhat * scale_el)
             else:
                 # Set correction to energy loss due to flow-gradient modification to zero
                 int_fg_utau_qhat = 0
@@ -184,7 +184,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
                 q_fg_uperp_qhat = 0
 
         else:
-            # If not in QGP, don't compute any jet-medium interactions
+            # If not in QGP, don't compute any parton-medium interactions
             # If you wanted to add some effects in other phases, they should be computed here
             int_el = 0
             q_el = 0
@@ -247,10 +247,10 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
 
             unhydro_time_total += dtau
 
-        # Record arrays of values from this step for the jet record
+        # Record arrays of values from this step for the parton record
         time_array = np.append(time_array, tau)
-        xpos_array = np.append(xpos_array, jet.x)
-        ypos_array = np.append(ypos_array, jet.y)
+        xpos_array = np.append(xpos_array, parton.x)
+        ypos_array = np.append(ypos_array, parton.y)
         q_drift_array = np.append(q_drift_array, q_drift)
         q_el_array = np.append(q_el_array, q_el)
         #q_fg_T_array = np.append(q_fg_T_array, q_fg_T)
@@ -258,7 +258,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         q_fg_uperp_array = np.append(q_fg_uperp_array, q_fg_uperp)
         q_fg_utau_qhat_array = np.append(q_fg_utau_qhat_array, q_fg_utau_qhat)
         q_fg_uperp_qhat_array = np.append(q_fg_uperp_qhat_array, q_fg_uperp_qhat)
-        pT_array = np.append(pT_array, jet.p_T())
+        pT_array = np.append(pT_array, parton.p_T())
         temp_seen_array = np.append(temp_seen_array, temp)
         grad_perp_T_seen_array = np.append(grad_perp_T_seen_array, grad_perp_T)
         grad_perp_utau_seen_array = np.append(grad_perp_utau_seen_array, grad_perp_utau)
@@ -268,32 +268,32 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         u_array = np.append(u_array, u)
         phase_array = np.append(phase_array, phase)
 
-        #########################
-        # Change Jet Parameters #
-        #########################
-        # Propagate jet position
-        jet.prop(tau=dtau)
+        ############################
+        # Change Parton Parameters #
+        ############################
+        # Propagate parton position
+        parton.prop(tau=dtau)
 
-        # Change jet momentum to reflect energy loss
-        jet.add_q_par(q_par=q_el)
-        jet.add_q_par(q_par=q_fg_utau_qhat)
-        jet.add_q_par(q_par=q_fg_uperp_qhat)
+        # Change parton momentum to reflect energy loss
+        parton.add_q_par(q_par=q_el)
+        parton.add_q_par(q_par=q_fg_utau_qhat)
+        parton.add_q_par(q_par=q_fg_uperp_qhat)
 
-        # Change jet momentum to reflect drift effects
+        # Change parton momentum to reflect drift effects
         # If not computed, q values go to zero.
-        jet.add_q_perp(q_perp=q_drift)
-        #jet.add_q_perp(q_perp=q_fg_T)
-        jet.add_q_perp(q_perp=q_fg_utau)
-        jet.add_q_perp(q_perp=q_fg_uperp)
+        parton.add_q_perp(q_perp=q_drift)
+        #parton.add_q_perp(q_perp=q_fg_T)
+        parton.add_q_perp(q_perp=q_fg_utau)
+        parton.add_q_perp(q_perp=q_fg_uperp)
 
-        # Check if the jet would be extinguished (prevents flipping directions
+        # Check if the "jet" would be extinguished (prevents flipping directions
         # when T >> p_T, since q_el has no p_T dependence):
-        # If the jet lost more energy this step than it had
-        # at the beginning of the step, we extinguish the jet and end things
-        if np.abs(q_el) >= jet_og_p_T:
-            logging.info('Jet extinguished')
-            jet.p_x = 0
-            jet.p_y = 0
+        # If the parton lost more energy this step than it had
+        # at the beginning of the step, we extinguish the "jet" and end things
+        if np.abs(q_el) >= parton_og_p_T:
+            logging.info('Parton extinguished')
+            parton.p_x = 0
+            parton.p_y = 0
             extinguished = True
             exit_code = 1
             break
@@ -303,22 +303,22 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
         ###############
         tau += dtau
 
-        # Get final jet parameters
-        rho_final, phi_final = jet.polar_mom_coords()
-        pT_final = jet.p_T()
+        # Get final parton parameters
+        rho_final, phi_final = parton.polar_mom_coords()
+        pT_final = parton.p_T()
 
     logging.info('Time loop complete...')
 
     # Create momentPlasma results dataframe
     try:
         print('Making dataframe...')
-        jet_dataframe = pd.DataFrame(
+        parton_dataframe = pd.DataFrame(
             {
-                "jetNo": [int(jet.no)],
-                "tag": [int(jet.tag)],
-                "weight": [float(jet.weight)],
-                "id": [int(jet.id)],
-                "pt_0": [float(jet.p_T0)],
+                "jetNo": [int(parton.no)],
+                "tag": [int(parton.tag)],
+                "weight": [float(parton.weight)],
+                "id": [int(parton.id)],
+                "pt_0": [float(parton.p_T0)],
                 "pt_f": [float(pT_final)],
                 "q_el": [float(q_el_total)],
                 "q_drift": [float(q_drift_total)],
@@ -332,9 +332,9 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
                 "q_fg_uperp_qhat": [float(q_fg_uperp_qhat_total)],
                 "q_fg_uperp_qhat_abs": [float(q_fg_uperp_qhat_abs_total)],
                 "extinguished": [bool(extinguished)],
-                "x_0": [float(jet.x_0)],
-                "y_0": [float(jet.y_0)],
-                "phi_0": [float(jet.phi_0)],
+                "x_0": [float(parton.x_0)],
+                "y_0": [float(parton.y_0)],
+                "phi_0": [float(parton.phi_0)],
                 "phi_f": [float(phi_final)],
                 "t_qgp": [float(t_qgp)],
                 "t_hrg": [float(t_hrg)],
@@ -342,7 +342,7 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
                 "time_total_plasma": [float(qgp_time_total)],
                 "time_total_hrg": [float(hrg_time_total)],
                 "time_total_unhydro": [float(unhydro_time_total)],
-                "Tmax_jet": [float(maxT)],
+                "Tmax_parton": [float(maxT)],
                 "initial_time": [float(event.t0)],
                 "final_time": [float(event.tf)],
                 "tau": [float(config.jet.DTAU)],
@@ -360,12 +360,12 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
 
     except Exception as error:
         logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError
-        logging.info('- Jet Dataframe Creation Failed -')
+        logging.info('- Parton Dataframe Creation Failed -')
         traceback.print_exc()
 
-    # Create and store jet record xarray
+    # Create and store parton record xarray
     # define data with variable attributes
-    logging.info('Creating xarray jet record...')
+    logging.info('Creating xarray parton record...')
     data_vars = {'x': (['time'], xpos_array,
                        {'units': 'fm',
                         'long_name': 'x position coordinate'}),
@@ -374,49 +374,49 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
                         'long_name': 'y position coordinate'}),
                  'q_drift': (['time'], q_drift_array,
                              {'units': 'GeV',
-                              'long_name': 'Momentum obtained by the jet at this timestep due to flow drift'}),
+                              'long_name': 'Momentum obtained by the parton at this timestep due to flow drift'}),
                  'q_fg_utau': (['time'], q_fg_utau_array,
                           {'units': 'GeV',
-                           'long_name': 'Momentum obtained by the jet at this timestep due to flow-grad_utau drift'}),
+                           'long_name': 'Momentum obtained by the parton at this timestep due to flow-grad_utau drift'}),
                  'q_fg_uperp': (['time'], q_fg_uperp_array,
                           {'units': 'GeV',
-                           'long_name': 'Momentum obtained by the jet at this timestep due to flow-grad_uperp drift'}),
+                           'long_name': 'Momentum obtained by the parton at this timestep due to flow-grad_uperp drift'}),
                  'q_el': (['time'], q_el_array,
                             {'units': 'GeV',
-                             'long_name': 'Momentum obtained by the jet at this timestep due to energy loss'}),
+                             'long_name': 'Momentum obtained by the parton at this timestep due to energy loss'}),
                  'q_fg_utau_qhat': (['time'], q_fg_utau_qhat_array,
                           {'units': 'GeV',
-                           'long_name': 'Momentum obtained by the jet at this timestep due to fg_utau mod to energy loss'}),
+                           'long_name': 'Momentum obtained by the parton at this timestep due to fg_utau mod to energy loss'}),
                  'q_fg_uperp_qhat': (['time'], q_fg_uperp_qhat_array,
                               {'units': 'GeV',
-                               'long_name': 'Momentum obtained by the jet at this timestep due to fg_uperp mod to energy loss'}),
+                               'long_name': 'Momentum obtained by the parton at this timestep due to fg_uperp mod to energy loss'}),
                  'pT': (['time'], pT_array,
                           {'units': 'GeV',
-                           'long_name': 'Transverse momentum of the jet at this timestep'}),
+                           'long_name': 'Transverse momentum of the parton at this timestep'}),
                  'temp': (['time'], temp_seen_array,
                           {'units': 'GeV',
-                           'long_name': 'Temperature seen by the jet at this timestep'}),
+                           'long_name': 'Temperature seen by the parton at this timestep'}),
                  'grad_perp_temp': (['time'], grad_perp_T_seen_array,
                           {'units': 'GeV/fm',
-                           'long_name': 'Gradient of Temperature perp. to jet seen by the jet at this timestep'}),
+                           'long_name': 'Gradient of Temperature perp. to parton seen by the parton at this timestep'}),
                  'grad_perp_utau': (['time'], grad_perp_utau_seen_array,
                                     {'units': 'GeV/fm',
-                                     'long_name': 'Gradient of utau perp. to jet seen by the jet at this timestep'}),
+                                     'long_name': 'Gradient of utau perp. to parton seen by the parton at this timestep'}),
                  'grad_perp_uperp': (['time'], grad_perp_uperp_seen_array,
                                     {'units': 'GeV/fm',
-                                     'long_name': 'Gradient of uperp perp. to jet seen by the jet at this timestep'}),
+                                     'long_name': 'Gradient of uperp perp. to parton seen by the parton at this timestep'}),
                  'u_perp': (['time'], u_perp_array,
                             {'units': 'GeV',
-                             'long_name': 'Temperature seen by the jet at this timestep'}),
+                             'long_name': 'Temperature seen by the parton at this timestep'}),
                  'u_par': (['time'], u_par_array,
                            {'units': 'GeV',
-                            'long_name': 'Temperature seen by the jet at this timestep'}),
+                            'long_name': 'Temperature seen by the parton at this timestep'}),
                  'u': (['time'], u_array,
                        {'units': 'GeV',
-                        'long_name': 'Temperature seen by the jet at this timestep'}),
+                        'long_name': 'Temperature seen by the parton at this timestep'}),
                  'phase': (['time'], phase_array,
                            {'units': 'qgp = Quark Gluon Plasma, hrg = HadRon Gas, unh = UNHydrodynamic hadron gas, vac = below unh cutoff / vacuum',
-                            'long_name': 'Phase seen by the jet at this timestep'})
+                            'long_name': 'Phase seen by the parton at this timestep'})
                  }
 
     # define coordinates
@@ -426,12 +426,12 @@ def time_loop(event, jet, drift=True, el=True, fg=True, fgqhat=False, scale_drif
     attrs = {'property_name': 'value'}
 
     # create dataset
-    jet_xarray = xr.Dataset(data_vars=data_vars,
+    parton_xarray = xr.Dataset(data_vars=data_vars,
                             coords=coords,
                             attrs=attrs)
 
-    jet.record = jet_xarray
+    parton.record = parton_xarray
 
     logging.info('Xarray dataframe generated...')
 
-    return jet_dataframe, jet_xarray
+    return parton_dataframe, parton_xarray

@@ -10,7 +10,7 @@ import utilities
 from utilities import tempDir
 import timekeeper
 import pythia
-import ff
+import fragmentation
 import traceback
 
 lund_string = False
@@ -278,7 +278,7 @@ def run_event(eventNo):
                         pp_frag_z = ff.frag(jet)
 
                         # Run the time loop
-                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, jet=jet, drift=drift,
+                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, parton=jet, drift=drift,
                                                                          el=el, fg=fg, fgqhat=fgqhat,
                                                                          el_model=el_model)
 

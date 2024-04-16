@@ -271,6 +271,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
         ############################
         # Change Parton Parameters #
         ############################
+        # Note -- We propagate FIRST in order to travel over the timestep whose medium properties we're averaging.
         # Propagate parton position
         parton.prop(tau=dtau)
 

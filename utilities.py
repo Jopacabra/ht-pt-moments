@@ -208,3 +208,17 @@ def jet_e_sample(maxAttempts=5, batch=1000, min_e=0, max_e=100):
     print("Catastrophic error in jet energy sampling!")
     print("AHHHHHHHHHHHHHHH!!!!!!!!!!!")
     return 0
+
+# Function generally used to average a medium parameter over a certain pathlength
+def dtau_avg(func, point, phi, dtau, beta, num_samples=20):
+    sample_coords = point
+    for delta_tau in np.arange(dtau/num_samples, dtau, dtau/num_samples):
+        sample_tau = point[0] + delta_tau
+        sample_x = point[1] + (beta * delta_tau * np.cos(phi))
+        sample_y = point[2] + (beta * delta_tau * np.sin(phi))
+        sample_coords = np.vstack((sample_coords, np.array([sample_tau, sample_x, sample_y])))
+
+    # return dtau_avg_val
+    return np.mean(func(sample_coords))
+
+

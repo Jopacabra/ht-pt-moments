@@ -164,6 +164,19 @@ class MainPage(tk.Frame):
         self.momentUnhydroDisplay = tk.StringVar()
         self.momentUnhydroDisplay.set('...')
 
+        ############################
+        # Event management objects #
+        ############################
+        self.hydro_file = None
+        self.current_event = None
+        self.temp_max = None
+        self.temp_min = None
+
+        #############################
+        # Parton management objects #
+        #############################
+        self.current_parton = None
+
         ################
         # Plot Objects #
         ################
@@ -180,6 +193,7 @@ class MainPage(tk.Frame):
         # Define plots
         self.tempPlot = None
         self.velPlot = None
+        self.gradPlot = None
 
         # Create the medium property plots that will dynamically update
         # Constrained layout does some magic to organize the plots
@@ -454,8 +468,8 @@ class MainPage(tk.Frame):
         self.current_event = plasma.plasma_event(event=self.hydro_file)
 
         # Find current_event parameters
-        self.tempMax = self.current_event.max_temp()
-        self.tempMin = self.current_event.min_temp()
+        self.temp_max = self.current_event.max_temp()
+        self.temp_min = self.current_event.min_temp()
 
         # Set sliders limits to match bounds of the event
         dec = 1  # number of decimals rounding to... Should match resolution of slider.
@@ -495,8 +509,8 @@ class MainPage(tk.Frame):
                                                  xmax=rmax, time=event_lifetime)
 
         # Find current_event parameters
-        self.tempMax = self.current_event.max_temp()
-        self.tempMin = self.current_event.min_temp()
+        self.temp_max = self.current_event.max_temp()
+        self.temp_min = self.current_event.min_temp()
 
         # Set sliders limits to match bounds of the event
         dec = 1  # number of decimals rounding to... Should match resolution of slider.
@@ -536,8 +550,8 @@ class MainPage(tk.Frame):
                                                       xmax=rmax, time=event_lifetime)
 
         # Find current_event parameters
-        self.tempMax = self.current_event.max_temp()
-        self.tempMin = self.current_event.min_temp()
+        self.temp_max = self.current_event.max_temp()
+        self.temp_min = self.current_event.min_temp()
 
         # Set sliders limits to match bounds of the event
         dec = 1  # number of decimals rounding to... Should match resolution of slider.
@@ -577,8 +591,8 @@ class MainPage(tk.Frame):
                                                       xmax=rmax, time=event_lifetime)
 
         # Find current_event parameters
-        self.tempMax = self.current_event.max_temp()
-        self.tempMin = self.current_event.min_temp()
+        self.temp_max = self.current_event.max_temp()
+        self.temp_min = self.current_event.min_temp()
 
         # Set sliders limits to match bounds of the event
         dec = 1  # number of decimals rounding to... Should match resolution of slider.

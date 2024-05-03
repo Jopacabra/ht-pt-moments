@@ -263,7 +263,7 @@ def run_event(eventNo):
                         # Yell about your selected jet
                         logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
 
-                        el_model = 'GLV'
+                        el_model = 'num_GLV'
 
                         # Log jet number and case description
                         logging.info('Running Jet {}, case {}'.format(str(process_num), case))

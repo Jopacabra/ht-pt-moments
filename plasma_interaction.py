@@ -63,7 +63,7 @@ def inv_lambda(event, parton, point, med_parton='all'):
 
 # Define integrand for mean q_drift (k=0 moment)
 def drift_integrand(event, parton, time):
-    FmGeV = 0.19732687
+    FmGeV = 1/0.19732687
 
     # Get parton coordinates
     point = parton.coords3(time=time)
@@ -82,7 +82,7 @@ def drift_integrand(event, parton, time):
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
 
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return ((1 / FmGeV) * (1 / parton.p_T()) * config.jet.K_F_DRIFT
+    return ((FmGeV) * (1 / parton.p_T()) * config.jet.K_F_DRIFT
             * (3 * np.log(E/mu)
                * (u_perp / (1 - u_tau))
                * (mu**2)
@@ -90,7 +90,7 @@ def drift_integrand(event, parton, time):
 
 # Define integrand for mean flow-grad_uT drift
 def flowgrad_T_integrand(event, parton, time):
-    FmGeV = 0.19732687
+    FmGeV = 1/0.19732687
 
     # Get parton coordinates
     point = parton.coords3(time=time)
@@ -111,14 +111,14 @@ def flowgrad_T_integrand(event, parton, time):
     grad_perp_temp = utilities.dtau_avg(func=lambda x: event.grad_perp_T(point=x, phi=p_phi),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
 
-    return - ((1 / FmGeV) * (3 / E) * config.jet.K_FG_DRIFT * (time - event.t0)
+    return - ((FmGeV) * (3 / E) * config.jet.K_FG_DRIFT * (time - event.t0)
               * 3 * grad_perp_temp * ((u_perp**2)/((1 - u_tau)**2)) * (1/T)
               * (mu**2) * inv_lambda_val
               * np.log(E / mu))
 
 # Define integrand for mean flow-grad_utau drift
 def flowgrad_utau_integrand(event, parton, time):
-    FmGeV = 0.19732687
+    FmGeV = 1/0.19732687
 
     # Get parton coordinates
     point = parton.coords3(time=time)
@@ -140,14 +140,14 @@ def flowgrad_utau_integrand(event, parton, time):
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
 
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return - ((1 / FmGeV) * (3 / E) * config.jet.K_FG_DRIFT * (time - event.t0)
+    return - ((FmGeV) * (3 / E) * config.jet.K_FG_DRIFT * (time - event.t0)
               * 2 * grad_perp_u_tau * ((u_perp**2)/((1 - u_tau)**3))
               * (mu**2) * inv_lambda_val
               * np.log(E / mu))
 
 # Define integrand for mean flow-grad_uperp drift
 def flowgrad_uperp_integrand(event, parton, time):
-    FmGeV = 0.19732687
+    FmGeV = 1/0.19732687
 
     # Get parton coordinates
     point = parton.coords3(time=time)
@@ -169,7 +169,7 @@ def flowgrad_uperp_integrand(event, parton, time):
                                           point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
 
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
-    return - ((1 / FmGeV) * (3 / E) * config.jet.K_FG_DRIFT * (time - event.t0)
+    return - ((FmGeV) * (3 / E) * config.jet.K_FG_DRIFT * (time - event.t0)
               * 2 * grad_perp_u_perp * (u_perp/((1 - u_tau)**2))
               * (mu**2) * inv_lambda_val
               * np.log(E / mu))
@@ -210,7 +210,7 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 
 # Integrand for energy loss
 def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, mean_el_rate=0):
-    FmGeV = 0.19732687
+    FmGeV = 1/0.19732687
 
     # Get parton coordinates
     point = parton.coords3(time=time)
@@ -229,7 +229,7 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
     # Select energy loss model and return appropriate energy loss
     if model == 'BBMG':
         # Note that we apply FERMI GeV twice... Once for the t factor, once for the (int dt).
-        return (config.jet.K_BBMG * (-1) * ((1 / FmGeV) ** 2) * time * (T ** 3)
+        return (config.jet.K_BBMG * (-1) * ((FmGeV) ** 2) * time * (T ** 3)
                 * zeta(q=-1) * (1 / np.sqrt(1 - (vel**2)))
                 * (1))
     elif model == 'GLV':
@@ -308,7 +308,6 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
 
 # Modification factor for energy loss due to gradients of temperature
 def fg_T_qhat_mod_factor(event, parton, time):
-    FmGeV = 0.19732687
 
     # Get parton coordinates
     point = parton.coords3(time=time)

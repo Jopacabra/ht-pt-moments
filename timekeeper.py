@@ -310,6 +310,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
 
     logging.info('Time loop complete...')
 
+    mean_QGP_temp = np.mean(temp_seen_array[phase_array == 'qgp'])
     # Create momentPlasma results dataframe
     try:
         print('Making dataframe...')
@@ -344,6 +345,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
                 "time_total_hrg": [float(hrg_time_total)],
                 "time_total_unhydro": [float(unhydro_time_total)],
                 "Tmax_parton": [float(maxT)],
+                "Tavg_qgp_parton": [float(mean_QGP_temp)],
                 "initial_time": [float(event.t0)],
                 "final_time": [float(event.tf)],
                 "tau": [float(config.jet.DTAU)],

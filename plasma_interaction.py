@@ -416,6 +416,7 @@ class num_eloss_interpolator():
             return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
 
 # Integrand for energy loss
+# https://journals.aps.org/prd/pdf/10.1103/PhysRevD.44.R2625
 def coll_energy_loss_integrand(event, parton, time):
     FmGeV = 1/0.19732687
     nf = 6  # Source?

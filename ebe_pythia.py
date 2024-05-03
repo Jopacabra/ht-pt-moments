@@ -275,7 +275,7 @@ def run_event(eventNo):
                                           weight=chosen_weight)
 
                         # Perform pp-level fragmentation
-                        pp_frag_z = ff.frag(jet)
+                        pp_frag_z = fragmentation.frag(jet)
 
                         # Run the time loop
                         jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, parton=jet, drift=drift,
@@ -295,7 +295,7 @@ def run_event(eventNo):
 
                         logging.info('FF Fragmentation')
                         # Perform ff fragmentation
-                        frag_z = ff.frag(jet)
+                        frag_z = fragmentation.frag(jet)
                         pion_pt = jet.p_T() * frag_z
                         pion_pt_0 = jet.p_T0 * pp_frag_z
                         current_parton['z'] = frag_z

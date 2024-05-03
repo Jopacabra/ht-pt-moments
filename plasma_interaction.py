@@ -1,7 +1,9 @@
+import os
 import numpy as np
 import config
 import utilities
 import logging
+from scipy.interpolate import RegularGridInterpolator
 
 # Function to return total cross section at a particular point for parton and *gluon* in medium
 # Total GW cross section, as per Sievert, Yoon, et. al.
@@ -358,3 +360,57 @@ def fg_uperp_qhat_mod_factor(event, parton, time):
                                           point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
 
     return (-1) * (time - event.t0) * (grad_perp_u_perp * (1 / (1-u_tau)))
+
+class num_eloss_interpolator():
+    # Instantiation statement. All parameters optional.
+    def __init__(self):
+        logging.info('Loading numerical energy loss tables...')
+        # Find directory of this file
+        project_path = os.path.dirname(os.path.realpath(__file__))
+
+        # Load tables of computed brick energy loss
+        self.g_table = np.load(project_path + '/e_loss_tables/deltaE_samples_g_1subdiv.npz')
+        self.q_table = np.load(project_path + '/e_loss_tables/deltaE_samples_q_1subdiv.npz')
+
+        # Compute pathlength gradient to get energy loss rate tables
+        g_delta_E_grad_L = np.gradient(self.g_table['delta_E_vals'], self.g_table['L_points'], axis=2)
+        q_delta_E_grad_L = np.gradient(self.q_table['delta_E_vals'], self.q_table['L_points'], axis=2)
+
+        # Interpolate energy loss rate tables
+        self.g_dE_dx = RegularGridInterpolator(  # gluons
+            (self.g_table['E_points'],
+             self.g_table['T_points'],
+             self.g_table['L_points']),
+             g_delta_E_grad_L,
+             bounds_error=False,  # Do not fail if out of data bounds
+             fill_value=None)  # Extrapolate energy loss rate, if necessary
+
+        self.q_dE_dx = RegularGridInterpolator(  # light quarks
+            (self.q_table['E_points'],
+             self.q_table['T_points'],
+             self.q_table['L_points']),
+            q_delta_E_grad_L,
+            bounds_error=False,  # Do not fail if out of data bounds
+            fill_value=None)  # Extrapolate energy loss rate, if necessary
+
+    # Method to return the energy loss rate from finite bound first order GLV
+    # emitted gluon k on [mu, np.min([2 * E * x, 2 * E * np.sqrt(x * (1 - x))])],
+    # medium gluon q on [0, np.sqrt(3 * mu * E)]
+    def eloss_rate(self, event, parton, time):
+        # Get parton energy, coordinates, etc.
+        E = parton.p_T()
+        beta = parton.beta()
+        point = parton.coords3(time=time)
+        p_rho, p_phi = parton.polar_mom_coords()
+
+        # Get medium properties averaged over timestep
+        T = utilities.dtau_avg(func=event.temp, point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
+        L = (2*time + config.jet.DTAU)/2
+
+        # Return energy loss rate for appropriate identity
+        if parton.part == 'g':
+            part = 'g'
+            return float(self.g_dE_dx(np.array([E, T, L])))
+        else:
+            part = 'q'
+            return float(self.q_dE_dx(np.array([E, T, L])))

@@ -79,6 +79,7 @@ class osu_hydro_file:
         self.tf = np.amax(self.tspace)
 
         # Record conversion factor for temperature
+        # Converts temperature to GeV -- By default goes from fm^-1 to GeV
         self.temp_conv_factor = temp_conv_factor
 
     # Method to get raw temp data

@@ -271,14 +271,14 @@ def run_event(eventNo):
                                                                                                         fgqhat))
 
                         # Create the jet object
-                        jet = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_seed_num, part=chosen_pilot,
+                        parton = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_seed_num, part=chosen_pilot,
                                           weight=chosen_weight)
 
                         # Perform pp-level fragmentation
-                        pp_frag_z = fragmentation.frag(jet)
+                        pp_frag_z = fragmentation.frag(parton)
 
                         # Run the time loop
-                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, parton=jet, drift=drift,
+                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, parton=parton, drift=drift,
                                                                          el=el, fg=fg, fgqhat=fgqhat,
                                                                          el_model=el_model)
 
@@ -295,9 +295,9 @@ def run_event(eventNo):
 
                         logging.info('FF Fragmentation')
                         # Perform ff fragmentation
-                        frag_z = fragmentation.frag(jet)
-                        pion_pt = jet.p_T() * frag_z
-                        pion_pt_0 = jet.p_T0 * pp_frag_z
+                        frag_z = fragmentation.frag(parton)
+                        pion_pt = parton.p_T() * frag_z
+                        pion_pt_0 = parton.p_T0 * pp_frag_z
                         current_parton['z'] = frag_z
                         current_parton['pp_z'] = pp_frag_z
                         current_parton['pion_pt_f'] = pion_pt
@@ -306,9 +306,9 @@ def run_event(eventNo):
 
                         # Save jet pair
                         if i == 4:
-                            jet1 = jet
+                            parton1 = parton
                         elif i == 5:
-                            jet2 = jet
+                            parton2 = parton
 
                         # Append current partons to the case partons
                         case_partons = pd.concat([current_parton, case_partons], axis=0)
@@ -319,7 +319,7 @@ def run_event(eventNo):
                         logging.info('Hadronizing...')
                         # Hadronize jet pair
                         scale = particles['scaleIn'].to_numpy()[-1]  # use last particle to set hard process scale
-                        case_hadrons = pythia.fragment(jet1=jet1, jet2=jet2, scaleIn=scale, weight=chosen_weight)
+                        case_hadrons = pythia.fragment(jet1=parton1, jet2=parton2, scaleIn=scale, weight=chosen_weight)
 
                         logging.info('Appending event dataframe to hadrons')
                         # Tack case, event, and process details onto the hadron dataframe
@@ -365,7 +365,7 @@ def run_event(eventNo):
 
                         logging.info('Hadron z_mean value')
                         # Compute a rough z value for each hadron
-                        mean_part_pt = np.mean([jet1.p_T(), jet2.p_T()])
+                        mean_part_pt = np.mean([parton1.p_T(), parton2.p_T()])
                         case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
 
                         logging.info('Hadron phi value')
@@ -381,13 +381,13 @@ def run_event(eventNo):
 
                             # Check the Delta R to each jet
                             # Set parent to the minimum Delta R jet
-                            for jet in [jet1, jet2]:
-                                jet_rho, jet_phi = jet.polar_mom_coords()
+                            for parton in [parton1, parton2]:
+                                jet_rho, jet_phi = parton.polar_mom_coords()
                                 dR = delta_R(phi1=case_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
                                              y1=case_hadrons.loc[index, 'y'], y2=0)
                                 if dR < min_dR:
                                     min_dR = dR
-                                    parent = jet
+                                    parent = parton
 
                             # Save parent info to hadron dataframe
                             case_hadrons.at[index, 'parent_id'] = parent.id

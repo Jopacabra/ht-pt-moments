@@ -114,7 +114,7 @@ class MainPage(tk.Frame):
         self.el = tk.BooleanVar()
         self.el.set(True)
         self.el_model = tk.StringVar()
-        self.el_model.set('GLV')
+        self.el_model.set('num_GLV')
 
         # Integration options
         self.tempHRG = tk.DoubleVar()
@@ -328,7 +328,9 @@ class MainPage(tk.Frame):
                                  command=self.not_calculated)
         elMenu.add_radiobutton(label='Off', variable=self.el, value=False,
                                  command=self.not_calculated)
-        el_model_menu.add_radiobutton(label='SGLV', variable=self.el_model, value='SGLV',
+        el_model_menu.add_radiobutton(label='Numerical GLV', variable=self.el_model, value='num_GLV',
+                                      command=self.not_calculated)
+        el_model_menu.add_radiobutton(label='Analytic Approx. GLV', variable=self.el_model, value='GLV',
                                command=self.not_calculated)
         el_model_menu.add_radiobutton(label='BBMG', variable=self.el_model, value='BBMG',
                                command=self.not_calculated)

@@ -228,7 +228,7 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
 
     # Select energy loss model and return appropriate energy loss
     if model == 'BBMG':
-        # Note that we apply FERMItoGeV twice... Once for the t factor, once for the (int dt).
+        # Note that we apply FERMI GeV twice... Once for the t factor, once for the (int dt).
         return (config.jet.K_BBMG * (-1) * ((1 / FmGeV) ** 2) * time * (T ** 3)
                 * zeta(q=-1) * (1 / np.sqrt(1 - (vel**2)))
                 * (1))
@@ -415,3 +415,33 @@ class num_eloss_interpolator():
         else:
             part = 'q'
             return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
+
+# Integrand for energy loss
+def coll_energy_loss_integrand(event, parton, time):
+    FmGeV = 1/0.19732687
+    nf = 6  # Source?
+
+    # Get parton coordinates
+    point = parton.coords3(time=time)
+    p_rho, p_phi = parton.polar_mom_coords()
+    E = parton.p_T()
+    beta = parton.beta()
+
+    # Average medium parameters
+    T = utilities.dtau_avg(func=event.temp, point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
+    # Set C_R, "quadratic Casimir of the representation R of SU(3) for the parton"
+    if parton.part == 'g':
+        # For a gluon it's the adjoint representation C_A = N_c = 3
+        CR = 3
+    else:
+        # For a quark it's the fundamental representation C_F = 4/3 in QCD
+        CR = 4/3
+
+    # Set alpha_s
+    # "For alpha_s the scale runs, but ballpark you can guess 0.3" - Dr. Sievert
+    ALPHAS = (config.constants.G**2) / (4*np.pi)
+
+    # Calculate and return energy loss per unit length of this step.
+    mg = (config.constants.G * T / np.sqrt(3)) * np.sqrt(1 + (nf / 6))  # Thermal gluon mass, see
+    return ((-1) * CR * (3 / 4) * (8 * np.pi * (ALPHAS ** 2) / 3) * (1 + (nf / 6)) * np.log(
+        (2 ** (nf / (2 * (6 + nf)))) * 0.920 * (np.sqrt(E * T) / mg)))

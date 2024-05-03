@@ -218,7 +218,13 @@ def dtau_avg(func, point, phi, dtau, beta, num_samples=10):
         sample_y = point[2] + (beta * delta_tau * np.sin(phi))
         sample_coords = np.vstack((sample_coords, np.array([sample_tau, sample_x, sample_y])))
 
-    # return dtau_avg_val
-    return np.mean(func(sample_coords))
+    # Return zero if any point within the step would be out of bounds
+    try:
+        value = np.mean(func(sample_coords))
+    except ValueError:
+        value = 0
+
+    # return averaged value
+    return value
 
 

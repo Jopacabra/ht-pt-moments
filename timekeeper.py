@@ -12,6 +12,13 @@ import traceback
 def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_drift=1, scale_el=1, el_model='GLV',
               temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
     parton_dataframe = pd.DataFrame({})  # Empty dataframe to return in case of issue.
+    # If using numerical energy loss, summon the interpolator
+    if el_model == 'num_GLV':
+        el_rate_interp = pi.num_eloss_interpolator()
+        el_num = True
+    else:
+        el_num = False
+
     #############
     # Time Loop #
     #############
@@ -144,9 +151,16 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
 
             # Compute energy loss, if enabled
             if el:
-                # Compute energy loss integrand in this timestep
-                int_el = pi.energy_loss_integrand(event=event, parton=parton, time=tau, tau=dtau,
-                                                  model=el_model)
+                # Use appropriate energy loss module
+                # Compute energy loss integrand (rate) in this timestep
+                if el_model == 'num_GLV':
+                    int_el = el_rate_interp.eloss_rate(event=event, parton=parton, time=tau)
+
+                else:
+                    # Compute energy loss integrand (rate) in this timestep
+                    int_el = pi.energy_loss_integrand(event=event, parton=parton, time=tau, tau=dtau,
+                                                      model=el_model)
+
 
                 # Compute energy loss due to gluon exchange with the medium
                 q_el = float(parton.beta() * dtau * int_el * scale_el)
@@ -352,6 +366,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
                 "Tmax_event": [float(event.max_temp())],
                 "drift": [bool(drift)],
                 "el": [bool(el)],
+                "el_num": [bool(el_num)],
                 "fg": [bool(fg)],
                 "fgqhat": [bool(fgqhat)],
                 "exit": [int(exit_code)],

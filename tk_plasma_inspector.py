@@ -468,7 +468,7 @@ class MainPage(tk.Frame):
         print('Selected file: ' + str(hydro_file_path))
 
         # Open grid file as object
-        self.hydro_file = plasma.osu_hydro_file(file_path=hydro_file_path, temp_conv_factor=1)
+        self.hydro_file = plasma.osu_hydro_file(file_path=hydro_file_path)
 
         # Create plasma object from current_event object
         self.current_event = plasma.plasma_event(event=self.hydro_file)

@@ -110,7 +110,7 @@ class MainPage(tk.Frame):
         self.fgqhat = tk.BooleanVar()
         self.fgqhat.set(False)
         self.fg = tk.BooleanVar()
-        self.fg.set(True)
+        self.fg.set(False)
         self.el = tk.BooleanVar()
         self.el.set(True)
         self.el_model = tk.StringVar()

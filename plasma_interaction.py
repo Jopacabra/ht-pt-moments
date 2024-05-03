@@ -408,9 +408,10 @@ class num_eloss_interpolator():
         L = (2*time + config.jet.DTAU)/2
 
         # Return energy loss rate for appropriate identity
+        # Note minus sign - positive values in table correspond to energy loss
         if parton.part == 'g':
             part = 'g'
-            return float(self.g_dE_dx(np.array([E, T, L])))
+            return (-1) * float(self.g_dE_dx(np.array([E, T, L])))
         else:
             part = 'q'
-            return float(self.q_dE_dx(np.array([E, T, L])))
+            return (-1) * float(self.q_dE_dx(np.array([E, T, L])))

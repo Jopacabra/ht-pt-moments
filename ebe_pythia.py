@@ -195,31 +195,37 @@ def run_event(eventNo):
                         drift = False
                         fg = False
                         el = True
+                        cel = False
                         fgqhat = False
                     elif case == 1:
                         drift = True
                         fg = False
                         el = True
+                        cel = False
                         fgqhat = False
                     elif case == 2:
                         drift = True
                         fg = True
                         el = True
+                        cel = False
                         fgqhat = False
                     elif case == 3:
                         drift = False
                         fg = False
                         el = True
-                        fgqhat = True
+                        cel = True
+                        fgqhat = False
                     elif case == 4:
                         drift = True
-                        fg = True
+                        fg = False
                         el = True
-                        fgqhat = True
+                        cel = True
+                        fgqhat = False
                     else:
                         drift = True
-                        fg = True
+                        fg = False
                         el = True
+                        cel = False
                         fgqhat = False
 
                     i = 0
@@ -279,7 +285,7 @@ def run_event(eventNo):
 
                         # Run the time loop
                         jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, parton=parton, drift=drift,
-                                                                         el=el, fg=fg, fgqhat=fgqhat,
+                                                                         el=el, cel=cel, fg=fg, fgqhat=fgqhat,
                                                                          el_model=el_model)
 
                         # Save the xarray trajectory file

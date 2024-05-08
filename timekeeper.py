@@ -9,7 +9,7 @@ import os
 import traceback
 
 
-def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_drift=1, scale_el=1, el_model='GLV',
+def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False, scale_drift=1, scale_el=1, el_model='GLV',
               temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
     parton_dataframe = pd.DataFrame({})  # Empty dataframe to return in case of issue.
     # If using numerical energy loss, summon the interpolator
@@ -35,6 +35,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
     unhydro_time_total = 0
     maxT = 0
     q_el_total = 0
+    q_cel_total = 0
     q_drift_total = 0
     q_drift_abs_total = 0
     q_fg_utau_total = 0
@@ -60,6 +61,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
     ypos_array = np.array([])
     q_drift_array = np.array([])
     q_el_array = np.array([])
+    q_cel_array = np.array([])
     q_fg_utau_array = np.array([])
     q_fg_uperp_array = np.array([])
     q_fg_utau_qhat_array = np.array([])
@@ -169,6 +171,15 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
                 int_el = 0
                 q_el = 0
 
+            if cel:
+                # Compute energy loss integrand (rate) in this timestep
+                int_cel = pi.coll_energy_loss_integrand(event=event, parton=parton, time=tau)
+                # Compute energy loss due to gluon exchange with the medium
+                q_cel = float(parton.beta() * dtau * int_cel)
+            else:
+                int_cel = 0
+                q_cel = 0
+
             if fg:
                 # Compute mixed flow-gradient drift integrand in this timestep
                 int_fg_utau = pi.flowgrad_utau_integrand(event=event, parton=parton, time=tau)
@@ -203,6 +214,9 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
             int_el = 0
             q_el = 0
 
+            int_cel = 0
+            q_cel = 0
+
             int_drift = 0
             q_drift = 0
 
@@ -221,6 +235,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
         ###################
         # Log momentum transfers
         q_el_total += q_el
+        q_cel_total += q_cel
         q_drift_total += q_drift
         q_drift_abs_total += np.abs(q_drift)
         #q_fg_T_total += q_fg_T
@@ -267,6 +282,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
         ypos_array = np.append(ypos_array, parton.y)
         q_drift_array = np.append(q_drift_array, q_drift)
         q_el_array = np.append(q_el_array, q_el)
+        q_cel_array = np.append(q_cel_array, q_cel)
         #q_fg_T_array = np.append(q_fg_T_array, q_fg_T)
         q_fg_utau_array = np.append(q_fg_utau_array, q_fg_utau)
         q_fg_uperp_array = np.append(q_fg_uperp_array, q_fg_uperp)
@@ -291,6 +307,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
 
         # Change parton momentum to reflect energy loss
         parton.add_q_par(q_par=q_el)
+        parton.add_q_par(q_par=q_cel)
         parton.add_q_par(q_par=q_fg_utau_qhat)
         parton.add_q_par(q_par=q_fg_uperp_qhat)
 
@@ -337,6 +354,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
                 "pt_0": [float(parton.p_T0)],
                 "pt_f": [float(pT_final)],
                 "q_el": [float(q_el_total)],
+                "q_cel": [float(q_cel_total)],
                 "q_drift": [float(q_drift_total)],
                 "q_drift_abs": [float(q_drift_abs_total)],
                 "q_fg_utau": [float(q_fg_utau_total)],
@@ -366,6 +384,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
                 "Tmax_event": [float(event.max_temp())],
                 "drift": [bool(drift)],
                 "el": [bool(el)],
+                "cel": [bool(cel)],
                 "el_num": [bool(el_num)],
                 "fg": [bool(fg)],
                 "fgqhat": [bool(fgqhat)],
@@ -401,7 +420,10 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, scale_d
                            'long_name': 'Momentum obtained by the parton at this timestep due to flow-grad_uperp drift'}),
                  'q_el': (['time'], q_el_array,
                             {'units': 'GeV',
-                             'long_name': 'Momentum obtained by the parton at this timestep due to energy loss'}),
+                             'long_name': 'Momentum obtained by the parton at this timestep due to radiative energy loss'}),
+                 'q_cel': (['time'], q_cel_array,
+                          {'units': 'GeV',
+                           'long_name': 'Momentum obtained by the parton at this timestep due to collisional energy loss'}),
                  'q_fg_utau_qhat': (['time'], q_fg_utau_qhat_array,
                           {'units': 'GeV',
                            'long_name': 'Momentum obtained by the parton at this timestep due to fg_utau mod to energy loss'}),

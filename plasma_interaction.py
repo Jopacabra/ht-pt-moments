@@ -419,7 +419,7 @@ class num_eloss_interpolator():
 # https://journals.aps.org/prd/pdf/10.1103/PhysRevD.44.R2625
 def coll_energy_loss_integrand(event, parton, time):
     FmGeV = 1/0.19732687
-    nf = 6  # Source?
+    nf = 2  # Source?
 
     # Get parton coordinates
     point = parton.coords3(time=time)
@@ -442,6 +442,7 @@ def coll_energy_loss_integrand(event, parton, time):
     ALPHAS = (config.constants.G**2) / (4*np.pi)
 
     # Calculate and return energy loss per unit length of this step.
-    mg = (config.constants.G * T / np.sqrt(3)) * np.sqrt(1 + (nf / 6))  # Thermal gluon mass, see
-    return ((-1) * CR * (3 / 4) * (8 * np.pi * (ALPHAS ** 2) / 3) * (1 + (nf / 6)) * np.log(
-        (2 ** (nf / (2 * (6 + nf)))) * 0.920 * (np.sqrt(E * T) / mg)))
+    mg = (config.constants.G * T / np.sqrt(3)) * np.sqrt(1 + (nf / 6))  # Thermal gluon mass, see paper
+    return FmGeV * CR * (3 / 4) * (8 * np.pi * (ALPHAS ** 2) / 3) * (1 + (nf / 6)) * (T ** 2) * np.log(
+        (2 ** (nf / (2 * (6 + nf)))) * 0.920 * (np.sqrt(E * T) / mg))
+

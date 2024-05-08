@@ -113,6 +113,8 @@ class MainPage(tk.Frame):
         self.fg.set(False)
         self.el = tk.BooleanVar()
         self.el.set(True)
+        self.cel = tk.BooleanVar()
+        self.cel.set(False)
         self.el_model = tk.StringVar()
         self.el_model.set('num_GLV')
 
@@ -323,11 +325,16 @@ class MainPage(tk.Frame):
         elMenu = tk.Menu(physicsMenu, tearoff=0)
         el_model_menu = tk.Menu(elMenu, tearoff=0)
         elMenu.add_cascade(label='Model', menu=el_model_menu)
-        physicsMenu.add_cascade(label='Energy Loss', menu=elMenu)
+        physicsMenu.add_cascade(label='Radiative Energy Loss', menu=elMenu)
         elMenu.add_radiobutton(label='On', variable=self.el, value=True,
                                  command=self.not_calculated)
         elMenu.add_radiobutton(label='Off', variable=self.el, value=False,
                                  command=self.not_calculated)
+        physicsMenu.add_cascade(label='Collisional Energy Loss', menu=elMenu)
+        elMenu.add_radiobutton(label='On', variable=self.cel, value=True,
+                               command=self.not_calculated)
+        elMenu.add_radiobutton(label='Off', variable=self.cel, value=False,
+                               command=self.not_calculated)
         el_model_menu.add_radiobutton(label='Numerical GLV', variable=self.el_model, value='num_GLV',
                                       command=self.not_calculated)
         el_model_menu.add_radiobutton(label='Analytic Approx. GLV', variable=self.el_model, value='GLV',
@@ -736,6 +743,7 @@ class MainPage(tk.Frame):
                 ypos_array = self.parton_xarray['y'].to_numpy()
                 q_drift_array = self.parton_xarray['q_drift'].to_numpy()
                 q_EL_array = self.parton_xarray['q_el'].to_numpy()
+                q_cel_array = self.parton_xarray['q_cel'].to_numpy()
                 q_fg_utau_array = self.parton_xarray['q_fg_utau'].to_numpy()
                 q_fg_uperp_array = self.parton_xarray['q_fg_uperp'].to_numpy()
                 q_fg_total_array = q_fg_utau_array + q_fg_uperp_array
@@ -757,7 +765,9 @@ class MainPage(tk.Frame):
 
                 # Set moment display
                 self.momentDisplay.set('Total F Drift: {} GeV'.format(np.sum(q_drift_array)))
-                self.ELDisplay.set('Total EL: {} (el) + {} (fg_utau) + {} (fg_uperp) = {} GeV'.format(np.sum(q_EL_array),
+                self.ELDisplay.set('Total EL: {} (el) + {} (coll) + {} (fg_utau) + {} (fg_uperp) = {} GeV'.format(
+                                                                       np.sum(q_EL_array),
+                                                                       np.sum(q_cel_array),
                                                                        np.sum(q_fg_utau_qhat_array),
                                                                        np.sum(q_fg_uperp_qhat_array),
                                                                        (np.sum(q_EL_array)
@@ -911,6 +921,7 @@ class MainPage(tk.Frame):
                                                                              parton=self.current_parton,
                                                                              drift=self.drift.get(),
                                                                              el=self.el.get(),
+                                                                             cel=self.cel.get(),
                                                                              fg=self.fg.get(),
                                                                              fgqhat=self.fgqhat.get(),
                                                                              temp_hrg=self.tempHRG.get(),

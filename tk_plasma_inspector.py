@@ -323,6 +323,7 @@ class MainPage(tk.Frame):
 
         # EL submenu
         elMenu = tk.Menu(physicsMenu, tearoff=0)
+        celMenu = tk.Menu(physicsMenu, tearoff=0)
         el_model_menu = tk.Menu(elMenu, tearoff=0)
         elMenu.add_cascade(label='Model', menu=el_model_menu)
         physicsMenu.add_cascade(label='Radiative Energy Loss', menu=elMenu)
@@ -330,10 +331,10 @@ class MainPage(tk.Frame):
                                  command=self.not_calculated)
         elMenu.add_radiobutton(label='Off', variable=self.el, value=False,
                                  command=self.not_calculated)
-        physicsMenu.add_cascade(label='Collisional Energy Loss', menu=elMenu)
-        elMenu.add_radiobutton(label='On', variable=self.cel, value=True,
+        physicsMenu.add_cascade(label='Collisional Energy Loss', menu=celMenu)
+        celMenu.add_radiobutton(label='On', variable=self.cel, value=True,
                                command=self.not_calculated)
-        elMenu.add_radiobutton(label='Off', variable=self.cel, value=False,
+        celMenu.add_radiobutton(label='Off', variable=self.cel, value=False,
                                command=self.not_calculated)
         el_model_menu.add_radiobutton(label='Numerical GLV', variable=self.el_model, value='num_GLV',
                                       command=self.not_calculated)
@@ -765,7 +766,7 @@ class MainPage(tk.Frame):
 
                 # Set moment display
                 self.momentDisplay.set('Total F Drift: {} GeV'.format(np.sum(q_drift_array)))
-                self.ELDisplay.set('Total EL: {} (el) + {} (coll) + {} (fg_utau) + {} (fg_uperp) = {} GeV'.format(
+                self.ELDisplay.set('Total EL: {} (el) \n+ {} (coll) \n+ {} (fg_utau) \n+ {} (fg_uperp) = {} GeV'.format(
                                                                        np.sum(q_EL_array),
                                                                        np.sum(q_cel_array),
                                                                        np.sum(q_fg_utau_qhat_array),

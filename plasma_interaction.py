@@ -368,8 +368,24 @@ class num_eloss_interpolator():
         project_path = os.path.dirname(os.path.realpath(__file__))
 
         # Load tables of computed brick energy loss
-        self.g_table = np.load(project_path + '/e_loss_tables/deltaE_samples_g_1subdiv.npz')
-        self.q_table = np.load(project_path + '/e_loss_tables/deltaE_samples_q_1subdiv.npz')
+        if config.constants.G == 1.7:
+            self.g_table = np.load(project_path + '/e_loss_tables/g1.7_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g1.7_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G == 1.8:
+            self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G == 1.9:
+            self.g_table = np.load(project_path + '/e_loss_tables/g1.9_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g1.9_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G == 2:
+            self.g_table = np.load(project_path + '/e_loss_tables/g2.0_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g2.0_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G == 2.1:
+            self.g_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_q_1subdiv.npz')
+        else:
+            logging.error('No suitable energy loss table!!!')
+            raise Exception
 
         # Compute pathlength gradient to get energy loss rate tables
         g_delta_E_grad_L = np.gradient(self.g_table['delta_E_vals'], self.g_table['L_points'], axis=2)

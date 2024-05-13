@@ -420,7 +420,7 @@ class num_eloss_interpolator():
 
         # Get medium properties averaged over timestep
         T = utilities.dtau_avg(func=event.temp, point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
-        L = (2*time + config.jet.DTAU)/2
+        L = (2*(time - event.t0) + config.jet.DTAU)/2
 
         # Return energy loss rate for appropriate identity
         # Note minus sign - positive values in table correspond to energy loss

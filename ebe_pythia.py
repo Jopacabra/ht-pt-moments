@@ -188,44 +188,32 @@ def run_event(eventNo):
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 
-                for case in [0, 1, 2, 3, 4]:
+                for case in [0, 1, 2]:
                     case_partons = pd.DataFrame({})
                     # Determine case details
                     if case == 0:
-                        drift = False
-                        fg = False
                         el = True
                         cel = False
+                        drift = False
+                        fg = False
                         fgqhat = False
                     elif case == 1:
-                        drift = True
-                        fg = False
                         el = True
                         cel = False
+                        drift = True
+                        fg = False
                         fgqhat = False
                     elif case == 2:
-                        drift = True
-                        fg = True
-                        el = True
-                        cel = False
-                        fgqhat = False
-                    elif case == 3:
-                        drift = False
-                        fg = False
                         el = True
                         cel = True
-                        fgqhat = False
-                    elif case == 4:
                         drift = True
                         fg = False
-                        el = True
-                        cel = True
                         fgqhat = False
                     else:
-                        drift = True
-                        fg = False
                         el = True
                         cel = False
+                        drift = True
+                        fg = False
                         fgqhat = False
 
                     i = 0

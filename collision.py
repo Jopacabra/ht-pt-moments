@@ -535,51 +535,8 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         raise StopEvent('no particles produced')
 
     ###################################
-    # Pre-Hadronic Transport Analysis #
+    # Log event size and eccentricity #
     ###################################
-
-    logging.info('Analyzing event geometry...')
-
-    # Perform pre-urqmd flow measurements
-    particle_phi_array = np.array([])
-    for part in parts:
-        p = part['p']  # a single particle's position vector
-        px = float(p[1])
-        py = float(p[2])
-        phi = np.arctan2(py, px)  # angle in xy-plane
-        particle_phi_array = np.append(particle_phi_array, phi)
-
-    # Compute flow vectors
-    q_2 = flow.qn(particle_phi_array, 2)
-    q_3 = flow.qn(particle_phi_array, 3)
-    q_4 = flow.qn(particle_phi_array, 4)
-
-    # Compute cumulant
-    vnk = flow.Cumulant(len(particle_phi_array), q2=q_2, q3=q_3, q4=q_4)
-
-    # Compute flow coefficients v_2{2} and v_3{2}
-    v_2 = vnk.flow(2, 2, imaginary='negative')
-    v_3 = vnk.flow(3, 2, imaginary='negative')
-
-    logging.info('Flow coefficients computed using {} samples of frzout surface'.format(nsamples))
-    logging.info('q_2 = {}'.format(q_2))
-    logging.info('q_3 = {}'.format(q_3))
-    logging.info('v_2 = {}'.format(v_2))
-    logging.info('v_3 = {}'.format(v_3))
-
-    psi_2 = np.angle(q_2)
-    psi_3 = np.angle(q_3)
-
-    event_dataframe['frzout_particles'] = np.real(q_2)
-    event_dataframe['q_2_re'] = np.real(q_2)
-    event_dataframe['q_2_re'] = np.real(q_2)
-    event_dataframe['q_2_im'] = np.imag(q_2)
-    event_dataframe['psi_2'] = psi_2
-    event_dataframe['q_3_re'] = np.real(q_3)
-    event_dataframe['q_3_im'] = np.imag(q_3)
-    event_dataframe['psi_3'] = psi_3
-    event_dataframe['v_2'] = v_2
-    event_dataframe['v_3'] = v_3
 
     # Add rmax to event_dataframe
     event_dataframe['rmax'] = rmax
@@ -589,8 +546,6 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     event_dataframe['e3'] = np.sqrt(event_dataframe['e3_re'] ** 2 + event_dataframe['e3_im'] ** 2)
     event_dataframe['e4'] = np.sqrt(event_dataframe['e4_re'] ** 2 + event_dataframe['e4_im'] ** 2)
     event_dataframe['e5'] = np.sqrt(event_dataframe['e5_re'] ** 2 + event_dataframe['e5_im'] ** 2)
-
-    logging.info('Event geometry analysis complete')
 
     # # try to free some memory
     # # (up to ~a few hundred MiB for ultracentral collisions)
@@ -683,6 +638,17 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     event_dataframe['urqmd_pT_fluct_sum_pT'] = results['pT_fluct']['sum_pT']
     event_dataframe['urqmd_pT_fluct_sum_pTsq'] = results['pT_fluct']['sum_pTsq']
     event_dataframe['urqmd_dET_deta'] = results['dET_deta']
+
+    # Try to pre-compute v_2 and psi_2 of soft particles
+    try:
+        flow_N = event_dataframe['urqmd_flow_N'][0]
+        event_dataframe['psi_2'] = np.angle(event_dataframe['urqmd_re_q_2'][0]
+                         + 1j * event_dataframe['urqmd_im_q_2'][0])
+        event_dataframe['v_2'] = np.abs(event_dataframe['urqmd_re_q_2'][0]
+                     + 1j * event_dataframe['urqmd_im_q_2'][0]) / flow_N
+    except:
+        logging.info('Problem pre-computing v_2 and psi_2!!!')
+        pass
 
 
     # # Save DukeQCD results file

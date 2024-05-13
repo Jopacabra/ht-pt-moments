@@ -188,7 +188,7 @@ def run_event(eventNo):
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 
-                for case in [0, 1, 2]:
+                for case in [0, 1]:
                     case_partons = pd.DataFrame({})
                     # Determine case details
                     if case == 0:

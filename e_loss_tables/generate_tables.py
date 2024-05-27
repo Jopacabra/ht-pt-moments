@@ -120,7 +120,7 @@ for parton in ['q', 'g']:
             # Define numerical integrand as function of q and k
             def integrand(x):
                 return lambda phi, k, q: (((FmGeV) ** 3) * (4 * CR * ALPHAS / (np.pi ** 2))
-                                          * (1 - x + ((x ** 2) / 2))
+                                          * (1)  # - x + ((x ** 2) / 2))
                                           * (L / lamb) * E
                                           * ((mu ** 2) / ((q ** 2 + mu ** 2) ** 2))
                                           * ((q ** 2 * np.cos(phi) * (
@@ -141,7 +141,7 @@ for parton in ['q', 'g']:
             t0 = time.time()
             delta_E = integrate.quad(dI_dx_finq, x_min, x_max, limit=subdiv)[0]
             tf = time.time()
-            print('E={} GeV, T={} GeV, L={} fm -- deltaT={} s'.format(E, T, L, (tf - t0)))
+            print('E={} GeV, T={} GeV, L={} fm -- time={} s'.format(E, T, L, (tf - t0)))
 
             return delta_E
 

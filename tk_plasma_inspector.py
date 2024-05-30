@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import asksaveasfilename
 from tkinter.simpledialog import askfloat
 from tkinter import messagebox
 import numpy as np
@@ -284,6 +285,7 @@ class MainPage(tk.Frame):
         # ---
         fileMenu = tk.Menu(parent.menubar, tearoff=0)
         fileMenu.add_command(label='Select File', command=self.select_file)
+        fileMenu.add_command(label='Save Parton Record', command=self.save_record)
         fileMenu.add_command(label='Optical Glauber', command=self.optical_glauber)
         fileMenu.add_command(label='Log(Mult) Temp Optical Glauber', command=self.lmt_optical_glauber)
         fileMenu.add_command(label='\"new\" Optical Glauber', command=self.new_optical_glauber)
@@ -500,6 +502,11 @@ class MainPage(tk.Frame):
         self.y0.set(0)
 
         self.update_plots()
+
+    # Define the save record function
+    def save_record(self, value=None):
+        filename = asksaveasfilename(initialdir='/share/apps/Hybrid-Transport/hic-eventgen/results/')
+        self.parton_xarray.to_netcdf(filename + '.nc')
 
     # Define the optical glauber selection
     def optical_glauber(self, value=None):

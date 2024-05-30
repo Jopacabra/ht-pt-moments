@@ -97,7 +97,7 @@ class MainPage(tk.Frame):
         ################################
         # Physical options
         self.time = tk.DoubleVar()  # Holds a float; default value 0.0
-        self.theta0 = tk.DoubleVar()
+        self.phi0 = tk.DoubleVar()
         self.x0 = tk.DoubleVar()
         self.y0 = tk.DoubleVar()
         self.parton_E = tk.DoubleVar()
@@ -247,12 +247,12 @@ class MainPage(tk.Frame):
         # Create y0 slider
         self.y0Slider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.y0,
                                  from_=0, to=10, length=200, resolution=0.1, label='y0 (fm)')
-        # Create theta0 slider
-        self.theta0Slider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.theta0,
-                                     from_=0, to=2*np.pi, length=200, resolution=0.1, label='theta0 (rad)')
+        # Create phi0 slider
+        self.phi0Slider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.phi0,
+                                   from_=0, to=2*np.pi, length=200, resolution=0.01, label='phi0 (rad)')
         # Create parton energy slider
         self.parton_E_slider = tk.Scale(self, orient=tk.HORIZONTAL, variable=self.parton_E,
-                                        from_=0.1, to=20, length=200, resolution=0.01, label='Parton E (GeV)')
+                                        from_=0.1, to=100, length=200, resolution=0.1, label='Parton E (GeV)')
         # Create tempHRG slider
         self.tempCutoffSlider = tk.Scale(self, orient=tk.HORIZONTAL,
                                          variable=self.tempHRG, from_=0, to=1, length=200, resolution=0.01,
@@ -272,7 +272,7 @@ class MainPage(tk.Frame):
         self.timeSlider.bind("<ButtonRelease-1>", self.update_parton)
         self.x0Slider.bind("<ButtonRelease-1>", self.update_parton)
         self.y0Slider.bind("<ButtonRelease-1>", self.update_parton)
-        self.theta0Slider.bind("<ButtonRelease-1>", self.update_parton)
+        self.phi0Slider.bind("<ButtonRelease-1>", self.update_parton)
         self.parton_E_slider.bind("<ButtonRelease-1>", self.update_parton)
         self.tempCutoffSlider.bind("<ButtonRelease-1>", self.update_parton)
         self.tempUnhydroSlider.bind("<ButtonRelease-1>", self.update_parton)
@@ -454,7 +454,7 @@ class MainPage(tk.Frame):
         self.timeSlider.grid(row=1, column=0, columnspan=2)
         self.x0Slider.grid(row=1, column=2, columnspan=2)
         self.y0Slider.grid(row=1, column=4, columnspan=2)
-        self.theta0Slider.grid(row=1, column=6, columnspan=2)
+        self.phi0Slider.grid(row=1, column=6, columnspan=2)
         self.parton_E_slider.grid(row=1, column=8, columnspan=2)
         self.zoomSlider.grid(row=1, column=10, columnspan=1)
         self.tempCutoffSlider.grid(row=5, column=8, columnspan=2)
@@ -666,7 +666,7 @@ class MainPage(tk.Frame):
     def update_parton(self, value=None):
         # Set current_parton object to current slider parameters
         self.current_parton = jets.parton(x_0=self.x0.get(), y_0=self.y0.get(),
-                                          phi_0=self.theta0.get(), p_T0=self.parton_E.get())
+                                          phi_0=self.phi0.get(), p_T0=self.parton_E.get())
         self.not_calculated(0)
 
     # Set dtau
@@ -956,7 +956,7 @@ class MainPage(tk.Frame):
             # Set sliders to point
             self.x0.set(sampledPoint[0])
             self.y0.set(sampledPoint[1])
-            self.theta0.set(sampledAngle)
+            self.phi0.set(sampledAngle)
 
             # Update plots
             self.update_plots()

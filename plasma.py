@@ -3,6 +3,7 @@ import pandas as pd
 try:
     import matplotlib.colors as colors
     import matplotlib.pyplot as plt
+    import matplotlib.ticker as tkr
 except:
     print('NO MATPLOTLIB')
 from scipy.interpolate import RegularGridInterpolator
@@ -754,7 +755,8 @@ class plasma_event:
             plt.gca().set_aspect('equal')
             plt.gca().set_xlabel('X Position [fm]')
             plt.gca().set_ylabel('Y Position [fm]')
-            tempcb = plt.colorbar(temps, label='Temperature (GeV)')
+            tempcb = plt.colorbar(temps, label='Temperature (GeV)',
+                              format=tkr.FormatStrFormatter('%.2f'))
         elif temptype == 'contour' and plot_temp:
             tempLevels = np.linspace(0, tempMax, numContours)
             temps = plt.contourf(x_space, x_space, temp_points, cmap='plasma',
@@ -762,7 +764,8 @@ class plasma_event:
             plt.gca().set_aspect('equal')
             plt.gca().set_xlabel('X Position [fm]')
             plt.gca().set_ylabel('Y Position [fm]')
-            tempcb = plt.colorbar(temps, label='Temperature (GeV)')
+            tempcb = plt.colorbar(temps, label='Temperature (GeV)',
+                              format=tkr.FormatStrFormatter('%.2f'))
         else:
             temps = 0
             tempcb = 0

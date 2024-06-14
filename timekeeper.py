@@ -99,11 +99,11 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=Fal
         #########################
         # Decide if we're in bounds of the grid
         if parton.x > event.xmax or parton.y > event.ymax or parton.x < event.xmin or parton.y < event.ymin:
-            logging.info('Jet escaped event space...')
+            logging.info('Parton escaped event space...')
             exit_code = 0
             break
         elif tau > event.tf:
-            logging.info('Jet escaped event time...')
+            logging.info('Parton escaped event time...')
             if phase == 'qgp':
                 exit_code = 3
             else:
@@ -347,7 +347,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=Fal
         print('Making dataframe...')
         parton_dataframe = pd.DataFrame(
             {
-                "jetNo": [int(parton.no)],
+                "partonNo": [int(parton.no)],
                 "tag": [int(parton.tag)],
                 "weight": [float(parton.weight)],
                 "id": [int(parton.id)],
@@ -380,7 +380,7 @@ def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=Fal
                 "Tavg_qgp_parton": [float(mean_QGP_temp)],
                 "initial_time": [float(event.t0)],
                 "final_time": [float(event.tf)],
-                "tau": [float(config.jet.DTAU)],
+                "dtau": [float(config.jet.DTAU)],
                 "Tmax_event": [float(event.max_temp())],
                 "drift": [bool(drift)],
                 "el": [bool(el)],

@@ -6,7 +6,7 @@
 # ALREADY IN PROPER PATH
 
 # Create python virtual environment
-export pkgname='jma'
+export pkgname='ape'
 export VIRTUAL_ENV=$pkgname
 
 # init and source scripts so that conda will work
@@ -16,10 +16,10 @@ source ~/.bashrc
 
 # create conda virtual environment with dependencies
 conda config --add channels conda-forge
-conda create --prefix /usr/conda/jma numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf
+conda create --prefix /usr/conda/ape numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf
 
 # Activate environment
-conda activate /usr/conda/jma
+conda activate /usr/conda/ape
 
 # Install fragmentation functions
 lhapdf install "JAM20-SIDIS_FF_hadron_nlo"

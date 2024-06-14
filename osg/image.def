@@ -1,0 +1,20 @@
+Bootstrap: docker
+From: opensciencegrid/osgvo-el8
+
+%runscript
+
+	# Run Command
+	exec "%@"
+
+%post
+    yum makecache --refresh && \
+    yum -y install cmake3 && \
+    yum -y install boost-devel && \
+    yum -y install hdf5-devel && \
+    yum -y install conda
+    conda init bash
+    cd /usr
+    git clone --recursive https://github.com/Jopacabra/ape.git
+    chmod +x /usr/ape/install.sh
+    cd /usr/ape
+    bash install.sh

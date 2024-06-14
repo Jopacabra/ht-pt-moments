@@ -1,5 +1,5 @@
-# We want to use the custom jopacabra/jma2 container image
-+SingularityImage = "osdf:///ospool/ap21/data/jopacabra/jma3.13.g3.sif"
+# We want to use the custom container image
++SingularityImage = "osdf:///ospool/ap21/data/jopacabra/ape.sif"
 # Requirements omit one resource location and require hardware to match newness of
 # hardware where we compiled osu-hydro and trento (on the login node)
 Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"

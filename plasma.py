@@ -819,6 +819,7 @@ class plasma_event:
 # and returns plasma_event objects generated from them.
 def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=None,
                       resolution=10, xmax=15, time=None, rmax=None, return_grids=False):
+    print('WARNING: Gradients of temp and flow not verified')
     # Define grid time and space domains
     if time is None:
         t_space = np.linspace(0, 2*xmax, int((xmax + xmax) * resolution))
@@ -838,18 +839,37 @@ def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=Non
     # Compute gradients
     temp_grad_x_values = np.gradient(temp_values, grid_step, axis=1)
     temp_grad_y_values = np.gradient(temp_values, grid_step, axis=2)
+    grad_x_u_x = np.gradient(x_vel_values, grid_step, axis=1)
+    grad_y_u_x = np.gradient(x_vel_values, grid_step, axis=2)
+    grad_x_u_y = np.gradient(y_vel_values, grid_step, axis=1)
+    grad_y_u_y = np.gradient(y_vel_values, grid_step, axis=2)
 
     # Interpolate functions
     interped_temp_function = RegularGridInterpolator((t_space, x_space, x_space), temp_values)
+
     interped_x_vel_function = RegularGridInterpolator((t_space, x_space, x_space), x_vel_values)
     interped_y_vel_function = RegularGridInterpolator((t_space, x_space, x_space), y_vel_values)
+
     interped_grad_x_function = RegularGridInterpolator((t_space, x_space, x_space), temp_grad_x_values)
     interped_grad_y_function = RegularGridInterpolator((t_space, x_space, x_space), temp_grad_y_values)
 
+    interped_grad_x_u_x = RegularGridInterpolator((t_space, x_space, x_space), grad_x_u_x)
+    interped_grad_y_u_x = RegularGridInterpolator((t_space, x_space, x_space), grad_y_u_x)
+
+    interped_grad_x_u_y = RegularGridInterpolator((t_space, x_space, x_space), grad_x_u_y)
+    interped_grad_y_u_y = RegularGridInterpolator((t_space, x_space, x_space), grad_y_u_y)
+
     # Create and return plasma object
-    plasma_object = plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
-                                 y_vel_func=interped_y_vel_function, grad_x_func=interped_grad_x_function,
-                                 grad_y_func=interped_grad_y_function, name=name, rmax=rmax)
+    plasma_object = plasma_event(temp_func=interped_temp_function,
+                                 x_vel_func=interped_x_vel_function,
+                                 y_vel_func=interped_y_vel_function,
+                                 grad_x_func=interped_grad_x_function,
+                                 grad_y_func=interped_grad_y_function,
+                                 grad_x_u_x_func=interped_grad_x_u_x,
+                                 grad_y_u_x_func=interped_grad_y_u_x,
+                                 grad_x_u_y_func=interped_grad_x_u_y,
+                                 grad_y_u_y_func=interped_grad_y_u_y,
+                                 name=name, rmax=rmax)
 
     # Return the grids of evaluated points, if requested.
     if return_grids:

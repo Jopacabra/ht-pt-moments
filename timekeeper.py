@@ -9,8 +9,8 @@ import os
 import traceback
 
 
-def time_loop(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False, scale_drift=1, scale_el=1, el_model='GLV',
-              temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
+def evolve(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False, scale_drift=1, scale_el=1, el_model='GLV',
+           temp_hrg=config.jet.T_HRG, temp_unh=config.jet.T_UNHYDRO):
     parton_dataframe = pd.DataFrame({})  # Empty dataframe to return in case of issue.
     # If using numerical energy loss, summon the interpolator
     if el_model == 'num_GLV':

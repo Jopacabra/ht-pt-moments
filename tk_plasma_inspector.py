@@ -925,16 +925,16 @@ class MainPage(tk.Frame):
             # Calculate the parton trajectory
             print('Calculating parton trajectory...')
             # Run the time loop
-            self.parton_dataframe, self.parton_xarray = timekeeper.time_loop(event=self.current_event,
-                                                                             parton=self.current_parton,
-                                                                             drift=self.drift.get(),
-                                                                             el=self.el.get(),
-                                                                             cel=self.cel.get(),
-                                                                             fg=self.fg.get(),
-                                                                             fgqhat=self.fgqhat.get(),
-                                                                             temp_hrg=self.tempHRG.get(),
-                                                                             temp_unh=self.tempUnhydro.get(),
-                                                                             el_model=self.el_model.get())
+            self.parton_dataframe, self.parton_xarray = timekeeper.evolve(event=self.current_event,
+                                                                          parton=self.current_parton,
+                                                                          drift=self.drift.get(),
+                                                                          el=self.el.get(),
+                                                                          cel=self.cel.get(),
+                                                                          fg=self.fg.get(),
+                                                                          fgqhat=self.fgqhat.get(),
+                                                                          temp_hrg=self.tempHRG.get(),
+                                                                          temp_unh=self.tempUnhydro.get(),
+                                                                          el_model=self.el_model.get())
 
             print('Parton trajectory complete.')
             self.calculated.set(True)

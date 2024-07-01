@@ -283,9 +283,9 @@ def run_event(eventNo):
                         pp_frag_z = fragmentation.frag(parton)
 
                         # Run the time loop
-                        jet_dataframe, jet_xarray = timekeeper.time_loop(event=event, parton=parton, drift=drift,
-                                                                         el=el, cel=cel, fg=fg, fgqhat=fgqhat,
-                                                                         el_model=el_model)
+                        jet_dataframe, jet_xarray = timekeeper.evolve(event=event, parton=parton, drift=drift,
+                                                                      el=el, cel=cel, fg=fg, fgqhat=fgqhat,
+                                                                      el_model=el_model)
 
                         # Save the xarray trajectory file
                         # Note we are currently in a temp directory... Save record in directory above.

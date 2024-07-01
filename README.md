@@ -14,6 +14,7 @@ Anisotropic parton evolution in hydrodynamic QGP grids generated with the DukeQC
 * hic
 * tkinter (For plasma inspector only)
 * matplotlib (For plotting only)
+* jupyter (For sample scripts only)
 
 #### Trento & OSU-Hydro dependencies
 
@@ -24,12 +25,12 @@ Anisotropic parton evolution in hydrodynamic QGP grids generated with the DukeQC
 
 #### Requires LHAPDF 
 
-* Installed separately, as in the included install script
+* Installed separately, e.g. as in the included install.sh script
 * Requires Python interface
 
 #### Requires Pythia
 
-* Installed separately, as in the included install script
+* Installed separately, e.g. as in the included install.sh script
 * Requires Python interface
 
 ### Usage

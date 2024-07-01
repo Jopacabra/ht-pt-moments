@@ -5,16 +5,24 @@ import utilities
 import logging
 from scipy.interpolate import RegularGridInterpolator
 
+# Function to return DeBye mass at a particular point
+# Ref - https://inspirehep.net/literature/1725162
+def mu(T, g=None):
+    Nf = 2  # Number of light quark flavors
+    if g is None:
+        g = config.constants.G
+    debye_mass = g * T * np.sqrt(1 + Nf /6)
+    return debye_mass
+
 # Function to return total cross section at a particular point for parton and *gluon* in medium
 # Total GW cross section, as per Sievert, Yoon, et. al.
 # Specify med_parton either 'g' for medium gluon or 'q' for generic light (?) quark in medium
 # https://inspirehep.net/literature/1725162
-def sigma(event, parton, point, med_parton='g'):
+def sigma(temp, parton, med_parton='g'):
     """
     We select the appropriate cross-section for a known parton and
     known medium parton specified when called
     """
-    current_point = point
     coupling = config.constants.G
 
     if (parton.part == 'u' or parton.part == 'ubar' or parton.part == 'd' or parton.part == 'dbar' or parton.part == 's'
@@ -25,9 +33,9 @@ def sigma(event, parton, point, med_parton='g'):
     else:
         parton_type = None
 
-    sigma_gg_gg = (9/(32 * np.pi)) * coupling ** 4 / (event.mu(point=current_point) ** 2)
-    sigma_qg_qg = (1/(8 * np.pi)) * coupling ** 4 / (event.mu(point=current_point) ** 2)
-    sigma_qq_qq = (1/(18 * np.pi)) * coupling ** 4 / (event.mu(point=current_point) ** 2)
+    sigma_gg_gg = (9/(32 * np.pi)) * coupling ** 4 / (mu(T=temp) ** 2)
+    sigma_qg_qg = (1/(8 * np.pi)) * coupling ** 4 / (mu(T=temp) ** 2)
+    sigma_qq_qq = (1/(18 * np.pi)) * coupling ** 4 / (mu(T=temp) ** 2)
 
     if parton_type == 'g' and med_parton == 'g':
         # gg -> gg cross-section
@@ -47,19 +55,35 @@ def sigma(event, parton, point, med_parton='g'):
 
     return cross_section
 
+# Function to return partial density at a particular point for given medium partons
+# Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
+def rho(temp, med_parton='g'):
+    if med_parton == 'g':
+        density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * temp ** 3
+    elif med_parton == 'q':
+        density = 1.202056903159594 * (3/4) * 24 * (1 / (np.pi ** 2)) * temp ** 3
+    else:
+        # Return 0
+        density = 0
+    return density
+
 # Function to return inverse QGP drift mean free path in units of GeV^{-1}
 # Total GW cross section, as per Sievert, Yoon, et. al.
-def inv_lambda(event, parton, point, med_parton='all'):
+def inv_lambda(event=None, parton=None, point=None, med_parton='all', T=None):
     """
     We apply a reciprocal summation between the cross-section times density for a medium gluon and for a medium quark
     to get the mean free path as in https://inspirehep.net/literature/1725162
     """
+    if T is not None and event is None:
+        temp = T
+    else:
+        temp = event.temp(point)
 
     if med_parton == 'all':
-        return (sigma(event, parton, point, med_parton='g') * event.rho(point, med_parton='g')
-                + sigma(event, parton, point, med_parton='q') * event.rho(point, med_parton='q'))
+        return (sigma(temp, parton, med_parton='g') * rho(temp, med_parton='g')
+                + sigma(temp, parton, med_parton='q') * rho(temp, med_parton='q'))
     else:
-        return sigma(event, parton, point, med_parton=med_parton) * event.rho(point, med_parton=med_parton)
+        return sigma(temp, parton, med_parton=med_parton) * rho(temp, med_parton=med_parton)
 
 # Define integrand for mean q_drift (k=0 moment)
 def drift_integrand(event, parton, time):
@@ -76,7 +100,7 @@ def drift_integrand(event, parton, time):
                                 dtau=config.jet.DTAU, beta=beta)
     u_tau = utilities.dtau_avg(func=lambda x : event.u_par(point=x, phi=p_phi), point=point, phi=p_phi,
                                 dtau=config.jet.DTAU, beta=beta)
-    mu = utilities.dtau_avg(func=lambda x : event.mu(point=x), point=point, phi=p_phi,
+    mu = utilities.dtau_avg(func=lambda x : mu(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
     inv_lambda_val = utilities.dtau_avg(func=lambda x : inv_lambda(event=event, parton=parton, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
@@ -104,7 +128,7 @@ def flowgrad_T_integrand(event, parton, time):
                                 dtau=config.jet.DTAU, beta=beta)
     u_tau = utilities.dtau_avg(func=lambda x: event.u_par(point=x, phi=p_phi), point=point, phi=p_phi,
                                dtau=config.jet.DTAU, beta=beta)
-    mu = utilities.dtau_avg(func=lambda x: event.mu(point=x), point=point, phi=p_phi,
+    mu = utilities.dtau_avg(func=lambda x: mu(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
     inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
@@ -132,7 +156,7 @@ def flowgrad_utau_integrand(event, parton, time):
                                 dtau=config.jet.DTAU, beta=beta)
     u_tau = utilities.dtau_avg(func=lambda x: event.u_par(point=x, phi=p_phi), point=point, phi=p_phi,
                                dtau=config.jet.DTAU, beta=beta)
-    mu = utilities.dtau_avg(func=lambda x: event.mu(point=x), point=point, phi=p_phi,
+    mu = utilities.dtau_avg(func=lambda x: mu(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
     inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
@@ -161,7 +185,7 @@ def flowgrad_uperp_integrand(event, parton, time):
                                 dtau=config.jet.DTAU, beta=beta)
     u_tau = utilities.dtau_avg(func=lambda x: event.u_par(point=x, phi=p_phi), point=point, phi=p_phi,
                                dtau=config.jet.DTAU, beta=beta)
-    mu = utilities.dtau_avg(func=lambda x: event.mu(point=x), point=point, phi=p_phi,
+    mu = utilities.dtau_avg(func=lambda x: mu(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
     inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
@@ -220,7 +244,7 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
 
     # Average medium parameters
     T = utilities.dtau_avg(func=event.temp, point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
-    mu = utilities.dtau_avg(func=lambda x: event.mu(point=x), point=point, phi=p_phi,
+    mu = utilities.dtau_avg(func=lambda x: mu(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
     inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)

@@ -3,83 +3,18 @@ import scipy as sp
 import scipy.integrate as integrate
 import scipy.interpolate as interpolate
 import matplotlib.pyplot as plt
+import plasma_interaction as pi
 import logging
 import time
+import config
 
 subdiv = 1
 for parton in ['q', 'g']:
     print('Computing tables for parton: {}'.format(parton))
     for coupling in [1.8, 1.9, 2.0, 2.1, 2.2]:
         print('Computing tables for g={}'.format(coupling))
+        config.constants.G = coupling
         ALPHAS = (coupling ** 2) / (4 * np.pi)
-
-
-        ############################
-        # Define medium parameters #
-        ############################
-
-        # Method to return partial density at a particular point for given medium partons
-        # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
-        def rho(T, med_parton='g'):
-            if med_parton == 'g':
-                density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * (T ** 3)
-            elif med_parton == 'q':
-                density = 1.202056903159594 * (3 / 4) * 24 * (1 / (np.pi ** 2)) * (T ** 3)
-            else:
-                # Return 0
-                density = 0
-            return density
-
-
-        # Function to return total cross section at a particular point for parton and *gluon* in medium
-        # Total GW cross section, as per Sievert, Yoon, et. al.
-        # Specify med_parton either 'g' for medium gluon or 'q' for generic light (?) quark in medium
-        # https://inspirehep.net/literature/1725162
-        def sigma(T, parton, med_parton='g'):
-            """
-            We select the appropriate cross-section for a known parton and
-            known medium parton specified when called
-            """
-            # current_point = point
-
-            parton_type = parton
-
-            sigma_gg_gg = (9 / (32 * np.pi)) * coupling ** 4 / ((coupling * T) ** 2)
-            sigma_qg_qg = (1 / (8 * np.pi)) * coupling ** 4 / ((coupling * T) ** 2)
-            sigma_qq_qq = (1 / (18 * np.pi)) * coupling ** 4 / ((coupling * T) ** 2)
-
-            if parton_type == 'g' and med_parton == 'g':
-                # gg -> gg cross-section
-                cross_section = sigma_gg_gg
-            elif parton_type == 'q' and med_parton == 'g':
-                # qg -> qg cross-section
-                cross_section = sigma_qg_qg
-            elif parton_type == 'g' and med_parton == 'q':
-                # qg -> qg cross-section
-                cross_section = sigma_qg_qg
-            elif parton_type == 'q' and med_parton == 'q':
-                # qq -> qq cross-section
-                cross_section = sigma_qq_qq
-            else:
-                logging.debug('Unknown parton scattering cs... Using gg->gg scattering cross section')
-                cross_section = sigma_gg_gg
-
-            return cross_section
-
-
-        # Function to return inverse QGP drift mean free path in units of GeV^{-1}
-        # Total GW cross section, as per Sievert, Yoon, et. al.
-        def inv_lambda(T, parton='q', med_parton='all'):
-            """
-            We apply a reciprocal summation between the cross-section times density for a medium gluon and for a medium quark
-            to get the mean free path as in https://inspirehep.net/literature/1725162
-            """
-
-            if med_parton == 'all':
-                return (sigma(T, parton, med_parton='g') * rho(T, med_parton='g')
-                        + sigma(T, parton, med_parton='q') * rho(T, med_parton='q'))
-            else:
-                return sigma(T, parton, med_parton=med_parton) * rho(T, med_parton=med_parton)
 
 
         ####################
@@ -91,16 +26,11 @@ for parton in ['q', 'g']:
 
             if parton == 'q':
                 CR = 4 / 3
-                # L = 3  # in fm
-                mu = coupling * T  # in GeV, for g * T
-                # E = 50  # jet E in GeV
-                lamb = 1 / inv_lambda(mu / 2, parton=parton)  # in GeV
             else:
                 CR = 3
-                # L = 3  # in fm
-                mu = coupling * T  # in GeV, for g * T
-                # E = 50  # jet E in GeV
-                lamb = 1 / inv_lambda(mu / 2, parton=parton)  # in GeV
+
+            mu = pi.mu(T=T, g=coupling)  # in GeV
+            lamb = 1 / pi.inv_lambda(T=T, parton=parton)  # in GeV
             FmGeV = 1 / 0.19732687
 
             # # Define the analytic dI_dx we're targeting

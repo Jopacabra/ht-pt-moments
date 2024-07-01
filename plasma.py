@@ -453,18 +453,6 @@ class plasma_event:
         return self.x_vel(point) * np.cos(phi) \
                + self.y_vel(np.array(point)) * np.sin(phi)
 
-    # Method to return partial density at a particular point for given medium partons
-    # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
-    def rho(self, point, med_parton='g'):
-        if med_parton == 'g':
-            density = 1.202056903159594 * 16 * (1 / (np.pi ** 2)) * self.temp(point) ** 3
-        elif med_parton == 'q':
-            density = 1.202056903159594 * (3/4) * 24 * (1 / (np.pi ** 2)) * self.temp(point) ** 3
-        else:
-            # Return 0
-            density = 0
-        return density
-
     # Method to return gradient of the Temperature
     # at a particular point perpendicular to a given angle phi.
     # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
@@ -512,43 +500,6 @@ class plasma_event:
         grad_perp_flow = (grad_x * e_perp[0]) + (grad_y * e_perp[1])
 
         return grad_perp_flow
-
-    # Method to return gradient of the partial density for given medium partons
-    # at a particular point perpendicular to a given angle phi.
-    # Chosen to be ideal gluon gas dens. as per Sievert, Yoon, et. al.
-    def grad_perp_rho(self, point, phi, med_parton='g'):
-        # Compute temperature gradient perp to given phi
-        grad_perp = self.grad_perp_T(point=point, phi=phi)
-
-        if med_parton == 'g':
-            grad_perp_density = (1.202056903159594 * 16 * (1 / (np.pi ** 2))
-                                 * 3 * (self.temp(point) ** 2) * grad_perp)
-        elif med_parton == 'q':
-            grad_perp_density = (1.202056903159594 * (3 / 4) * 24 * (1 / (np.pi ** 2))
-                                * 3 * (self.temp(point) ** 2) * grad_perp)
-        else:
-            # Return 0
-            grad_perp_density = 0
-        return grad_perp_density
-
-    # Method to return DeBye mass at a particular point
-    # Chosen to be simple approximation. Ref - https://inspirehep.net/literature/1725162
-    def mu(self, point):
-        Nf = 2  # Number of light quark flavors
-        debye_mass = config.constants.G_MU * self.temp(point) * np.sqrt(1 + Nf /6)
-        return debye_mass
-
-    def i_int_factor(self, parton, point, k=0):
-        current_point = point
-        parton_E = parton.p_T()
-
-        if k == 0:
-            Ik = 3 * np.log(parton_E / self.mu(point=current_point))  # No idea what the error should be here
-        else:  # Not really a thing.
-            print('I(k) for k =/= 0 is not functional. Using k=0 form.')
-            Ik = 3 * np.log(parton_E / self.mu(point=current_point))  # No idea what the error should be here
-
-        return Ik
 
     # Method to find the maximum temperature of a plasma object
     def max_temp(self, resolution=100, time='i'):

@@ -66,7 +66,8 @@ The full list of properties is as follows
 'weight' - Pythia-assigned weight from importance sampling of the scattering pT-hat distribution. Partons were sampled 
            from a rescaled distribution so as to collect information on different regions in pT. This roughly 
            corresponds to something like the "number of times this hard scattering occurs proportionate to original pT-hat
-           distribution."
+           distribution." This should be considered the weight in pp collisions.
+'AA_weight' - pp weight x reweighting factor for cold nuclear matter effects in AA collisions.
 'id' - PDG id of the parton "https://pdg.lbl.gov/2007/reviews/montecarlorpp.pdf"
 'pt_0' - pT of the parton directly after the hard scattering
 'pt_f' - pT of the parton after interacting with the QGP (if any effects turned on)

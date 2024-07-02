@@ -134,6 +134,9 @@ def run_event(eventNo):
     # Record seed selected
     seed = event_dataframe.iloc[0]['seed']
 
+    # Record number of participants
+    npart = event_dataframe.iloc[0]['npart']
+
     # Record event psi_2
     psi_2 = event_dataframe.iloc[0]['psi_2']
 
@@ -144,6 +147,9 @@ def run_event(eventNo):
     # Create event object
     # This asks the hydro file object to interpolate the relevant functions and pass them on to the plasma object.
     event = plasma.plasma_event(event=file, name=eventNo, rmax=rmax)
+
+    # Create Cold Nuclear Matter effect interpolator
+    CNM_interp = collision.CNM_RAA_interp()
 
     ##################
     # "Jet" Analysis #
@@ -274,10 +280,12 @@ def run_event(eventNo):
                         logging.info('Running Jet {}, case {}'.format(str(process_num), case))
                         logging.info('Energy Loss: {}, Vel Drift: {}, FG Drift: {}, FG Qhat: {}'.format(el, drift, fg,
                                                                                                         fgqhat))
+                        # Perform AA CNM weighting
+                        AA_weight = CNM_interp.weight(pt=chosen_e, npart=npart, id=particle_pid)
 
                         # Create the jet object
                         parton = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_seed_num, part=chosen_pilot,
-                                          weight=chosen_weight)
+                                          weight=chosen_weight, AA_weight=AA_weight)
 
                         # Perform pp-level fragmentation
                         pp_frag_z = fragmentation.frag(parton)

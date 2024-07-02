@@ -7,7 +7,7 @@ import logging
 # Note parton angle (theta0) in radians
 class parton:
     # Instantiation statement. All parameters optional.
-    def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, part=None, tag=None, no=None, weight=1):
+    def __init__(self, x_0=0, y_0=0, phi_0=0, p_T0=100, part=None, tag=None, no=None, weight=1, AA_weight=0):
         logging.info('Creating new parton...')
 
         # Initialize basic parameters
@@ -17,6 +17,7 @@ class parton:
         self.y_0 = float(y_0)
         self.part = str(part)
         self.weight = float(weight)
+        self.AA_weight = float(AA_weight)
 
         # If no particle type supplied, particle is a gluon (most common case).
         if self.part is None:

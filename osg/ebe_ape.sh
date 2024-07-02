@@ -18,7 +18,7 @@ conda activate /usr/conda/ape
 
 # Run the script
 echo "Running event..."
-python3 /usr/ape/ebe_pythia.py
+python3 /usr/ape/ebe_ape.py
 echo "Event complete!"
 
 # Transfer relevant output files to /srv

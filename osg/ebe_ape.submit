@@ -1,5 +1,5 @@
 # We want to use the custom container image
-+SingularityImage = "osdf:///ospool/ap21/data/jopacabra/ape.sif"
++SingularityImage = "osdf:///ospool/ap21/data/jopacabra/ape_v1.0.0.sif"
 # Requirements omit one resource location and require hardware to match newness of
 # hardware where we compiled osu-hydro and trento (on the login node)
 Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
@@ -11,7 +11,7 @@ Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
 # We need the job to run the bash script that will update and call the EBE.py script
 # We'll specify unique filenames for each job by using
 # the job's 'cluster' value.
-executable = ../ebe_pythia.sh
+executable = ../ebe_ape.sh
 # We don't feed any particular files to transfer, so all files in the /srv directory are transferred
 # transfer_output_files = /srv/*.pkl
 

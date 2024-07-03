@@ -1,10 +1,6 @@
 import numpy as np
-import scipy as sp
 import scipy.integrate as integrate
-import scipy.interpolate as interpolate
-import matplotlib.pyplot as plt
 import plasma_interaction as pi
-import logging
 import time
 import config
 
@@ -29,7 +25,7 @@ for parton in ['q', 'g']:
             else:
                 CR = 3
 
-            mu = pi.mu(T=T, g=coupling)  # in GeV
+            mu = pi.mu_DeBye(T=T, g=coupling)  # in GeV
             lamb = 1 / pi.inv_lambda(T=T, parton=parton)  # in GeV
             FmGeV = 1 / 0.19732687
 

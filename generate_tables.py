@@ -3,10 +3,10 @@ import scipy as sp
 import scipy.integrate as integrate
 import scipy.interpolate as interpolate
 import matplotlib.pyplot as plt
-from .. import plasma_interaction as pi
+import plasma_interaction as pi
 import logging
 import time
-from .. import config
+import config
 
 subdiv = 1
 for parton in ['q', 'g']:
@@ -93,6 +93,6 @@ for parton in ['q', 'g']:
 
         delta_E_vals = delta_E(Es, Ts, Ls)
 
-        np.savez('g{}_deltaE_samples_{}_{}subdiv.npz'.format(coupling, parton, subdiv), E_points=E_points,
+        np.savez('e_loss_tables/g{}_deltaE_samples_{}_{}subdiv.npz'.format(coupling, parton, subdiv), E_points=E_points,
                  T_points=T_points,
                  L_points=L_points, delta_E_vals=delta_E_vals)

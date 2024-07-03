@@ -18,20 +18,12 @@ def mu_DeBye(T, g=None):
 # Total GW cross section, as per Sievert, Yoon, et. al.
 # Specify med_parton either 'g' for medium gluon or 'q' for generic light (?) quark in medium
 # https://inspirehep.net/literature/1725162
-def sigma(temp, parton, med_parton='g'):
+def sigma(temp, parton_type, med_parton='g'):
     """
     We select the appropriate cross-section for a known parton and
     known medium parton specified when called
     """
     coupling = config.constants.G
-
-    if (parton.part == 'u' or parton.part == 'ubar' or parton.part == 'd' or parton.part == 'dbar' or parton.part == 's'
-                or parton.part == 'sbar'):
-        parton_type = 'q'
-    elif parton.part == 'g':
-        parton_type = 'g'
-    else:
-        parton_type = None
 
     sigma_gg_gg = (9/(32 * np.pi)) * coupling ** 4 / (mu_DeBye(T=temp) ** 2)
     sigma_qg_qg = (1/(8 * np.pi)) * coupling ** 4 / (mu_DeBye(T=temp) ** 2)
@@ -69,7 +61,7 @@ def rho(temp, med_parton='g'):
 
 # Function to return inverse QGP drift mean free path in units of GeV^{-1}
 # Total GW cross section, as per Sievert, Yoon, et. al.
-def inv_lambda(event=None, parton=None, point=None, med_parton='all', T=None):
+def inv_lambda(event=None, parton_type=None, point=None, med_parton='all', T=None):
     """
     We apply a reciprocal summation between the cross-section times density for a medium gluon and for a medium quark
     to get the mean free path as in https://inspirehep.net/literature/1725162
@@ -80,10 +72,10 @@ def inv_lambda(event=None, parton=None, point=None, med_parton='all', T=None):
         temp = event.temp(point)
 
     if med_parton == 'all':
-        return (sigma(temp, parton, med_parton='g') * rho(temp, med_parton='g')
-                + sigma(temp, parton, med_parton='q') * rho(temp, med_parton='q'))
+        return (sigma(temp, parton_type, med_parton='g') * rho(temp, med_parton='g')
+                + sigma(temp, parton_type, med_parton='q') * rho(temp, med_parton='q'))
     else:
-        return sigma(temp, parton, med_parton=med_parton) * rho(temp, med_parton=med_parton)
+        return sigma(temp, parton_type, med_parton=med_parton) * rho(temp, med_parton=med_parton)
 
 # Define integrand for mean q_drift (k=0 moment)
 def drift_integrand(event, parton, time):
@@ -102,7 +94,7 @@ def drift_integrand(event, parton, time):
                                 dtau=config.jet.DTAU, beta=beta)
     mu = utilities.dtau_avg(func=lambda x : mu_DeBye(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
-    inv_lambda_val = utilities.dtau_avg(func=lambda x : inv_lambda(event=event, parton=parton, point=x),
+    inv_lambda_val = utilities.dtau_avg(func=lambda x : inv_lambda(event=event, parton_type=parton.part, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
 
     # Source link? -- Converts factor of fermi from integral to factor of GeV^{-1}
@@ -130,7 +122,7 @@ def flowgrad_T_integrand(event, parton, time):
                                dtau=config.jet.DTAU, beta=beta)
     mu = utilities.dtau_avg(func=lambda x: mu_DeBye(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
-    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
+    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton_type=parton.part, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
     grad_perp_temp = utilities.dtau_avg(func=lambda x: event.grad_perp_T(point=x, phi=p_phi),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
@@ -158,7 +150,7 @@ def flowgrad_utau_integrand(event, parton, time):
                                dtau=config.jet.DTAU, beta=beta)
     mu = utilities.dtau_avg(func=lambda x: mu_DeBye(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
-    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
+    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton_type=parton.part, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
     grad_perp_u_tau = utilities.dtau_avg(func=lambda x: event.grad_perp_u_par(point=x, phi=p_phi),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
@@ -187,7 +179,7 @@ def flowgrad_uperp_integrand(event, parton, time):
                                dtau=config.jet.DTAU, beta=beta)
     mu = utilities.dtau_avg(func=lambda x: mu_DeBye(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
-    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
+    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton_type=parton.part, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
     grad_perp_u_perp = utilities.dtau_avg(func=lambda x: event.grad_perp_u_perp(point=x, phi=p_phi),
                                           point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
@@ -246,7 +238,7 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
     T = utilities.dtau_avg(func=event.temp, point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
     mu = utilities.dtau_avg(func=lambda x: mu_DeBye(T=event.temp(x)), point=point, phi=p_phi,
                             dtau=config.jet.DTAU, beta=beta)
-    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton=parton, point=x),
+    inv_lambda_val = utilities.dtau_avg(func=lambda x: inv_lambda(event=event, parton_type=parton.part, point=x),
                                         point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
     vel = utilities.dtau_avg(func=event.vel, point=point, phi=p_phi, dtau=config.jet.DTAU, beta=beta)
 

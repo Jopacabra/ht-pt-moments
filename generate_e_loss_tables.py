@@ -4,6 +4,10 @@ import plasma_interaction as pi
 import time
 import config
 
+"""
+This file generates the tabulated energy loss values in the 'e_loss_tables' folder.
+"""
+
 subdiv = 1
 for parton in ['q', 'g']:
     print('Computing tables for parton: {}'.format(parton))

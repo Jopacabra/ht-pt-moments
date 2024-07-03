@@ -384,10 +384,7 @@ class num_eloss_interpolator():
         project_path = os.path.dirname(os.path.realpath(__file__))
 
         # Load tables of computed brick energy loss
-        if config.constants.G == 1.7:
-            self.g_table = np.load(project_path + '/e_loss_tables/g1.7_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g1.7_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G == 1.8:
+        if config.constants.G == 1.8:
             self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
             self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
         elif config.constants.G == 1.9:

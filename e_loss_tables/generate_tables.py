@@ -3,10 +3,10 @@ import scipy as sp
 import scipy.integrate as integrate
 import scipy.interpolate as interpolate
 import matplotlib.pyplot as plt
-import plasma_interaction as pi
+from .. import plasma_interaction as pi
 import logging
 import time
-import config
+from .. import config
 
 subdiv = 1
 for parton in ['q', 'g']:

@@ -85,19 +85,19 @@ class CNM_RAA_interp:
 
     def weight(self, pt, npart, id):
         if id == 21:
-            return self.g(np.array([pt, npart]))
+            return self.g(np.array([pt, npart**(1/3)]))
         elif id == 1:
-            return self.d(np.array([pt, npart]))
+            return self.d(np.array([pt, npart**(1/3)]))
         elif id == -1:
-            return self.dbar(np.array([pt, npart]))
+            return self.dbar(np.array([pt, npart**(1/3)]))
         elif id == 2:
-            return self.u(np.array([pt, npart]))
+            return self.u(np.array([pt, npart**(1/3)]))
         elif id == -2:
-            return self.ubar(np.array([pt, npart]))
+            return self.ubar(np.array([pt, npart**(1/3)]))
         elif id == 3:
-            return self.s(np.array([pt, npart]))
+            return self.s(np.array([pt, npart**(1/3)]))
         elif id == -3:
-            return self.sbar(np.array([pt, npart]))
+            return self.sbar(np.array([pt, npart**(1/3)]))
         else:
             return 0
 

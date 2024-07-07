@@ -281,7 +281,7 @@ def run_event(eventNo):
                         logging.info('Energy Loss: {}, Vel Drift: {}, FG Drift: {}, FG Qhat: {}'.format(el, drift, fg,
                                                                                                         fgqhat))
                         # Perform AA CNM weighting
-                        AA_weight = CNM_interp.weight(pt=chosen_e, npart=npart, id=particle_pid)
+                        AA_weight = CNM_interp.weight(pt=chosen_e, npart=npart, id=particle_pid) * chosen_weight
 
                         # Create the jet object
                         parton = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_seed_num, part=chosen_pilot,

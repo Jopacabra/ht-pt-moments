@@ -260,7 +260,6 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
             CR = 4/3
 
         # Set alpha_s
-        # "For alpha_s the scale runs, but ballpark you can guess 0.3" - Dr. Sievert
         alphas = (config.constants.G**2) / (4*np.pi)
 
         # Calculate and return energy loss per unit length of this step.
@@ -467,7 +466,6 @@ def coll_energy_loss_integrand(event, parton, time):
         CR = 4/3
 
     # Set alpha_s
-    # "For alpha_s the scale runs, but ballpark you can guess 0.3" - Dr. Sievert
     ALPHAS = (config.constants.G**2) / (4*np.pi)
 
     # Calculate and return energy loss per unit length of this step.

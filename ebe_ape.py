@@ -194,7 +194,7 @@ def run_event(eventNo):
             for phi_val in phi_values:
                 # phi_val = np.mod(np.random.uniform(phi_center - phi_res/2, phi_center + phi_res/2), 2*np.pi)
 
-                for case in [0, 1, 2, 3]:
+                for case in ['c1.6', 'c1.7', 'c1.8', '1.9', '2.0', '2.1']:  # [0, 1, 2, 3]
                     case_partons = pd.DataFrame({})
                     # Determine case details
                     if case == 0:
@@ -225,6 +225,48 @@ def run_event(eventNo):
                         fg = False
                         fgqhat = False
                         config.constants.G = config.constants.G_COL
+                    elif case == 'c1.6':
+                        el = True
+                        cel = True
+                        drift = True
+                        fg = False
+                        fgqhat = False
+                        config.constants.G = 1.6
+                    elif case == 'c1.7':
+                        el = True
+                        cel = True
+                        drift = True
+                        fg = False
+                        fgqhat = False
+                        config.constants.G = 1.7
+                    elif case == 'c1.8':
+                        el = True
+                        cel = True
+                        drift = True
+                        fg = False
+                        fgqhat = False
+                        config.constants.G = 1.8
+                    elif case == '1.9':
+                        el = True
+                        cel = False
+                        drift = True
+                        fg = False
+                        fgqhat = False
+                        config.constants.G = 1.9
+                    elif case == '2.0':
+                        el = True
+                        cel = False
+                        drift = True
+                        fg = False
+                        fgqhat = False
+                        config.constants.G = 2.0
+                    elif case == '2.1':
+                        el = True
+                        cel = False
+                        drift = True
+                        fg = False
+                        fgqhat = False
+                        config.constants.G = 2.1
                     else:
                         el = True
                         cel = False

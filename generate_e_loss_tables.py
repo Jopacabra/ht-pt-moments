@@ -11,7 +11,7 @@ This file generates the tabulated energy loss values in the 'e_loss_tables' fold
 subdiv = 1
 for parton in ['q', 'g']:
     print('Computing tables for parton: {}'.format(parton))
-    for coupling in [1.8, 1.9, 2.0, 2.1, 2.2]:
+    for coupling in [1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2]:
         print('Computing tables for g={}'.format(coupling))
         config.constants.G = coupling
         ALPHAS = (coupling ** 2) / (4 * np.pi)

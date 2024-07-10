@@ -382,8 +382,14 @@ class num_eloss_interpolator():
         # Find directory of this file
         project_path = os.path.dirname(os.path.realpath(__file__))
 
-        # Load tables of computed brick energy loss
-        if config.constants.G == 1.8:
+        # Load tables of computed fixed length energy loss
+        if config.constants.G == 1.6:
+            self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G == 1.7:
+            self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G == 1.8:
             self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
             self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
         elif config.constants.G == 1.9:
@@ -395,6 +401,12 @@ class num_eloss_interpolator():
         elif config.constants.G == 2.1:
             self.g_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_g_1subdiv.npz')
             self.q_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G == 2.2:
+            self.g_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_q_1subdiv.npz')
+        elif config.constants.G < 2.2 and config.constants.G > 1.6:
+            # Future: Interpolate between
+            logging.error('No suitable energy loss table!!!')
         else:
             logging.error('No suitable energy loss table!!!')
             raise Exception

@@ -390,7 +390,9 @@ def evolve(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False,
                 "fg": [bool(fg)],
                 "fgqhat": [bool(fgqhat)],
                 "exit": [int(exit_code)],
-                "g": [float(config.constants.G)]
+                "g": [float(config.constants.G)],
+                "K_F_DRIFT": [float(config.jet.K_F_DRIFT)],
+                "K_FG_DRIFT": [float(config.jet.K_FG_DRIFT)]
             }
         )
 

@@ -4,7 +4,7 @@ import pandas as pd
 import config
 
 # Function to generate a pp hard scattering at sqrt(s) = 5.02 TeV
-def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX):
+def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_shower=config.jet.PROCESS_CORRECTION):
     ############
     # Settings #
     ############
@@ -51,7 +51,6 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX):
             else:
                 return True  # Veto the event
 
-
     #################
     # Set up Pythia #
     #################
@@ -70,20 +69,15 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX):
 
     # Only do the parton level stuff
     pythia_process.readString("ProcessLevel:all = on")
-    pythia_process.readString("PartonLevel:all = off")
+    pythia_process.readString("PartonLevel:all = {}".format(do_shower))
+    pythia_process.readString("PartonLevel:MPI = {}".format(do_shower))  # Multi-parton interactions
+    pythia_process.readString("PartonLevel:ISR = {}".format(
+        do_shower))  # "Initial state" radiation with spacelike particles "before the hard process"
+    pythia_process.readString("PartonLevel:FSR = off")  # "Final state" radiation with timelike particles
     pythia_process.readString("HadronLevel:all = off")
 
     # Turn on all hard QCD processes
     pythia_process.readString("HardQCD:all = on")
-
-    # Turn off all showers
-    # pythia_process.readString("PartonLevel:MPI = off")
-    # pythia_process.readString("PartonLevel:ISR = off")
-    # pythia_process.readString("PartonLevel:FSR = off")
-    # pythia_process.readString("PartonLevel:FSRinProcess = off")
-    # pythia_process.readString("PartonLevel:FSRinResonances = off")
-    # pythia_process.readString("PartonLevel:earlyResDec = off")
-    # pythia_process.readString("PartonLevel:Remnants = on")
 
     # Set a phase space cut for particle pT.
     '''
@@ -107,35 +101,42 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX):
     # Tell Pythia to "do the thing" (run with the configurations above)
     pythia_process.init()
 
-    ####################################
-    # Run the event generation routine #
-    ####################################
+    # Event loop. Iterate until getting a satisfactory hard process.
+    for iEvent in range(1000):
+        # Run the next event
+        if not pythia_process.next(): continue
+        nCharged = 0
+        max_0 = 0
+        max_0_i = 0
+        max_1 = 0
+        max_1_i = 0
 
-    # Generate event. Skip if error.
-    """
-    This is the event loop. When we call pythia.next(), we generate the next event. If this returns "False",
-    an error occured, so we try again.
-
-    We then check for a satisfactory particle. If it exists, we accept the event. If not, we generate a new one.
-    """
-
-    failed_events = 0
-    success = False
-    while not success:
-        if not pythia_process.next():  # Note: Calling pythia.next() generates the next event in with the pythia object.
-            failed_events += 1
+        # Check if we're using the event record or the process record
+        if pythia_process.event.size() == 0:
+            num_particles_hist = pythia_process.process.size()
+            record = pythia_process.process
         else:
-            break  # Do not check output particles
-            # for particle in pythia_process.process:
-            #     if particle.status() > 0:
-            #         if np.abs(float(particle.y())) < (y_res / 2):
-            #             # if np.abs(particle.id()) == 3 or np.abs(particle.id()) == 2 or np.abs(particle.id()) == 1  \
-            #             #         or particle.id() == 21:
-            #             # if np.abs(chosen_pt - np.abs(particle.pT())) < (pt_res/2):
-            #             id = particle.id()
-            #             if id == chosen_id:
-            #                 success = True
-            # failed_events += 1
+            num_particles_hist = pythia_process.event.size()
+            record = pythia_process.event
+
+        # Iterate over all particles and look for the hardest partonic outputs.
+        for i in np.arange(0, num_particles_hist):
+            p = record[i]
+            if (p.status() > 0):  # and p.isHadron() and p.isCharged():
+                nCharged += 1
+                if p.pT() > max_1:
+                    if p.pT() > max_0:
+                        max_0_i = i
+                        max_0 = p.pT()
+                    else:
+                        max_1_i = i
+                        max_1 = p.pT()
+        ids = [record[max_0_i].id(), record[max_1_i].id()]
+
+        # Check if the results are The correct flavors and above 1 GeV
+        if ((np.abs(ids[0]) < 3.1) or (np.abs(ids[0]) == 21)) and ((np.abs(ids[1]) < 3.1) or (np.abs(ids[1]) == 21)):
+            if (max_0 > 1) and (max_1 > 1):
+                break  # Stop generating events
 
     ################################
     # Package and output particles #
@@ -143,29 +144,28 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX):
     weight = pythia_process.infoPython().weight()
     particles = pd.DataFrame({})
 
-    for particle in pythia_process.process:
-        if particle.id() != 90:
-            properties = pd.DataFrame(
-                {
-                    'id': [int(particle.id())],
-                    'status': [int(particle.status())],
-                    'mother1': [int(particle.mother1())],
-                    'mother2': [int(particle.mother2())],
-                    'daughter1': [int(particle.daughter1())],
-                    'daughter2': [int(particle.daughter2())],
-                    'col': [int(particle.col())],
-                    'acol': [int(particle.acol())],
-                    'px': [particle.px()],
-                    'py': [particle.py()],
-                    'pz': [particle.pz()],
-                    'pt': [particle.pT()],
-                    'e': [particle.e()],
-                    'm': [particle.m()],
-                    'scaleIn': [particle.scale()]
-                }
-            )
+    for particle in [record[max_0_i], record[max_1_i]]:
+        properties = pd.DataFrame(
+            {
+                'id': [int(particle.id())],
+                'status': [int(particle.status())],
+                'mother1': [int(particle.mother1())],
+                'mother2': [int(particle.mother2())],
+                'daughter1': [int(particle.daughter1())],
+                'daughter2': [int(particle.daughter2())],
+                'col': [int(particle.col())],
+                'acol': [int(particle.acol())],
+                'px': [particle.px()],
+                'py': [particle.py()],
+                'pz': [particle.pz()],
+                'pt': [particle.pT()],
+                'e': [particle.e()],
+                'm': [particle.m()],
+                'scaleIn': [particle.scale()]
+            }
+        )
 
-            particles = pd.concat([particles, properties], axis=0)
+        particles = pd.concat([particles, properties], axis=0)
 
     return particles, weight
 

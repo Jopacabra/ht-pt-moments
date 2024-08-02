@@ -69,6 +69,7 @@ class transport:
 class jet:
     PTHATMIN = float(cfg['jet']['PTHATMIN'])
     PTHATMAX = float(cfg['jet']['PTHATMAX'])
+    PROCESS_CORRECTIONS = bool(cfg['jet']['PROCESS_CORRECTIONS'])
     DTAU = float(cfg['jet']['DTAU'])
     T_HRG = float(cfg['jet']['T_HRG'])
     T_UNHYDRO = float(cfg['jet']['T_UNHYDRO'])

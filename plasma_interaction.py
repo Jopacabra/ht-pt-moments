@@ -66,6 +66,12 @@ def inv_lambda(event=None, parton_type=None, point=None, med_parton='all', T=Non
     We apply a reciprocal summation between the cross-section times density for a medium gluon and for a medium quark
     to get the mean free path as in https://inspirehep.net/literature/1725162
     """
+    # Choose quark or gluon
+    if parton_type == 'g' or parton_type == 'q':
+        pass
+    else:
+        parton_type = 'q'
+
     if T is not None and event is None:
         temp = T
     else:

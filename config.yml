@@ -32,7 +32,7 @@ transport:  # Parameters for the hybrid transport medium model - freestreaming, 
 jet:  # Parameters for the jet production processes to be run
     PTHATMIN: 1  # [GeV] Minimum pTHat for jet production hard scatterings ~ min initial pT of jets
     PTHATMAX: 100  # [GeV] Maximum pTHat for jet production hard scatterings ~ max initial pT of jets
-    PROCESS_CORRECTIONS: True  # Higher order corrections to the tree level 2-to-2 hard process -- Test function ONLY
+    PROCESS_CORRECTIONS: False  # Higher order corrections to the tree level 2-to-2 hard process -- Test function ONLY
     DTAU: 0.1  # [fm] Timestep used for parton propagation -- plasma properties assumed constant over dtau
     T_HRG: 0.155  # [GeV] Temperature in GeV at which to consider the medium hadronized - cuts off el & drift
     T_UNHYDRO: 0.150  # [GeV] Temperature in GeV at which to consider the medium unhydrodynamic

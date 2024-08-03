@@ -10,14 +10,14 @@ project_path = os.path.dirname(os.path.realpath(__file__))
 # Read config file and parse settings
 try:
     with open(project_path + '/user_config.yml', 'r') as ymlfile:
-        logging.info('Using user edited config file')
+        print('Using user edited config file')
         # Note the usage of yaml.safe_load()
         # Using yaml.load() exposes the system to running any Python commands in the config file.
         # That is unnecessary risk!!!
         cfg = yaml.safe_load(ymlfile)
 except:
     with open(project_path + '/config.yml', 'r') as ymlfile:
-        logging.info('Using default config file')
+        print('Using default config file')
         # Note the usage of yaml.safe_load()
         # Using yaml.load() exposes the system to running any Python commands in the config file.
         # That is unnecessary risk!!!

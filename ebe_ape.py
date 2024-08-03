@@ -239,9 +239,6 @@ def run_event(eventNo):
                         # Only do the things for the particle output
                         particle_status = particle['status']
                         particle_tag = int(particle_tags[i])
-                        if particle_status != 23:
-                            i += 1
-                            continue
                         jet_seed_num += 1
                         # Read jet seed particle properties
                         chosen_e = particle['pt']
@@ -318,9 +315,9 @@ def run_event(eventNo):
                         current_parton['process_run'] = process_run
 
                         # Save jet pair
-                        if i == 4:
+                        if i == 0:
                             parton1 = parton
-                        elif i == 5:
+                        elif i == 1:
                             parton2 = parton
 
                         # Append current partons to the case partons

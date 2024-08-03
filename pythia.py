@@ -4,7 +4,7 @@ import pandas as pd
 import config
 
 # Function to generate a pp hard scattering at sqrt(s) = 5.02 TeV
-def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_shower=config.jet.PROCESS_CORRECTION):
+def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_shower=config.jet.PROCESS_CORRECTIONS):
     ############
     # Settings #
     ############

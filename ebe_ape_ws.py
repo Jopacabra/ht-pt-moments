@@ -165,7 +165,7 @@ def run_event(eventNo):
     for process_num in range(0, config.EBE.NUM_SAMPLES):
         # Create unique jet seed tag
         process_tag = int(np.random.uniform(0, 1000000000000))
-        logging.infoj('- Jet Seed Process {} Start -'.format(process_num))
+        logging.info('- Jet Seed Process {} Start -'.format(process_num))
 
         try:
             #########################

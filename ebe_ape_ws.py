@@ -76,7 +76,7 @@ def safe_exit(resultsDataFrame, event_obs, temp_dir, filename, identifier, hadro
         logging.info('Saving event UrQMD observables...')
         np.save(results_path + '/{}_observables.npy'.format(filename), event_obs)
     except Exception as error:
-        logging.info("Failed to copy UrQMD file: {}".format(type(error).__name__))  # An error occurred: NameError
+        logging.info("Failed to save soft observables: {}".format(type(error).__name__))  # An error occurred: NameError
         traceback.print_exc()
 
     # Save the dataframe into the identified results folder
@@ -288,7 +288,8 @@ def run_event(eventNo):
                             logging.info('Energy Loss: {}, Vel Drift: {}, FG Drift: {}, FG Qhat: {}'.format(el, drift, fg,
                                                                                                             fgqhat))
                             # Perform AA CNM weighting
-                            AA_weight = CNM_interp.weight(pt=chosen_e, npart=npart, id=particle_pid) * chosen_weight
+                            logging.info('No CNM!!!')
+                            AA_weight = chosen_weight #CNM_interp.weight(pt=chosen_e, npart=npart, id=particle_pid) * chosen_weight
 
                             # Create the jet object
                             parton = jets.parton(x_0=x0, y_0=y0, phi_0=phi_0, p_T0=chosen_e, tag=particle_tag, no=jet_seed_num, part=chosen_pilot,

@@ -1088,9 +1088,8 @@ def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, alpha=0, name
     interped_grad_y_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), temp_grad_y_values)
 
     # Create and return plasma object
-    plasma_object = plasma.plasma_event(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
-                                 y_vel_func=interped_y_vel_function, grad_x_func=interped_grad_x_function,
-                                 grad_y_func=interped_grad_y_function, name=name, rmax=rmax)
+    plasma_object = plasma.functional_plasma(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
+                                 y_vel_func=interped_y_vel_function, name=name, rmax=rmax)
 
     # Return the grids of evaluated points, if requested.
     if return_grids:

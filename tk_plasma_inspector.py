@@ -526,8 +526,8 @@ class MainPage(tk.Frame):
 
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
-                                                 y_vel_func=analytic_uy,
-                                                 xmax=rmax, time=event_lifetime)
+                                                      y_vel_func=analytic_uy,
+                                                      rmax=rmax, time=event_lifetime)
 
         # Find current_event parameters
         self.temp_max = self.current_event.max_temp()
@@ -568,7 +568,7 @@ class MainPage(tk.Frame):
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
                                                       y_vel_func=analytic_uy,
-                                                      xmax=rmax, time=event_lifetime)
+                                                      rmax=rmax, time=event_lifetime)
 
         # Find current_event parameters
         self.temp_max = self.current_event.max_temp()
@@ -609,7 +609,7 @@ class MainPage(tk.Frame):
         # Create plasma object
         self.current_event = plasma.functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux,
                                                       y_vel_func=analytic_uy,
-                                                      xmax=rmax, time=event_lifetime)
+                                                      rmax=rmax, time=event_lifetime)
 
         # Find current_event parameters
         self.temp_max = self.current_event.max_temp()
@@ -951,7 +951,7 @@ class MainPage(tk.Frame):
             sampledPoint = collision.generate_jet_seed_point(self.current_event, 1)
 
             # Uniform sample an angle
-            sampledAngle = float(np.random.uniform(0, 2*np.pi, 1))
+            sampledAngle = float(np.random.uniform(0, 2*np.pi, 1)[0])
 
             # Set sliders to point
             self.x0.set(sampledPoint[0])

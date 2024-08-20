@@ -765,27 +765,12 @@ class plasma_event:
 
         return temps, vels, grads, tempcb, velcb, gradcb
 
-
 # Takes callable functions that take parameters (t, x, y) for the temperature and velocities
 # and returns plasma_event objects generated from them.
-def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=None,
-                      resolution=10, xmax=15, time=None, rmax=None, return_grids=False):
+def tabulated_plasma(t_space, x_space, temp_values, x_vel_values, y_vel_values, name=None, return_grids=False):
     print('WARNING: Gradients of temp and flow not verified')
-    # Define grid time and space domains
-    if time is None:
-        t_space = np.linspace(0, 2*xmax, int((xmax + xmax) * resolution))
-    else:
-        t_space = np.linspace(0, time, int((xmax + xmax) * resolution))
-    x_space = np.linspace((0 - xmax), xmax, int((xmax + xmax) * resolution))
-    grid_step = (2*xmax)/int((xmax + xmax) * resolution)
-
-    # Create meshgrid for function evaluation
-    t_coords, x_coords, y_coords = np.meshgrid(t_space, x_space, x_space, indexing='ij')
-
-    # Evaluate functions for grid points
-    temp_values = temp_func(t_coords, x_coords, y_coords)
-    x_vel_values = x_vel_func(t_coords, x_coords, y_coords)
-    y_vel_values = y_vel_func(t_coords, x_coords, y_coords)
+    grid_step = float(x_space[-1] - x_space[-2])
+    rmax = x_space[-1]
 
     # Compute gradients
     temp_grad_x_values = np.gradient(temp_values, grid_step, axis=1)
@@ -827,5 +812,31 @@ def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=Non
         return plasma_object, temp_values, x_vel_values, y_vel_values,
     else:
         return plasma_object
+
+# Takes callable functions that take parameters (t, x, y) for the temperature and velocities
+# and returns plasma_event objects generated from them.
+def functional_plasma(temp_func=None, x_vel_func=None, y_vel_func=None, name=None,
+                      resolution=10, rmax=15, time=None, return_grids=False, tau0=0.5):
+    # Define grid time and space domains
+    if time is None:
+        t_space = np.linspace(tau0, 2 * rmax, int((rmax + rmax) * resolution))
+    else:
+        t_space = np.linspace(tau0, time, int((rmax + rmax) * resolution))
+    x_space = np.linspace((0 - rmax), rmax, int((rmax + rmax) * resolution))
+
+
+    # Create meshgrid for function evaluation
+    t_coords, x_coords, y_coords = np.meshgrid(t_space, x_space, x_space, indexing='ij')
+
+    # Evaluate functions for grid points
+    temp_values = temp_func(t_coords, x_coords, y_coords)
+    x_vel_values = x_vel_func(t_coords, x_coords, y_coords)
+    y_vel_values = y_vel_func(t_coords, x_coords, y_coords)
+
+    # Create the plasma object via tabulated points
+    return tabulated_plasma(t_space, x_space, temp_values, x_vel_values, y_vel_values, name=name,
+                            return_grids=return_grids)
+
+
 
 

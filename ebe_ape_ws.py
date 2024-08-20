@@ -131,14 +131,10 @@ def run_event(eventNo):
     rmax = 8
 
     # Create event object
-    event = collision.woods_saxon_plasma(chosen_b, resolution=5, xmax=rmax)
+    event = collision.woods_saxon_plasma(chosen_b, resolution=5, rmax=rmax)
 
     event_dataframe = pd.DataFrame({'b': [chosen_b]})
     event_observables = None
-
-    logging.info('Generating new event...')
-
-
 
     # Record seed selected
     seed = None
@@ -150,6 +146,7 @@ def run_event(eventNo):
     psi_2 = None
 
     # Create Cold Nuclear Matter effect interpolator
+    logging.info('Creating CNM RAA interpolator...')
     CNM_interp = collision.CNM_RAA_interp()
 
     ##################

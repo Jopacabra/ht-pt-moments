@@ -1016,7 +1016,7 @@ def optical_glauber_new(R=7.5, b=7.5, phi=0, T0=1, U0=1):
 # Function to create plasma object for Woods-Saxon distribution
 # Alpha is expansion power level
 def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, alpha=0, name=None,
-                       resolution=5, xmax=10, tmin=0.5, tmax=None, rmax=None, return_grids=False):
+                       resolution=5, rmax=10, tmin=0.5, tmax=None, return_grids=False):
     # Defaults are Trento PbPb parameters
 
     # Determine radius
@@ -1031,11 +1031,10 @@ def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, alpha=0, name
 
     # Define grid time and space domains
     if tmax is None:
-        t_space = np.linspace(tmin, 2 * xmax, int((xmax + xmax) * resolution))
-    else:
-        t_space = np.linspace(tmin, tmax, int((xmax + xmax) * resolution))
-    x_space = np.linspace((0 - xmax), xmax, int((xmax + xmax) * resolution))
-    grid_step = (2 * xmax) / int((xmax + xmax) * resolution)
+        tmax = 2 * rmax
+    t_space = np.linspace(tmin, tmax, int((rmax + rmax) * resolution))
+    x_space = np.linspace((0 - rmax), rmax, int((rmax + rmax) * resolution))
+    grid_step = (2 * rmax) / int((rmax + rmax) * resolution)
 
     # Create meshgrid for function evaluation
     t_coords, x_coords, y_coords = np.meshgrid(t_space, x_space, x_space, indexing='ij')
@@ -1069,27 +1068,26 @@ def woods_saxon_plasma(b, T0=0.39, V0=0.5, A=208, R=6.62, a=0.546, alpha=0, name
     # Evaluate functions for grid points
     # temp_values = np.power(np.multiply(T_A(t_coords, x_coords, y_coords),
     #                                    T_B(t_coords, x_coords, y_coords)), 1/2)
-    temp_values = np.power(TATB(t_coords, x_coords, y_coords), 1/6)
-    temp_values = (T0 / 2.708) * temp_values  # normalize max temp to proper event
+    temp_values = (T0 / 2.708) * np.power(TATB(t_coords, x_coords, y_coords), 1/6)
+    temp_values =  temp_values  # normalize max temp to proper event
     # temp_values = T0 * np.multiply(integrate_ws(t_coords, x_coords, y_coords), integrate_ws_2(t_coords, x_coords, y_coords))
     x_vel_values = np.multiply(temp_values, x_vel_func(t_coords, x_coords, y_coords))
     y_vel_values = np.multiply(temp_values, y_vel_func(t_coords, x_coords, y_coords))
 
     logging.info(np.ndim(temp_values))
     # Compute gradients
-    temp_grad_x_values = np.gradient(temp_values, grid_step, axis=1)
-    temp_grad_y_values = np.gradient(temp_values, grid_step, axis=2)
+    # temp_grad_x_values = np.gradient(temp_values, grid_step, axis=1)
+    # temp_grad_y_values = np.gradient(temp_values, grid_step, axis=2)
 
     # Interpolate functions
-    interped_temp_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), temp_values)
-    interped_x_vel_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), x_vel_values)
-    interped_y_vel_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), y_vel_values)
-    interped_grad_x_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), temp_grad_x_values)
-    interped_grad_y_function = interpolate.RegularGridInterpolator((t_space, x_space, x_space), temp_grad_y_values)
+    interped_temp_function = lambda t, x, y : interpolate.RegularGridInterpolator((t_space, x_space, x_space),
+                                                                                  temp_values)(np.array([t, x, y]))
+    interped_x_vel_function = lambda t, x, y : interpolate.RegularGridInterpolator((t_space, x_space, x_space), x_vel_values)(np.array([t, x, y]))
+    interped_y_vel_function = lambda t, x, y : interpolate.RegularGridInterpolator((t_space, x_space, x_space), y_vel_values)(np.array([t, x, y]))
 
     # Create and return plasma object
-    plasma_object = plasma.functional_plasma(temp_func=interped_temp_function, x_vel_func=interped_x_vel_function,
-                                 y_vel_func=interped_y_vel_function, name=name, rmax=rmax)
+    plasma_object = plasma.tabulated_plasma(t_space, x_space, temp_values, x_vel_values, y_vel_values, name=name,
+                            return_grids=return_grids)
 
     # Return the grids of evaluated points, if requested.
     if return_grids:

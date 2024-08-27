@@ -130,8 +130,8 @@ def run_event(eventNo):
     chosen_b = np.random.default_rng().uniform(0, 2 * 6.62)
     rmax = 8
 
-    # Create event object
-    event = collision.woods_saxon_plasma(chosen_b, resolution=5, rmax=rmax)
+    # Create event object -- alpha=0 is no expansion, alpha=1 is 1+1D Bjorken expansion
+    event = collision.woods_saxon_plasma(chosen_b, resolution=5, rmax=rmax, alpha=1)
 
     event_dataframe = pd.DataFrame({'b': [chosen_b]})
     event_observables = None
@@ -172,6 +172,16 @@ def run_event(eventNo):
             particle_tags = np.random.default_rng().uniform(0, 1000000000000, len(particles)).astype(int)
             process_partons = pd.DataFrame({})
             process_hadrons = pd.DataFrame({})
+
+            # Compute angles for particles
+            part_phis = np.array([])
+            for index, particle in particles.iterrows():
+                # Find angle of each particle, add to list
+                pythia_phi = np.arctan2(particle['py'], particle['px']) + np.pi
+                part_phis = np.append(part_phis, pythia_phi)
+
+            # set coordinate system such that phi of first particle is at 0, on interval 0 to 2pi
+            part_phis = np.mod(part_phis - part_phis[0], 2 * np.pi)
 
             # Select jet seed production point
             if not config.mode.VARY_POINT:
@@ -266,14 +276,8 @@ def run_event(eventNo):
                             elif particle_pid == -3:
                                 chosen_pilot = 'sbar'
 
-                            # Select jet seed particle angle from sample
-                            if jet_seed_num == 0:
-                                phi_0 = phi_val
-                            else:
-                                phi_0 = np.mod(phi_val + np.pi, 2*np.pi)
-
-                            # Read jet production angle
-                            #phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
+                            # Select jet seed particle angles
+                            phi_0 = np.mod(part_phis[i] + phi_val, 2 * np.pi)
 
                             # Yell about your selected jet
                             logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))
@@ -360,17 +364,7 @@ def run_event(eventNo):
                                     'el': np.full(num_hadrons, el),
                                     'fg': np.full(num_hadrons, fg),
                                     'process': np.full(num_hadrons, process_tag),
-                                    'e_2': np.full(num_hadrons, event_e2),
-                                    'psi_e2': np.full(num_hadrons, event_psi_e2),
-                                    'v_2': np.full(num_hadrons, event_v2),
-                                    'psi_2': np.full(num_hadrons, event_psi_2),
-                                    'e_3': np.full(num_hadrons, event_e3),
-                                    'psi_e3': np.full(num_hadrons, event_psi_e3),
-                                    'v_3': np.full(num_hadrons, event_v3),
-                                    'psi_3': np.full(num_hadrons, event_psi_3),
-                                    'mult': np.full(num_hadrons, event_mult),
-                                    'ncoll': np.full(num_hadrons, event_ncoll),
-                                    'b': np.full(num_hadrons, event_b),
+                                    'b': np.full(num_hadrons, chosen_b),
                                     'parent_id': np.empty(num_hadrons),
                                     'parent_pt': np.empty(num_hadrons),
                                     'parent_pt_f': np.empty(num_hadrons),

@@ -175,6 +175,16 @@ def run_event(eventNo):
             process_partons = pd.DataFrame({})
             process_hadrons = pd.DataFrame({})
 
+            # Compute angules for particles
+            part_phis = np.array([])
+            for index, particle in particles.iterrows():
+                # Find angle of each particle, add to list
+                pythia_phi = np.arctan2(particle['py'], particle['px']) + np.pi
+                part_phis = np.append(part_phis, pythia_phi)
+
+            # set coordinate system such that phi of first particle is at 0, on interval 0 to 2pi
+            part_phis = np.mod(part_phis - part_phis[0], 2*np.pi)
+
             # Select jet seed production point
             if not config.mode.VARY_POINT:
                 x0 = 0
@@ -268,14 +278,8 @@ def run_event(eventNo):
                             elif particle_pid == -3:
                                 chosen_pilot = 'sbar'
 
-                            # Select jet seed particle angle from sample
-                            if jet_seed_num == 0:
-                                phi_0 = phi_val
-                            else:
-                                phi_0 = np.mod(phi_val + np.pi, 2*np.pi)
-
-                            # Read jet production angle
-                            #phi_0 = np.arctan2(particle['py'], particle['px']) + np.pi
+                            # Select jet seed particle angles
+                            phi_0 = np.mod(part_phis[i] + phi_val, 2*np.pi)
 
                             # Yell about your selected jet
                             logging.info('Pilot parton: {}, pT: {} GeV'.format(chosen_pilot, chosen_e))

@@ -19,7 +19,8 @@ bash Anaconda3-2024.06-1-Linux-x86_64.sh
 sudo git clone --recursive https://github.com/Jopacabra/ape.git
 #sudo chmod +x ape/install.sh
 cd ~/ape
-#bash install.sh
+
+exec "$SHELL"
 
 # create conda virtual environment with dependencies
 conda config --add channels conda-forge

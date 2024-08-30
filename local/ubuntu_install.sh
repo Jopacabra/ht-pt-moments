@@ -1,7 +1,8 @@
 #!/bin/bash
 # You should have already installed the prerequisites, e.g. with ubuntu_prereqs.sh
 # You should have already made a conda environment called "ape", e.g. by running
-#conda create --yes -n ape numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf jupyter
+# conda config --add channels conda-forge
+# conda create --yes -n ape numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf jupyter
 
 # Go to ape directory
 cd ~/ape

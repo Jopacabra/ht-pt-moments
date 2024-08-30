@@ -3,7 +3,7 @@
 cd ~
 
 # Update apt-get stuff
-sudo -y apt-get update
+sudo apt-get -y update
 
 # Install dependencies
 sudo apt-get -y install build-essential libtool autoconf unzip wget

@@ -1,32 +1,13 @@
 #!/bin/bash
-# Go to home
-cd ~
+# You should have already installed the prerequisites, e.g. with ubuntu_prereqs.sh
+# You should have already made a conda environment called "ape", e.g. by running
+#conda create --yes -n ape numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf jupyter
 
-# Update apt-get stuff
-sudo -y apt-get update
-
-# Get Conda
-wget https://repo.anaconda.com/archive/Anaconda3-2024.06-1-Linux-x86_64.sh
-
-# Install dependencies
-sudo apt-get -y install build-essential libtool autoconf unzip wget
-sudo apt-get -y install cmake
-sudo apt-get -y install libboost-all-dev
-sudo apt-get -y install libhdf5-serial-dev
-bash Anaconda3-2024.06-1-Linux-x86_64.sh
-conda init
-
-# Install ape stuff
-#sudo git clone --recursive https://github.com/Jopacabra/ape.git
-#sudo chmod +x ape/install.sh
+# Go to ape directory
 cd ~/ape
 
-# create conda virtual environment with dependencies
-conda config --add channels conda-forge
-conda create --yes --prefix ~/anaconda3/ape numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf
-
 # Activate environment
-conda activate ~/anaconda3/ape
+source activate ape
 
 # Install fragmentation functions
 lhapdf install "JAM20-SIDIS_FF_hadron_nlo"

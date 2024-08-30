@@ -9,25 +9,24 @@ sudo -y apt-get update
 wget https://repo.anaconda.com/archive/Anaconda3-2024.06-1-Linux-x86_64.sh
 
 # Install dependencies
-sudo apt-get install build-essential libtool autoconf unzip wget
+sudo apt-get -y install build-essential libtool autoconf unzip wget
 sudo apt-get -y install cmake
 sudo apt-get -y install libboost-all-dev
 sudo apt-get -y install libhdf5-serial-dev
 bash Anaconda3-2024.06-1-Linux-x86_64.sh
+conda init
 
 # Install ape stuff
-sudo git clone --recursive https://github.com/Jopacabra/ape.git
+#sudo git clone --recursive https://github.com/Jopacabra/ape.git
 #sudo chmod +x ape/install.sh
 cd ~/ape
 
-exec "$SHELL"
-
 # create conda virtual environment with dependencies
 conda config --add channels conda-forge
-conda create --yes --prefix ~/conda/ape numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf
+conda create --yes --prefix ~/anaconda3/ape numpy scipy cython h5py pandas xarray pyyaml fastparquet pythia8 lhapdf
 
 # Activate environment
-conda activate ~/conda/ape
+conda activate ~/anaconda3/ape
 
 # Install fragmentation functions
 lhapdf install "JAM20-SIDIS_FF_hadron_nlo"

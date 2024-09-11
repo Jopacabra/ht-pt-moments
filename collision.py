@@ -9,6 +9,7 @@ except:
 import h5py
 import math
 import os
+import shutil
 import logging
 import utilities
 import config
@@ -103,10 +104,12 @@ class CNM_RAA_interp:
 
 # Function that generates a new Trento collision event with parameters from config file.
 # Returns the Trento output file name.
-def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filename='initial.hdf'):
+def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filename='initial.hdf', bmin=None, bmax=None):
     # Make sure there's no file where we want to stick it.
     try:
         os.remove(filename)
+    except IsADirectoryError:
+        shutil.rmtree(filename)
     except FileNotFoundError:
         pass
 
@@ -133,10 +136,14 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     # Append any supplied commands in the proper order
     trentoCmd.append('--projectile {}'.format(config.transport.trento.PROJ1))
     trentoCmd.append('--projectile {}'.format(config.transport.trento.PROJ2))
-    if config.transport.trento.BMIN is not None:
-        trentoCmd.append('--b-min {}'.format(config.transport.trento.BMIN))  # Minimum impact parameter (in fm ???)
-    if config.transport.trento.BMAX is not None:
-        trentoCmd.append('--b-max {}'.format(config.transport.trento.BMIN))  # Maximum impact parameter (in fm ???)
+    if bmin is not None:
+        trentoCmd.append('--b-min {}'.format(bmin))  # Minimum impact parameter (in fm ???)
+    elif config.transport.trento.BMIN is not None:
+        trentoCmd.append('--b-min {}'.format(config.transport.trento.BMIN))
+    if bmax is not None:
+        trentoCmd.append('--b-max {}'.format(bmax))  # Maximum impact parameter (in fm ???)
+    elif config.transport.trento.BMAX is not None:
+        trentoCmd.append('--b-max {}'.format(config.transport.trento.BMAX))
     if outputFile:
         trentoCmd.append('--output {}'.format(filename))  # Output file name
     if randomSeed is not None:
@@ -159,6 +166,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     subprocess, output = utilities.run_cmd(*trentoCmd, quiet=quiet)
 
     # Parse output and pass to dataframe.
+    first = True
     for line in output:
         trentoOutput = line.split()
         try:
@@ -186,8 +194,11 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
             )
         except ValueError:
             pass
-
-        resultsDataFrame = trentoDataFrame
+        if first:
+            resultsDataFrame = trentoDataFrame
+            first = False
+        else:
+            resultsDataFrame = pd.concat([resultsDataFrame, trentoDataFrame])
 
     # Pass on result file name, trentoSubprocess data, and dataframe.
     return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess
@@ -195,7 +206,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
 
 # Function that generates a new Trento collision event with given parameters.
 # Returns the Trento output file name.
-def runTrentoLone(bmin=None, bmax=None, projectile1='Au', projectile2='Au', outputFile=False, randomSeed=None,
+def runTrentoLone(bmin=None, bmax=None, projectile1='Pb', projectile2='Pb', outputFile=False, randomSeed=None,
               normalization=None, crossSection=None, numEvents=1, quiet=False, grid_step=0.1, grid_max_target=15,
               nucleon_width=0.5, filename='initial.hdf'):
     # Make sure there's no file where we want to stick it.

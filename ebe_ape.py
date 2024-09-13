@@ -12,6 +12,15 @@ import timekeeper
 import pythia
 import fragmentation
 import traceback
+import argparse
+
+# Define command line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-e", "--eventtype", help="Type of initial conditions to use")
+
+# Get command line arguments
+args = parser.parse_args()
+event_type = str(args.eventtype)  # Type of initial conditions to use
 
 lund_string = False
 
@@ -128,7 +137,7 @@ def run_event(eventNo):
 
     # Run event generation using config setttings
     # Note that we need write permissions in the working directory
-    event_dataframe, event_observables = collision.generate_event(working_dir=None)
+    event_dataframe, event_observables = collision.generate_event(working_dir=None, IC_type=event_type)
     rmax = event_dataframe.iloc[0]['rmax']
 
     # Record seed selected

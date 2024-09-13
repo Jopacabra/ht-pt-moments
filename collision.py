@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from scipy import interpolate
 from scipy import integrate
+from scipy.ndimage import rotate
+from scipy.ndimage import shift
 try:
     import matplotlib.pyplot as plt
 except:
@@ -13,7 +15,7 @@ import shutil
 import logging
 import utilities
 import config
-from hic import flow
+from hic import initial
 from utilities import cube_random
 import plasma
 from itertools import chain, groupby, repeat
@@ -104,12 +106,12 @@ class CNM_RAA_interp:
 
 # Function that generates a new Trento collision event with parameters from config file.
 # Returns the Trento output file name.
-def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filename='initial.hdf', bmin=None, bmax=None):
+def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, output='initial.hdf', bmin=None, bmax=None):
     # Make sure there's no file where we want to stick it.
     try:
-        os.remove(filename)
+        os.remove(output)
     except IsADirectoryError:
-        shutil.rmtree(filename)
+        shutil.rmtree(output)
     except FileNotFoundError:
         pass
 
@@ -145,7 +147,7 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
     elif config.transport.trento.BMAX is not None:
         trentoCmd.append('--b-max {}'.format(config.transport.trento.BMAX))
     if outputFile:
-        trentoCmd.append('--output {}'.format(filename))  # Output file name
+        trentoCmd.append('--output {}'.format(output))  # Output file name
     if randomSeed is not None:
         trentoCmd.append('--random-seed {}'.format(int(randomSeed)))  # Random seed for repeatability
     trentoCmd.append('--normalization {}'.format(config.transport.trento.NORM))
@@ -200,8 +202,14 @@ def runTrento(outputFile=False, randomSeed=None, numEvents=1, quiet=False, filen
         else:
             resultsDataFrame = pd.concat([resultsDataFrame, trentoDataFrame])
 
+        # Compute trento ic eccentricities
+        resultsDataFrame['e2'] = np.sqrt(resultsDataFrame['e2_re'] ** 2 + resultsDataFrame['e2_im'] ** 2)
+        resultsDataFrame['e3'] = np.sqrt(resultsDataFrame['e3_re'] ** 2 + resultsDataFrame['e3_im'] ** 2)
+        resultsDataFrame['e4'] = np.sqrt(resultsDataFrame['e4_re'] ** 2 + resultsDataFrame['e4_im'] ** 2)
+        resultsDataFrame['e5'] = np.sqrt(resultsDataFrame['e5_re'] ** 2 + resultsDataFrame['e5_im'] ** 2)
+
     # Pass on result file name, trentoSubprocess data, and dataframe.
-    return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess
+    return resultsDataFrame.drop(labels='event', axis=1), output, subprocess
 
 
 # Function that generates a new Trento collision event with given parameters.
@@ -298,6 +306,69 @@ def runTrentoLone(bmin=None, bmax=None, projectile1='Pb', projectile2='Pb', outp
     # Pass on result file name, trentoSubprocess data, and dataframe.
     return resultsDataFrame.drop(labels='event', axis=1), filename, subprocess
 
+# Define function to generate an averaged initial condition at the impact parameter associated with the seed
+def runTrento_Avg(directory=False, randomSeed=None, quiet=False, bmin=None, bmax=None, num_events=1000):
+    logging.info('Finding impact parameter from sample event...')
+    event_dataframe, trento_output_file, trento_subprocess = runTrento(outputFile=False, randomSeed=randomSeed,
+                                                                       numEvents=1, quiet=quiet, bmin=bmin, bmax=bmax)
+    chosen_b = float(event_dataframe['b'].iloc[0])
+
+    logging.info('Generating many Trento events...')
+    event_dataframe, trento_output_file, trento_subprocess = runTrento(outputFile=True, randomSeed=None,
+                                                                       numEvents=num_events,
+                                                                       quiet=quiet, output=directory,
+                                                                       bmin=chosen_b, bmax=chosen_b)
+
+    logging.info('Aligning and averaging events...')
+    # Load the events and sum them
+    gridstep = config.transport.GRID_STEP
+    first = True
+    for file in os.listdir(directory):
+        new = np.loadtxt(directory + '/' + file)
+        ic = initial.IC(new, 0.1)
+        e2_more, e2_psi2 = utilities.ecc_more(ic, 2)
+        #print('{}, {}'.format(e2_more, e2_psi2))
+        new_cm = ic.cm()
+        new = shift(new, shift=(np.array([new_cm[1], -new_cm[0]]) / gridstep))
+        ic = initial.IC(new, 0.1)
+        e2_more, e2_psi2 = utilities.ecc_more(ic, 2)
+        new = rotate(new, angle=-(e2_psi2 / np.pi) * 180, reshape=False)
+        if first:
+            ic_array = new
+            first = False
+        else:
+            ic_array = ic_array + new
+
+    # Normalize sum to average
+    ic_array = ic_array / num_events
+
+    logging.info('Computing event info and packaging...')
+    ic_object = initial.IC(ic_array, config.transport.GRID_STEP)
+
+    ic_mult = ic_object.sum()
+    e2, psi_e2 = utilities.ecc_more(ic_object, 2)
+    e3, psi_e3 = utilities.ecc_more(ic_object, 3)
+    e4, psi_e4 = utilities.ecc_more(ic_object, 4)
+    e5, psi_e5 = utilities.ecc_more(ic_object, 5)
+
+
+    trentoDataFrame = pd.DataFrame(
+        {
+            "b": [float(chosen_b)],
+            "mult": [float(ic_mult)],
+            "e2": [float(e2)],
+            "psi_e2": [float(psi_e2)],
+            "e3": [float(e3)],
+            "psi_e3": [float(psi_e3)],
+            "e4": [float(e4)],
+            "psi_e4": [float(psi_e4)],
+            "e5": [float(e5)],
+            "psi_e5": [float(psi_e5)],
+            "seed": [randomSeed]
+        }
+    )
+
+    return ic_array, trentoDataFrame
 
 
 # Define function to generate initial conditions object as for freestream input from trento file
@@ -427,7 +498,8 @@ def run_hydro(fs, event_size, grid_step=0.1, tau_fs=0.5, eswitch=0.110, coarse=F
 # Function to generate a new HIC event and dump the files in the current working directory.
 def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=config.transport.GRID_STEP,
                    time_step=config.transport.TIME_STEP, tau_fs=config.transport.hydro.TAU_FS,
-                   t_end=config.transport.hydro.T_SWITCH, seed=None, get_rmax=False, working_dir=None):
+                   t_end=config.transport.hydro.T_SWITCH, seed=None, get_rmax=False, working_dir=None,
+                   IC_type='Duke', bmin=None, bmax=None):
 
     # the "target" grid max: the grid shall be at least as large as the target
     # By defualt grid_max_target = config.transport.GRID_MAX_TARGET
@@ -487,37 +559,56 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         ('eta', float)
     ]
 
-    ##########
-    # Trento #
-    ##########
+    ###############################
+    # Trento / Initial Conditions #
+    ###############################
 
     # Choose random seed
     if seed is None:
         seed = int(np.random.uniform(0, 10000000000000000))
     logging.info('Random seed selected: {}'.format(seed))
 
-    # Decide where to locate the initial conditions file
-    if working_dir is not None:
-        trento_ic_path = working_dir + '/initial.hdf'
-    else:
-        trento_ic_path = 'initial.hdf'
+    # Default to duke events
+    if IC_type == None:
+        IC_type = 'Duke'
 
-    # Debug pwd
-    logging.info('Running trento in...')
-    logging.info(os.getcwd())
+    if IC_type == 'Duke':
+        # Decide where to locate the initial conditions file
+        if working_dir is not None:
+            trento_ic_path = working_dir + '/initial.hdf'
+        else:
+            trento_ic_path = 'initial.hdf'
 
-    # Generate trento event
-    event_dataframe, trento_output_file, trento_subprocess = runTrento(outputFile=True, randomSeed=seed,
-                                                                    quiet=False,
-                                                                    filename=trento_ic_path)
+        # Debug pwd
+        logging.info('Running trento in...')
+        logging.info(os.getcwd())
 
-    # Debug pwd
-    logging.info('Running freestream in...')
-    logging.info(os.getcwd())
+        # Generate trento event
+        event_dataframe, trento_output_file, trento_subprocess = runTrento(outputFile=True, randomSeed=seed,
+                                                                           quiet=False,
+                                                                           output=trento_ic_path, bmin=bmin, bmax=bmax)
 
-    # Format trento data into initial conditions for freestream
-    logging.info('Packaging trento initial conditions into array...')
-    ic = toFsIc(initial_file=trento_ic_path, quiet=False)
+        # Debug pwd
+        logging.info('Running freestream in...')
+        logging.info(os.getcwd())
+
+        # Format trento data into initial conditions for freestream
+        logging.info('Packaging trento initial conditions into array...')
+        ic = toFsIc(initial_file=trento_ic_path, quiet=False)
+    elif IC_type == 'Duke_avg':
+        # Decide where to locate the initial conditions files
+        if working_dir is not None:
+            trento_ic_path = working_dir + '/trento_output'
+        else:
+            trento_ic_path = 'trento_output'
+
+        # Get an averaged initial condition from many trento runs
+        ic_array, event_dataframe = runTrento_Avg(directory=trento_ic_path, randomSeed=seed,
+                                        quiet=False, bmin=bmin, bmax=bmax)
+
+        ic = ic_array
+    elif IC_type == 'WS':
+        ic = None
 
     #################
     # Freestreaming #
@@ -616,12 +707,6 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
 
     # Add rmax to event_dataframe
     event_dataframe['rmax'] = rmax
-
-    # Compute trento ic eccentricities
-    event_dataframe['e2'] = np.sqrt(event_dataframe['e2_re'] ** 2 + event_dataframe['e2_im'] ** 2)
-    event_dataframe['e3'] = np.sqrt(event_dataframe['e3_re'] ** 2 + event_dataframe['e3_im'] ** 2)
-    event_dataframe['e4'] = np.sqrt(event_dataframe['e4_re'] ** 2 + event_dataframe['e4_im'] ** 2)
-    event_dataframe['e5'] = np.sqrt(event_dataframe['e5_re'] ** 2 + event_dataframe['e5_im'] ** 2)
 
     # # try to free some memory
     # # (up to ~a few hundred MiB for ultracentral collisions)

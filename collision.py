@@ -319,6 +319,9 @@ def runTrento_Avg(directory=False, randomSeed=None, quiet=False, bmin=None, bmax
                                                                        quiet=quiet, output=directory,
                                                                        bmin=chosen_b, bmax=chosen_b)
 
+    npart = event_dataframe['npart'].mean()
+    ncoll = event_dataframe["ncoll"].mean()
+
     logging.info('Aligning and averaging events...')
     # Load the events and sum them
     gridstep = config.transport.GRID_STEP
@@ -356,6 +359,8 @@ def runTrento_Avg(directory=False, randomSeed=None, quiet=False, bmin=None, bmax
         {
             "b": [float(chosen_b)],
             "mult": [float(ic_mult)],
+            "npart": [int(npart)],
+            "ncoll": [int(ncoll)],
             "e2": [float(e2)],
             "psi_e2": [float(psi_e2)],
             "e3": [float(e3)],

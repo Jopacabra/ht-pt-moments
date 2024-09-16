@@ -430,11 +430,12 @@ def run_event(eventNo):
                                 case_hadrons.at[index, 'parent_tag'] = parent.tag
                                 case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
 
+                        process_run += 1
                     logging.info('Appending case results to process results')
                     if lund_string:
                         process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
                     process_partons = pd.concat([process_partons, case_partons], axis=0)
-                    process_run += 1
+
 
         except Exception as error:
             logging.info("An error occurred: {}".format(type(error).__name__))  # An error occurred: NameError

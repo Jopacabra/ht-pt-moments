@@ -7,6 +7,7 @@ import xarray as xr
 from scipy import interpolate
 import os
 import traceback
+import utilities
 
 
 def evolve(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False, scale_drift=1, scale_el=1, el_model='GLV',
@@ -116,13 +117,19 @@ def evolve(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False,
         # For timekeeping in phases, we approximate all time in one step as in one phase
         parton_point = parton.coords3(time=tau)
         parton_p_rho, parton_p_phi = parton.polar_mom_coords()
-        temp = event.temp(parton_point)
-        grad_perp_T = event.grad_perp_T(point=parton_point, phi=parton_p_phi)
-        grad_perp_utau = event.grad_perp_u_par(point=parton_point, phi=parton_p_phi)
-        grad_perp_uperp = event.grad_perp_u_perp(point=parton_point, phi=parton_p_phi)
+        beta = parton.beta()
+
+        temp = utilities.dtau_avg(func=event.temp, point=parton_point, phi=parton_p_phi, dtau=config.jet.DTAU, beta=beta) #event.temp(parton_point)
+        grad_perp_T = utilities.dtau_avg(func=lambda x: event.grad_perp_T(point=x, phi=parton_p_phi),
+                                          point=parton_point, phi=parton_p_phi, dtau=config.jet.DTAU, beta=beta)  #event.grad_perp_T(point=parton_point, phi=parton_p_phi)
+        grad_perp_utau = utilities.dtau_avg(func=lambda x: event.grad_perp_u_par(point=x, phi=parton_p_phi),
+                                          point=parton_point, phi=parton_p_phi, dtau=config.jet.DTAU, beta=beta)  #event.grad_perp_u_par(point=parton_point, phi=parton_p_phi)
+        grad_perp_uperp = utilities.dtau_avg(func=lambda x: event.grad_perp_u_perp(point=x, phi=parton_p_phi),
+                                          point=parton_point, phi=parton_p_phi, dtau=config.jet.DTAU, beta=beta)  #event.grad_perp_u_perp(point=parton_point, phi=parton_p_phi)
         u_perp = event.u_perp(point=parton_point, phi=parton_p_phi)
-        u_par = event.u_par(point=parton_point, phi=parton_p_phi)
-        u = event.vel(parton_point)
+        u_par = utilities.dtau_avg(func=lambda x: event.u_par(point=x, phi=parton_p_phi), point=parton_point, phi=parton_p_phi,
+                               dtau=config.jet.DTAU, beta=beta)
+        u = utilities.dtau_avg(func=event.vel, point=parton_point, phi=parton_p_phi, dtau=config.jet.DTAU, beta=beta)  #event.vel(parton_point)
 
         # Decide phase
         if temp > temp_hrg:

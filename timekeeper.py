@@ -258,7 +258,7 @@ def evolve(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False,
 
         # Check for max temperature
         if temp > maxT:
-            maxT = temp[0]
+            maxT = temp  #[0]
 
         # Decide phase for categorization & timekeeping
         if phase == 'qgp':

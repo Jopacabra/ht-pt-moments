@@ -286,6 +286,7 @@ class MainPage(tk.Frame):
         fileMenu = tk.Menu(parent.menubar, tearoff=0)
         fileMenu.add_command(label='Select File', command=self.select_file)
         fileMenu.add_command(label='Save Parton Record', command=self.save_record)
+        fileMenu.add_command(label='Woods-Saxon', command=self.woods_saxon)
         fileMenu.add_command(label='Optical Glauber', command=self.optical_glauber)
         fileMenu.add_command(label='Log(Mult) Temp Optical Glauber', command=self.lmt_optical_glauber)
         fileMenu.add_command(label='\"new\" Optical Glauber', command=self.new_optical_glauber)
@@ -508,6 +509,40 @@ class MainPage(tk.Frame):
         filename = asksaveasfilename(initialdir='/share/apps/Hybrid-Transport/hic-eventgen/results/')
         self.parton_xarray.to_netcdf(filename + '.nc')
 
+    # Define the woods-saxon selection
+    def woods_saxon(self, value=None):
+        # Ask user for optical glauber input parameters:
+        b = askfloat("Input", "Enter impact parameter (b) in fm (max 2R): ", minvalue=0.0, maxvalue=2 * 6.62)
+        T0 = askfloat("Input", "Enter temperature norm in GeV: ", minvalue=0.0, maxvalue=500)
+        V0 = askfloat("Input", "Enter flow velocity norm in c: ", minvalue=0.0, maxvalue=1)
+        alpha = askfloat("Input", "Enter expansion parameter: ", minvalue=0, maxvalue=2)
+        self.file_selected = True  # Set that you have selected an event
+        #print('Selected optical glauber:\nR = {}, b = {}, phi = {}, T0 = {}, V0 = {}'.format(R, b, phi, T0, V0))
+
+        # Create plasma object
+        rmax = 8
+        self.current_event = collision.woods_saxon_plasma(b, resolution=5, rmax=rmax, alpha=1)
+
+        # Find current_event parameters
+        self.temp_max = self.current_event.max_temp()
+        self.temp_min = self.current_event.min_temp()
+
+        # Set sliders limits to match bounds of the event
+        dec = 1  # number of decimals rounding to... Should match resolution of slider.
+        self.timeSlider.configure(from_=round_decimals_up(self.current_event.t0, decimals=dec))
+        self.timeSlider.configure(to=round_decimals_down(self.current_event.tf, decimals=dec))
+        self.time.set(round_decimals_up(self.current_event.t0, decimals=dec))
+
+        self.x0Slider.configure(from_=round_decimals_up(self.current_event.xmin, decimals=dec))
+        self.x0Slider.configure(to=round_decimals_down(self.current_event.xmax, decimals=dec))
+        self.x0.set(0)
+
+        self.y0Slider.configure(from_=round_decimals_up(self.current_event.ymin, decimals=dec))
+        self.y0Slider.configure(to=round_decimals_down(self.current_event.ymax, decimals=dec))
+        self.y0.set(0)
+
+        self.update_plots()
+
     # Define the optical glauber selection
     def optical_glauber(self, value=None):
         # Ask user for optical glauber input parameters:
@@ -676,7 +711,7 @@ class MainPage(tk.Frame):
     # Define the update function
     def update_plots(self, value=None):
         if self.file_selected:
-            # Clear all the plots and colorbars
+            # # Clear all the plots and colorbars
             self.plasmaAxis.clear()
             try:
                 self.tempcb.remove()
@@ -690,10 +725,28 @@ class MainPage(tk.Frame):
                 self.gradcb.remove()
             except AttributeError:
                 pass
-
+            #
             for axisList in self.propertyAxes:  # Medium property plots
                 for axis in axisList:
                     axis.clear()
+
+            # Create the QGP Plot that will dynamically update and set its labels
+            self.plasmaFigure = plt.figure(num=0)
+            self.plasmaAxis = self.plasmaFigure.add_subplot(1, 1, 1)
+
+            # # Define colorbar objects with "1" scalar mappable object so they can be manipulated.
+            # self.tempcb = 0
+            # self.velcb = 0
+            # self.gradcb = 0
+
+            # Define plots
+            self.tempPlot = None
+            self.velPlot = None
+            self.gradPlot = None
+
+            # Create canvases and show the empty plots
+            # self.canvas = FigureCanvasTkAgg(self.plasmaFigure, master=self)
+            # self.canvas.draw()
 
             # Select QGP figure as current figure
             plt.figure(self.plasmaFigure.number)
@@ -792,12 +845,12 @@ class MainPage(tk.Frame):
                 self.propertyAxes[0, 0].plot(time_array, u_perp_array, ls=connectorLineStyle)
                 self.propertyAxes[0, 1].plot(time_array, u_par_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 0].plot(time_array, q_fg_utau_qhat_array, ls=connectorLineStyle)
-                self.propertyAxes[1, 1].plot(time_array, grad_perp_temp_array, ls=connectorLineStyle)
+                self.propertyAxes[1, 1].plot(time_array, grad_perp_temp_array/(temp_seen_array**2), ls=connectorLineStyle)
                 self.propertyAxes[1, 2].plot(time_array, q_EL_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 1].plot(time_array, grad_perp_utau_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 1].plot(time_array, grad_perp_utau_array/(u_par_array**2), ls=connectorLineStyle)
                 self.propertyAxes[0, 2].plot(time_array, q_fg_uperp_qhat_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 2].plot(time_array, q_drift_array, ls=connectorLineStyle)
-                self.propertyAxes[2, 0].plot(time_array, grad_perp_uperp_array, ls=connectorLineStyle)
+                self.propertyAxes[2, 0].plot(time_array, grad_perp_uperp_array/(u_perp_array**2), ls=connectorLineStyle)
                 self.propertyAxes[0, 3].plot(time_array, pT_array, ls=connectorLineStyle)
                 self.propertyAxes[1, 3].plot(time_array, q_fg_utau_array, ls=connectorLineStyle)
                 self.propertyAxes[2, 3].plot(time_array, q_fg_uperp_array, ls=connectorLineStyle)
@@ -820,12 +873,12 @@ class MainPage(tk.Frame):
                         self.propertyAxes[0, 0].plot(time_array[i], u_perp_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 1].plot(time_array[i], u_par_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 0].plot(time_array[i], q_fg_utau_qhat_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[1, 1].plot(time_array[i], grad_perp_temp_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[1, 1].plot(time_array[i], grad_perp_temp_array[i]/(temp_seen_array[i]**2), 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 2].plot(time_array[i], q_EL_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 1].plot(time_array[i], grad_perp_utau_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 1].plot(time_array[i], grad_perp_utau_array[i]/(u_par_array[i]**2), 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 2].plot(time_array[i], q_fg_uperp_qhat_array[i], 'o', color=color_array[i] , markersize=markSize)
                         self.propertyAxes[2, 2].plot(time_array[i], q_drift_array[i], 'o', color=color_array[i], markersize=markSize)
-                        self.propertyAxes[2, 0].plot(time_array[i], grad_perp_uperp_array[i], 'o', color=color_array[i], markersize=markSize)
+                        self.propertyAxes[2, 0].plot(time_array[i], grad_perp_uperp_array[i]/(u_perp_array[i]**2), 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[0, 3].plot(time_array[i], pT_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[1, 3].plot(time_array[i], q_fg_utau_array[i], 'o', color=color_array[i], markersize=markSize)
                         self.propertyAxes[2, 3].plot(time_array[i], q_fg_uperp_array[i], 'o', color=color_array[i], markersize=markSize)
@@ -895,12 +948,12 @@ class MainPage(tk.Frame):
             self.propertyAxes[0, 0].set_title(r"$u_\tau$", fontsize=plotFontSize)
             self.propertyAxes[0, 1].set_title(r"$u_\parallel$", fontsize=plotFontSize)
             self.propertyAxes[1, 0].set_title(r"$q_{\nabla_\perp u_\tau \hat{q}}$ (GeV)", fontsize=plotFontSize)
-            self.propertyAxes[1, 1].set_title(r"$\nabla_{\perp} T$", fontsize=plotFontSize)
+            self.propertyAxes[1, 1].set_title(r"$\nabla_{\perp} T / T^2$", fontsize=plotFontSize)
             self.propertyAxes[1, 2].set_title(r"$q_{EL}$", fontsize=plotFontSize)
-            self.propertyAxes[2, 1].set_title(r"$\nabla_{\perp} u_{\tau}$", fontsize=plotFontSize)
+            self.propertyAxes[2, 1].set_title(r"$\nabla_{\perp} u_{\tau} / u_{\tau}^2$", fontsize=plotFontSize)
             self.propertyAxes[0, 2].set_title(r"$q_{\nabla_\perp u_\perp \hat{q}}$", fontsize=plotFontSize)
             self.propertyAxes[2, 2].set_title(r"$q_{drift}$", fontsize=plotFontSize)
-            self.propertyAxes[2, 0].set_title(r"$\nabla_{\perp} u_{\perp}$", fontsize=plotFontSize)
+            self.propertyAxes[2, 0].set_title(r"$\nabla_{\perp} u_{\perp}/ u_{\perp}^2$", fontsize=plotFontSize)
             self.propertyAxes[0, 3].set_title(r"$p_T$", fontsize=plotFontSize)
             self.propertyAxes[1, 3].set_title(r"$q_{\nabla_\perp u_\tau}$", fontsize=plotFontSize)
             self.propertyAxes[2, 3].set_title(r"$q_{\nabla_\perp u_\perp}$", fontsize=plotFontSize)

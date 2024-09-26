@@ -301,6 +301,7 @@ class MainPage(tk.Frame):
         scale_menu = tk.Menu(physicsMenu, tearoff=0)
         physicsMenu.add_cascade(label='dtau', menu=scale_menu)
         scale_menu.add_command(label='Set dtau', command=self.select_dtau)
+        scale_menu.add_command(label='Set hard process time', command=self.select_tau_prod)
         # drift submenu
         driftMenu = tk.Menu(physicsMenu, tearoff=0)
         physicsMenu.add_cascade(label='Flow Drift', menu=driftMenu)
@@ -487,11 +488,13 @@ class MainPage(tk.Frame):
         # Find current_event parameters
         self.temp_max = self.current_event.max_temp()
         self.temp_min = self.current_event.min_temp()
+        self.tau0 = self.current_event.t0
+        self.tauf = self.current_event.tf
 
         # Set sliders limits to match bounds of the event
         dec = 1  # number of decimals rounding to... Should match resolution of slider.
-        self.timeSlider.configure(from_=round_decimals_up(self.current_event.t0, decimals=dec))
-        self.timeSlider.configure(to=round_decimals_down(self.current_event.tf, decimals=dec))
+        self.timeSlider.configure(from_=round_decimals_up(self.tau0, decimals=dec))
+        self.timeSlider.configure(to=round_decimals_down(self.tauf, decimals=dec))
         self.time.set(round_decimals_up(self.current_event.t0, decimals=dec))
 
         self.x0Slider.configure(from_=round_decimals_up(self.current_event.xmin, decimals=dec))
@@ -707,6 +710,11 @@ class MainPage(tk.Frame):
     # Set dtau
     def select_dtau(self, value=None):
         config.jet.DTAU = askfloat("Input", "Enter parton prop. time step in fm: ", minvalue=0.0001, maxvalue=5)
+
+    # Set production time of the hard process
+    def select_tau_prod(self, value=None):
+        config.jet.TAU_PROD = askfloat("Input", "Enter parton production. time in fm: ", minvalue=self.tau0, maxvalue=self.tauf)
+
 
     # Define the update function
     def update_plots(self, value=None):

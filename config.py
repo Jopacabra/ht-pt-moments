@@ -76,6 +76,7 @@ class transport:
 
 # Jet configuration
 class jet:
+    TAU_PROD = bool(cfg['jet']['TAU_PROD'])
     PTHATMIN = float(cfg['jet']['PTHATMIN'])
     PTHATMAX = float(cfg['jet']['PTHATMAX'])
     PROCESS_CORRECTIONS = bool(cfg['jet']['PROCESS_CORRECTIONS'])

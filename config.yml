@@ -1,7 +1,7 @@
 mode:  # Operation mode flags
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
     NUM_EVENTS: 1  # Number of events to generate -- 0 runs events until interrupt.
-    NUM_SAMPLES: 100  # Number of hard jet production processes to run in each event
+    NUM_SAMPLES: 100      # Number of hard jet production processes to run in each event
     KEEP_EVENT: False  # Keep plasma data for future analysis
     KEEP_RECORD: False  # Save xarray parton record - includes trajectory & pT history
 trento:
@@ -30,6 +30,7 @@ transport:  # Parameters for the hybrid transport medium model - freestreaming, 
     ZETAS_WIDTH: 0.024  # [GeV] width of (zeta/s)(T)
     ZETAS_T0: 0.175  # [GeV] peak location of Cauchy (zeta/s)(T)
 jet:  # Parameters for the jet production processes to be run
+    TAU_PROD: 0  # Choose when the hard process occurs
     PTHATMIN: 1  # [GeV] Minimum pTHat for jet production hard scatterings ~ min initial pT of jets
     PTHATMAX: 100  # [GeV] Maximum pTHat for jet production hard scatterings ~ max initial pT of jets
     PROCESS_CORRECTIONS: False  # Higher order corrections to the tree level 2-to-2 hard process -- Test function ONLY

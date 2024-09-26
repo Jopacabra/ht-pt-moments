@@ -18,7 +18,7 @@ trento:
     NC: 6  # Number of nucleon constituents
     DMIN: 0.81  # [fm] Minimum nucleon distance
 transport:  # Parameters for the hybrid transport medium model - freestreaming, hydro, frzout, & UrQMD
-    TAU_FS: 0.37  # [fm] freestreaming time. Default 0.5 fm.
+    TAU_FS: 0.37  # [fm] freestreaming time. Default 0.37 fm.
     GRID_STEP: 0.1  # [fm] Hydro / Trento grid step in fm. Default 0.15*NUCLEON_WIDTH from DukeQCD BA
     TIME_STEP: 0.05  # [fm] Hydro / Trento time step in fm. Default 0.25*GRID_STEP fm from DukeQCD BA
     GRID_MAX_TARGET: 15  # [fm] Maximum hydro grid width.

@@ -713,7 +713,7 @@ class MainPage(tk.Frame):
 
     # Set production time of the hard process
     def select_tau_prod(self, value=None):
-        config.jet.TAU_PROD = askfloat("Input", "Enter parton production. time in fm: ", minvalue=self.tau0, maxvalue=self.tauf)
+        config.jet.TAU_PROD = askfloat("Input", "Enter parton production. time in fm: ", minvalue=0, maxvalue=self.tauf)
 
 
     # Define the update function

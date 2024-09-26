@@ -84,8 +84,7 @@ def evolve(event, parton, drift=True, el=True, fg=True, fgqhat=False, cel=False,
 
     # If we want to produce hard scattering at t=0, we should propagate the partons
     # in the time before thermalization...
-    if config.jet.I_PROD:
-        parton.prop(tau=tau)
+    parton.prop(tau=(tau - config.jet.TAU_PROD))
 
 
     # Initiate loop

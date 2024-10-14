@@ -1,7 +1,7 @@
 import numpy as np
 import lhapdf
 
-def frag(parton):
+def frag(parton, num=1):
     # Get jet properties
     jet_pt = parton.p_T()
     jet_pid = parton.id
@@ -38,7 +38,7 @@ def frag(parton):
     max_p_z = np.amax(p_z_array)
 
     # Sample a z value from the p(z) distribution
-    z_val = 0
+    z_val = np.array([])
     for attempt in np.arange(0, 10):
         # Randomly generate many points
         batch = 10000
@@ -48,9 +48,13 @@ def frag(parton):
         # Accept those under the curve
         for i in np.arange(0, len(z_guesses)):
             if p_z(z_guesses[i]) >= y_guesses[i]:
-                z_val = z_guesses[i]
-                break
-        if z_val > 0:
+                z_val = np.append(z_val, z_guesses[i])
+                if len(z_val) == num:
+                    break
+        if len(z_val) == num:
             break
 
-    return z_val
+    if len(z_val) == 1:
+        return z_val[0]
+    else:
+        return z_val

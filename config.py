@@ -28,6 +28,7 @@ except:
 class EBE:
     NUM_EVENTS = int(cfg['mode']['NUM_EVENTS'])
     NUM_SAMPLES = int(cfg['mode']['NUM_SAMPLES'])
+    NUM_FRAGS = int(cfg['mode']['NUM_FRAGS'])
 
 
 # Mode configuration

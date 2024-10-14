@@ -307,7 +307,7 @@ def run_event(eventNo):
                                               weight=chosen_weight, AA_weight=AA_weight)
 
                             # Perform pp-level fragmentation
-                            pp_frag_z = fragmentation.frag(parton)
+                            pp_frag_z = fragmentation.frag(parton, num=100)
 
                             # Run the time loop
                             jet_dataframe, jet_xarray = timekeeper.evolve(event=event, parton=parton, drift=drift,
@@ -327,11 +327,11 @@ def run_event(eventNo):
 
                             logging.info('FF Fragmentation')
                             # Perform ff fragmentation
-                            frag_z = fragmentation.frag(parton)
-                            pion_pt = parton.p_T() * frag_z
-                            pion_pt_0 = parton.p_T0 * pp_frag_z
-                            current_parton['z'] = frag_z
-                            current_parton['pp_z'] = pp_frag_z
+                            frag_z = fragmentation.frag(parton, num=config.ebe.NUM_FRAGS)
+                            pion_pt = parton.p_T() * frag_z[0]
+                            pion_pt_0 = parton.p_T0 * pp_frag_z[0]
+                            current_parton['z'] = [frag_z]
+                            current_parton['pp_z'] = [pp_frag_z]
                             current_parton['hadron_pt_f'] = pion_pt
                             current_parton['hadron_pt_0'] = pion_pt_0
                             current_parton['process_run'] = process_run

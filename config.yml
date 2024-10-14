@@ -2,6 +2,7 @@ mode:  # Operation mode flags
     VARY_POINT: True  # Determines if we vary the prod point or set it to (0,0)
     NUM_EVENTS: 1  # Number of events to generate -- 0 runs events until interrupt.
     NUM_SAMPLES: 100      # Number of hard jet production processes to run in each event
+    NUM_FRAGS: 100  # Number of fragmentations to sample per hard process (must be > 1)
     KEEP_EVENT: False  # Keep plasma data for future analysis
     KEEP_RECORD: False  # Save xarray parton record - includes trajectory & pT history
 trento:

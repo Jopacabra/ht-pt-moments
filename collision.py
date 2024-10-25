@@ -574,7 +574,7 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
     logging.info('Random seed selected: {}'.format(seed))
 
     # Default to duke events
-    if IC_type == None:
+    if IC_type == 'None':  # Case for if no command line arg passed to ebe_ape.py
         IC_type = 'Duke'
 
     if IC_type == 'Duke':

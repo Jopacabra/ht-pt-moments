@@ -613,7 +613,50 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
 
         ic = ic_array
     elif IC_type == 'WS':
-        ic = None
+        # Get an impact parameter straight from Trento
+        # Decide where to locate the initial conditions files
+        if working_dir is not None:
+            trento_ic_path = working_dir + '/trento_output'
+        else:
+            trento_ic_path = 'trento_output'
+
+        # Get an averaged initial condition from many trento runs -- pull some fancy stuff
+        ic_array, avg_dataframe = runTrento_Avg(directory=trento_ic_path, randomSeed=seed,
+                                                  quiet=False, bmin=bmin, bmax=bmax)
+        chosen_b = float(avg_dataframe['b'].iloc[0])
+        npart = avg_dataframe['npart']
+        ncoll = avg_dataframe['ncoll']
+
+        # Compute the normalization for the WS event from the averaged event
+        ws_norm = np.sum(ic_array)
+
+        # Create WS initial conditions with the chosen b, norm, and reduced thickness parameter p
+        arr, gs = woods_saxon_ic(b=chosen_b, norm=ws_norm, p=-1)
+        ic = arr
+
+        ic_object = initial.IC(arr, gs)
+        e2, psi_e2 = utilities.ecc_more(ic_object, 2)
+        e3, psi_e3 = utilities.ecc_more(ic_object, 3)
+        e4, psi_e4 = utilities.ecc_more(ic_object, 4)
+        e5, psi_e5 = utilities.ecc_more(ic_object, 5)
+
+        event_dataframe = pd.DataFrame(
+            {
+                "b": [float(chosen_b)],
+                "mult": [float(ws_norm)],
+                "npart": [int(npart)],
+                "ncoll": [int(ncoll)],
+                "e2": [float(e2)],
+                "psi_e2": [float(psi_e2)],
+                "e3": [float(e3)],
+                "psi_e3": [float(psi_e3)],
+                "e4": [float(e4)],
+                "psi_e4": [float(psi_e4)],
+                "e5": [float(e5)],
+                "psi_e5": [float(psi_e5)],
+                "seed": [seed]
+            }
+        )
 
     #################
     # Freestreaming #
@@ -1113,6 +1156,42 @@ def optical_glauber_new(R=7.5, b=7.5, phi=0, T0=1, U0=1):
     #og_event = functional_plasma(temp_func=analytic_t, x_vel_func=analytic_ux, y_vel_func=analytic_uy)
 
     return analytic_t, analytic_ux, analytic_uy, mult, e2
+
+# Function to create Woods-Saxon distribution initial conditions
+def woods_saxon_ic(b, A=208, R=6.62, a=0.546, p=-1, norm=1,
+                   grid_step=config.transport.GRID_STEP, rmax=config.transport.GRID_MAX_TARGET):
+    # Defaults are Trento PbPb parameters
+
+    # Determine radius
+    if R == None:
+        R = 1.25 * (A)**(1/3)  # Good approximation, re:https://en.wikipedia.org/wiki/Woods%E2%80%93Saxon_potential
+
+    # Define ic function
+    ws = lambda x, y, z, x0: 1 / (1 + np.exp( (np.sqrt((x-x0)**2 + y**2 + z**2) - R) / a))
+    z_vals = np.arange(-R, R, 0.5)
+    # See Trento discussion, eq. 5: https://arxiv.org/abs/1412.4708
+    if p == 0:
+        TR_func = np.vectorize(lambda x, y: (integrate.trapezoid(ws(x, y, z_vals, -b / 2))
+                                        * integrate.trapezoid(ws(x, y, z_vals, b / 2))) ** (1 / 2))
+    elif p == 'bc':  # Binary colllision scaling
+        TR_func = np.vectorize(lambda x, y: (integrate.trapezoid(ws(x, y, z_vals, -b / 2))
+                                        * integrate.trapezoid(ws(x, y, z_vals, b / 2))))
+    else:
+        TR_func = np.vectorize(lambda x, y: (integrate.trapezoid(ws(x, y, z_vals, -b / 2))**p
+                                                         + integrate.trapezoid(ws(x, y, z_vals, b / 2))**p)**(1/p))
+
+    # Compute tabulated values for function
+
+
+    # Create meshgrid and evaluate TR function for given points
+    x_space = np.arange((0 - rmax), rmax, grid_step)
+    x_coords, y_coords = np.meshgrid(x_space, x_space, indexing='ij')
+    TR = TR_func(x_coords, y_coords)
+
+    # Normalize and transpose (to set impact parameter along x-axis)
+    array = np.transpose((norm/np.sum(TR)) * TR)
+
+    return array, grid_step
 
 # Function to create plasma object for Woods-Saxon distribution
 # Alpha is expansion power level

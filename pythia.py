@@ -9,6 +9,7 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_sh
     # Settings #
     ############
     y_res = 0.5
+    soft_emission_cut = 0.1  # If do_shower, veto anything with fractional dijet pt difference > soft_emission_cut
 
     # Generate scattering id
     scattering_id = int(np.random.uniform(0, 1000000000000))
@@ -69,15 +70,23 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_sh
 
     # Only do the parton level stuff
     pythia_process.readString("ProcessLevel:all = on")
-    pythia_process.readString("PartonLevel:all = {}".format(do_shower))
-    pythia_process.readString("PartonLevel:MPI = {}".format(do_shower))  # Multi-parton interactions
-    pythia_process.readString("PartonLevel:ISR = {}".format(
-        do_shower))  # "Initial state" radiation with spacelike particles "before the hard process"
-    pythia_process.readString("PartonLevel:FSR = off")  # "Final state" radiation with timelike particles
+    pythia_process.readString("PartonLevel:all = off")
+    # pythia_process.readString("PartonLevel:all = {}".format(do_shower))
+    # pythia_process.readString("PartonLevel:MPI = off")  # Multi-parton interactions
+    # pythia_process.readString("PartonLevel:ISR = off")
+    # # pythia_process.readString("PartonLevel:MPI = {}".format(do_shower))  # Multi-parton interactions
+    # # pythia_process.readString("PartonLevel:ISR = {}".format(
+    # #     do_shower))  # "Initial state" radiation with spacelike particles "before the hard process"
+    # pythia_process.readString("PartonLevel:FSR = off")  # "Final state" radiation with timelike particles
+    # pythia_process.readString("PartonLevel:Remnants = off")  # Turn off beam remnant adding
     pythia_process.readString("HadronLevel:all = off")
 
+    # Turn off event checks -- Missing beam remnants!
+    #pythia_process.readString("Check:event = off")
+
     # Turn on all hard QCD processes
-    pythia_process.readString("HardQCD:all = on")
+    pythia_process.readString("HardQCD:all = {}".format(not do_shower))
+    pythia_process.readString("HardQCD:3parton = {}".format(do_shower))
 
     # Set a phase space cut for particle pT.
     '''
@@ -91,8 +100,8 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_sh
     # Here we bias the selection of pTHat for the process by a given power of pTHat (Here pTHat^4)
     # This is more or less equivalent to sampling from a uniform distribution in pTHat
     # and recording an appropriate true pTHat-dependent weight from a known weight distribution
-    pythia_process.readString("PhaseSpace:bias2Selection = on")
-    pythia_process.readString("PhaseSpace:bias2SelectionPow = 4")
+    # pythia_process.readString("PhaseSpace:bias2Selection = on")
+    # pythia_process.readString("PhaseSpace:bias2SelectionPow = 4")
 
     # Set up to do a user veto and send it in.
     myUserHooks = MyUserHooks()
@@ -132,11 +141,14 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_sh
                         max_1_i = i
                         max_1 = p.pT()
         ids = [record[max_0_i].id(), record[max_1_i].id()]
+        ys = [record[max_0_i].y(), record[max_1_i].y()]
 
         # Check if the results are The correct flavors and above 1 GeV
         if ((np.abs(ids[0]) < 3.1) or (np.abs(ids[0]) == 21)) and ((np.abs(ids[1]) < 3.1) or (np.abs(ids[1]) == 21)):
             if (max_0 > 1) and (max_1 > 1):
-                break  # Stop generating events
+                if np.abs(ys[0]) < y_res and np.abs(ys[1]) < y_res:
+                    if ((max_0 - max_1)/max_0 < soft_emission_cut):
+                        break  # Stop generating events, keep these particles
 
     ################################
     # Package and output particles #
@@ -159,6 +171,7 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_sh
                 'py': [particle.py()],
                 'pz': [particle.pz()],
                 'pt': [particle.pT()],
+                'y': [particle.y()],
                 'e': [particle.e()],
                 'm': [particle.m()],
                 'scaleIn': [particle.scale()]

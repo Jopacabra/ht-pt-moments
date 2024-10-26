@@ -327,7 +327,7 @@ def run_event(eventNo):
 
                             logging.info('FF Fragmentation')
                             # Perform ff fragmentation
-                            frag_z = fragmentation.frag(parton, num=config.ebe.NUM_FRAGS)
+                            frag_z = fragmentation.frag(parton, num=config.EBE.NUM_FRAGS)
                             pion_pt = parton.p_T() * frag_z[0]
                             pion_pt_0 = parton.p_T0 * pp_frag_z[0]
                             current_parton['z'] = [frag_z]

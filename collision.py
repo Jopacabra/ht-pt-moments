@@ -628,11 +628,14 @@ def generate_event(grid_max_target=config.transport.GRID_MAX_TARGET, grid_step=c
         ncoll = avg_dataframe['ncoll']
 
         # Compute the normalization for the WS event from the averaged event
-        ws_norm = np.sum(ic_array)
+        ws_norm = np.sum(ic_array) * (config.transport.GRID_STEP **2)
 
         # Create WS initial conditions with the chosen b, norm, and reduced thickness parameter p
         arr, gs = woods_saxon_ic(b=chosen_b, norm=ws_norm, p=-1)
         ic = arr
+
+        # Multiplicity
+        ws_mult = np.sum(ic) * (config.transport.GRID_STEP **2)
 
         ic_object = initial.IC(arr, gs)
         e2, psi_e2 = utilities.ecc_more(ic_object, 2)
@@ -1189,7 +1192,7 @@ def woods_saxon_ic(b, A=208, R=6.62, a=0.546, p=-1, norm=1,
     TR = TR_func(x_coords, y_coords)
 
     # Normalize and transpose (to set impact parameter along x-axis)
-    array = np.transpose((norm/np.sum(TR)) * TR)
+    array = np.transpose((norm/(np.sum(TR) * (grid_step ** 2))) * TR)
 
     return array, grid_step
 

@@ -3,16 +3,13 @@ import math
 import os
 import subprocess
 import tempfile
-
 import numpy as np
-
+import pandas as pd
+import xarray as xr
 
 # Command to run process in the terminal
 # Stolen and modified from DukeQCD "run-events.py":
 # https://github.com/Duke-QCD/hic-eventgen
-import pandas as pd
-
-
 def run_cmd(*args, quiet=False):
     """
     Run and log a Subprocess.
@@ -91,49 +88,6 @@ def round_decimals_down(number: float, decimals: int = 1):
 
     factor = 10 ** decimals
     return math.floor(number * factor) / factor
-
-
-# Function to create empty results dataframe.
-def resultsFrameOG():
-    resultsDataframe = pd.DataFrame(
-            {
-                "eventNo": [],
-                "jetNo": [],
-                "jet_pT": [],
-                "q_BBMG": [],
-                "q_BBMG_err": [],
-                "q_drift_plasma": [],
-                "q_drift_plasma_err": [],
-                "q_drift_hrg": [],
-                "q_drift_hrg_err": [],
-                "q_drift_unhydro": [],
-                "q_drift_unhydro_err": [],
-                "k_moment": [],
-                "shower_correction": [],
-                "X0": [],
-                "Y0": [],
-                "theta0": [],
-                "tau_unhydro": [],
-                "tau_hrg": [],
-                "t_total_plasma": [],
-                "t_total_hrg": [],
-                "t_total_unhydro": [],
-                "Tmax_jet": [],
-                "initial_time": [],
-                "final_time": [],
-                "dx": [],
-                "dt": [],
-                "rmax": [],
-                "Tmax_event": [],
-                "b": [],
-                "R": [],
-                "e2": [],
-                "mult": [],
-                "phi_2": [],
-            }
-        )
-
-    return resultsDataframe
 
 
 # Creates a temporary directory and moves to it.
@@ -269,4 +223,45 @@ def ecc_more(ic, n):
 
     return abs(exp_phi.sum()) / W.sum(), np.angle(exp_phi.sum() / W.sum())
 
+# Function that takes a pandas dataframe and creates a histogramed weight xarray
+def xarray_ify(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight_series='weight',
+               drift=True, cel=False, NUM_PHI=157):
+
+    # Make cut
+    mask = (df['drift'] == drift) & (df['K_F_DRIFT'] == 1.0) & (df['cel'] == cel)
+
+    # Get list of ids
+    id_list = df['id'].value_counts().index
+
+    # Select bins for the coordinates
+    pt_bins = np.arange(0, 101, 0.5)
+    pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
+
+    phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
+    phi_bin_labels = (phi_bins[1:] + phi_bins[0:-1]) / 2
+
+    pid_bins = np.array([-3.5, -2.5, -1.5, -0.5, 1.5, 2.5, 3.5, 21.5])
+    pid_bin_labels = np.array([-3, -2, -1, 1, 2, 3, 21])
+
+    # Get the lists of coordinates
+    pt_array = df[mask][pt_series].to_numpy()
+    phi_array = df[mask][phi_series].to_numpy()
+    weights = df[mask][weight_series].to_numpy()
+
+    # Histogram with PIDs, if requested
+    if pid_series is not None:
+        # Get pid coordinates
+        pid_array = df[mask][pid_series].to_numpy()
+
+
+        # Zip them up in ordered pair coordinates
+        coords = np.stack([pt_array, phi_array, pid_array], axis=1)
+
+        # Do 4D histogram
+        H, edges = np.histogramdd(coords, bins=(pt_bins, phi_bins, pid_bins), weights=weights, density=False)
+    # H, edges = np.histogramdd((pt_0_array, pt_f_array, phi_0_array, phi_f_array, id_array), (pt_bins, pt_bins, phi_bins, phi_bins, id_bins), weights=weights)
+
+    # Make it an xarray DataArray
+    xr_weights = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels, "pid": pid_bin_labels})
+    return xr_weights
 

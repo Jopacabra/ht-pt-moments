@@ -10,7 +10,7 @@ import utilities
 from utilities import tempDir
 import timekeeper
 import pythia
-import fragmentation
+import hadronization
 import traceback
 import argparse
 
@@ -307,7 +307,7 @@ def run_event(eventNo):
                                               weight=chosen_weight, AA_weight=AA_weight)
 
                             # Perform pp-level fragmentation
-                            pp_frag_z = fragmentation.frag(parton, num=100)
+                            pp_frag_z = hadronization.frag(parton, num=100)
 
                             # Run the time loop
                             jet_dataframe, jet_xarray = timekeeper.evolve(event=event, parton=parton, drift=drift,
@@ -327,7 +327,7 @@ def run_event(eventNo):
 
                             logging.info('FF Fragmentation')
                             # Perform ff fragmentation
-                            frag_z = fragmentation.frag(parton, num=config.EBE.NUM_FRAGS)
+                            frag_z = hadronization.frag(parton, num=config.EBE.NUM_FRAGS)
                             pion_pt = parton.p_T() * frag_z[0]
                             pion_pt_0 = parton.p_T0 * pp_frag_z[0]
                             current_parton['z'] = [frag_z]
@@ -448,6 +448,14 @@ def run_event(eventNo):
 
         # Declare jet complete
         logging.info('- Jet Process ' + str(process_num) + ' Complete -')
+
+    # Do coalescence & save xarray histograms for drift & no drift cases
+    for drift_bool in [True, False]:
+        xr_partons = utilities.xarray_ify(event_partons, pt_series='pt_f', phi_series='phi_f', pid_series='id',
+                                          weight_series='weight', drift=drift_bool, cel=False, NUM_PHI=157)
+
+        xr_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)  # Perform coalescence at T = 155 MeV
+        xr_hadrons.to_netcdf(results_path + '/{}_coal_hadrons_drift{}.nc'.format(seed, drift_bool))
 
     return event_partons, event_hadrons, event_observables
 

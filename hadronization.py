@@ -68,16 +68,12 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
     def soft_parts_boltz(E, phi=0, T=T, pid=21):
         if pid == 21:
             term = -1  # Bose statistics
-            spin_factor = 3  # 2s + 1 for s = 1
-            color_factor = 1
         elif np.abs(pid) <= 3:  # For light quarks
             term = 1  # Fermion statistics
-            spin_factor = 2  # 2s + 1 for s = 1/2
-            color_factor = 1
         else:  # Return zero -- don't involve these partons
             return 0
 
-        return ((color_factor * spin_factor) / (np.exp(np.abs(E) / T) + term))
+        return (1 / (np.exp(np.abs(E) / T) + term))
 
     # Get array bins and create a storage DataArray of zeros
     pt_array = xr_partons.pt.to_numpy()
@@ -94,10 +90,9 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
     delta_p = 0.24  # From https://arxiv.org/pdf/nucl-th/0301093 pg. 3
 
     # Iterate through dataarray cells, adding produced hadrons to new zeroes dataarray
-    pt_i_arr = np.arange(0, len(xr_hadrons.pt))
-    for pt_i in pt_i_arr[pt_i_arr <= max_pt]:  # Only perform coalescence up to maximum hadronic pt <max_pt>
+    had_pts = xr_hadrons.pt.to_numpy()
+    for pt in had_pts[had_pts <= max_pt]:  # Only perform coalescence up to maximum hadronic pt <max_pt>
         t_0 = timeit.default_timer()
-        pt = pt_array[pt_i]
         print(pt)
         for phi_i in np.arange(0, len(xr_hadrons.phi)):
 
@@ -106,7 +101,7 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
             # Integrate over hard and soft pt for each flavor
             num_hadrons_dpt = 0
             for pt_hard in pt_array:
-                for pid_val in pid_array:
+                for pid_val in [21, 1]:  # Compute for bosons and fermions
                     # Get num hard particles in this pt and phi bin
                     num_hard = float(xr_partons.sel({"pt": pt_hard, "phi": phi, "pid": pid_val},
                                                     method='nearest').sum())  # Get arrary of hard particles in this phi bin
@@ -116,8 +111,7 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
                     soft_min_delta = pt - (pt_res / 2) - pt_hard  # From momentum conserving delta function
                     soft_max_delta = pt + (pt_res / 2) - pt_hard
 
-                    soft_min_hs = np.amin(
-                        [(delta_p - pt_hard) / 2, (pt_hard - delta_p) / 2])  # From heavy side function
+                    soft_min_hs = np.amin([(delta_p - pt_hard) / 2, (pt_hard - delta_p) / 2])  # Heavy-side function
                     soft_max_hs = np.amax([(delta_p - pt_hard) / 2, (pt_hard - delta_p) / 2])
 
                     soft_min = np.amax([soft_min_delta, soft_min_hs, 0.01])  # Get most constraining window
@@ -129,12 +123,16 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
                     # Perform integral over soft sector and add to the count
                     quad_result = integrate.quad(lambda x: d_num_hard * soft_parts_boltz(x, phi, pid=pid_val) / phi_res,
                                                  soft_min, soft_max, points=[0])
-                    num_hadrons_dpt += quad_result[0]
+                    if pid_val == 21:  # Assume only one boson -- the gluon
+                        num_hadrons_dpt += quad_result[0]
+                    else:  # Assume all other pids are fermions
+                        num_hadrons_dpt += (len(pid_array) - 1) * quad_result[0]
 
-                num_hadrons = num_hadrons_dpt * pt_res  # integral from sum of bins
-                num_hadrons = ((pt_res * phi_res) / (delta_p ** 3)) * num_hadrons  # Dimensionful prefactor
+            # Add coalesced hadrons in this pt & phi bin from all flavors and all hard and soft pts
+            num_hadrons = num_hadrons_dpt * pt_res  # integral from sum of bins
+            num_hadrons = ((pt_res * phi_res) / (delta_p ** 3)) * num_hadrons  # Dimensionful prefactor
 
-                xr_hadrons.loc[dict(pt=(pt), phi=(phi))] += num_hadrons  # Add produced hadrons to xarray
+            xr_hadrons.loc[dict(pt=(pt), phi=(phi))] += num_hadrons  # Add produced hadrons to xarray
 
         t_f = timeit.default_timer()
         print(t_f - t_0)

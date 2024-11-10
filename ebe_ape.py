@@ -451,10 +451,12 @@ def run_event(eventNo):
 
     # Do coalescence & save xarray histograms for drift & no drift cases
     for drift_bool in [True, False]:
+        # Histogram partons into an xarray dataarray, using the v2 optimized bin number -- 157 bins
         xr_partons = utilities.xarray_ify(event_partons, pt_series='pt_f', phi_series='phi_f', pid_series='id',
                                           weight_series='weight', drift=drift_bool, cel=False, NUM_PHI=157)
 
-        xr_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)  # Perform coalescence at T = 155 MeV
+        # Perform coalescence at T = 155 MeV
+        xr_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
         xr_hadrons.to_netcdf(results_path + '/{}_coal_hadrons_drift{}.nc'.format(seed, drift_bool))
 
     return event_partons, event_hadrons, event_observables

@@ -26,5 +26,6 @@ echo "Moving results parquet to /srv..."
 mv /srv/results/*/*.pickle /srv
 mv /srv/results/*/*.dat /srv
 mv /srv/results/*/*.npy /srv
+mv /srv/results/*/*.nc /srv
 
 echo "Job complete! Have a great day! :)"

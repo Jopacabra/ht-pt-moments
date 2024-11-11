@@ -100,8 +100,8 @@ def scattering(pThatmin=config.jet.PTHATMIN, pThatmax=config.jet.PTHATMAX, do_sh
     # Here we bias the selection of pTHat for the process by a given power of pTHat (Here pTHat^4)
     # This is more or less equivalent to sampling from a uniform distribution in pTHat
     # and recording an appropriate true pTHat-dependent weight from a known weight distribution
-    # pythia_process.readString("PhaseSpace:bias2Selection = on")
-    # pythia_process.readString("PhaseSpace:bias2SelectionPow = 4")
+    pythia_process.readString("PhaseSpace:bias2Selection = on")
+    pythia_process.readString("PhaseSpace:bias2SelectionPow = 4")
 
     # Set up to do a user veto and send it in.
     myUserHooks = MyUserHooks()

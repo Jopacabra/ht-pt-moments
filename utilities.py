@@ -315,7 +315,7 @@ def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, w
         xr_hist.attrs['Tmax'] = event_Tmax
 
         # Add to growing list of events
-        xr_all[seed] = xr_hist
+        xr_all[str(seed)] = xr_hist
 
         # Save some memory
         del loaded_pd_partons

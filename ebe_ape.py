@@ -457,7 +457,7 @@ def run_event(eventNo):
 
         # Perform coalescence at T = 155 MeV
         xr_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
-        xr_hadrons.to_netcdf(results_path + '/{}_coal_hadrons_drift{}.nc'.format(seed, drift_bool))
+        xr_hadrons.to_netcdf(results_path + '/{}_coal_hadrons_drift{}.nc'.format(identifierString, drift_bool))
 
     return event_partons, event_hadrons, event_observables
 

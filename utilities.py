@@ -265,3 +265,63 @@ def xarray_ify(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight
     xr_weights = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels, "pid": pid_bin_labels})
     return xr_weights
 
+def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight_series='weight',
+               drift=True, cel=False, NUM_PHI=157):
+    # Select bins for the coordinates
+    pt_bins = np.arange(0, 101, 1)
+    pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
+
+    phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
+    phi_bin_labels = (phi_bins[1:] + phi_bins[0:-1]) / 2
+
+    id_bins = np.array([-3.5, -2.5, -1.5, -0.5, 1.5, 2.5, 3.5, 21.5])
+    id_bin_labels = np.array([-3, -2, -1, 1, 2, 3, 21])
+
+    # Iterate through events and combine to one dataset
+    xr_all = xr.Dataset({})
+    seed_list = df['seed'].value_counts().index.to_numpy()
+    for i in np.arange(0, len(seed_list)):
+        print(i / len(seed_list))
+        # Cut to one event
+        seed = seed_list[i]
+        loaded_pd_partons = df[(df['seed'] == seed) & (df['K_F_DRIFT'] == 1.0)
+                               & (df['drift'] == drift) & (df['cel'] == cel)]
+        event_psi_2 = loaded_pd_partons.loc[:, 'psi_2'].to_numpy()[0]
+        event_mult = loaded_pd_partons.loc[:, 'mult'].to_numpy()[0]
+        event_e_2 = loaded_pd_partons.loc[:, 'e2'].to_numpy()[0]
+        event_v_2 = loaded_pd_partons.loc[:, 'v_2'].to_numpy()[0]
+        event_Tmax = loaded_pd_partons.loc[:, 'Tmax_event'].to_numpy()[0]
+
+        # Get the lists of coordinates
+        pt_array = loaded_pd_partons[pt_series].to_numpy()
+        phi_array = loaded_pd_partons[phi_series].to_numpy()
+        pid_array = loaded_pd_partons[pid_series].to_numpy()
+        weights = loaded_pd_partons[weight_series].to_numpy()
+
+        # Zip them up in ordered pair coordinates
+        coords = np.stack([pt_array, phi_array, pid_array], axis=1)
+
+        # Do 3D histogram
+        H, edges = np.histogramdd(coords, bins=(pt_bins, phi_bins, id_bins), weights=weights, density=False)
+
+        # Make it an xarray DataArray
+        xr_hist = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels, "pid": id_bin_labels})
+
+        # Record psi_2 as xarray attribute
+        xr_hist.attrs['psi_2'] = event_psi_2
+        xr_hist.attrs['e_2'] = event_e_2
+        xr_hist.attrs['v_2'] = event_v_2
+        xr_hist.attrs['mult'] = event_mult
+        xr_hist.attrs['Tmax'] = event_Tmax
+
+        # Add to growing list of events
+        xr_all[seed] = xr_hist
+
+        # Save some memory
+        del loaded_pd_partons
+        del pt_array
+        del phi_array
+        del pid_array
+        del weights
+
+    return xr_all

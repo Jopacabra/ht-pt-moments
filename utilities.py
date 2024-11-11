@@ -281,7 +281,7 @@ def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, w
     xr_all = xr.Dataset({})
     seed_list = df['seed'].value_counts().index.to_numpy()
     for i in np.arange(0, len(seed_list)):
-        print(i / len(seed_list))
+        #print(i / len(seed_list))
         # Cut to one event
         seed = seed_list[i]
         loaded_pd_partons = df[(df['seed'] == seed) & (df['K_F_DRIFT'] == 1.0)

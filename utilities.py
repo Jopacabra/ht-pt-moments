@@ -356,7 +356,7 @@ def xarray_ify_many_ff(df, pt_series='pt_f', phi_series='phi_f', z_series='z', w
 
         # Get the lists of coordinates
         # Find out how many fragmentations were done:
-        num_frags = len(loaded_pd_partons['z'][0].to_numpy())
+        num_frags = len(loaded_pd_partons['z'].to_numpy()[0])
 
         # Get ordered list of fragmentations
         z_vals = np.concatenate(loaded_pd_partons[z_series].to_numpy(), axis=0)

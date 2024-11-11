@@ -330,7 +330,7 @@ def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, w
 
 
 # Function to package many events' output into histogrammed xarray files of fragmented hadrons
-def xarray_ify_many_ff(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight_series='weight',
+def xarray_ify_many_ff(df, pt_series='pt_f', phi_series='phi_f', z_series='z', weight_series='weight',
                drift=True, cel=False, NUM_PHI=157):
     # Select bins for the coordinates
     pt_bins = np.arange(0, 101, 1)
@@ -359,7 +359,7 @@ def xarray_ify_many_ff(df, pt_series='pt_f', phi_series='phi_f', pid_series=None
         num_frags = len(loaded_pd_partons['z'][0].to_numpy())
 
         # Get ordered list of fragmentations
-        z_vals = loaded_pd_partons['z'].to_numpy().flatten('C')
+        z_vals = np.concatenate(loaded_pd_partons[z_series].to_numpy(), axis=0)
         part_pt_array = np.repeat(loaded_pd_partons[pt_series].to_numpy(), repeats=num_frags)
         had_pt_array = z_vals * part_pt_array
         phi_array = np.repeat(loaded_pd_partons[phi_series].to_numpy(), repeats=num_frags)

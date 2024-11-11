@@ -449,6 +449,18 @@ def run_event(eventNo):
         # Declare jet complete
         logging.info('- Jet Process ' + str(process_num) + ' Complete -')
 
+    # Compute event metadata for xarray datasets
+    event_mult = event_dataframe['mult'][0]
+    event_e2 = event_dataframe['e2'][0]
+    event_Tmax = event.max_temp()
+    flow_N = event_dataframe['urqmd_flow_N'][0]
+    for n in [2, 3, 4]:
+        # Compute vn and psin soft
+        soft_psi_n = np.angle(event_dataframe['urqmd_re_q_{}'.format(n)][0]
+                              + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0])
+        soft_v_n = np.abs(event_dataframe['urqmd_re_q_{}'.format(n)][0]
+                          + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0]) / flow_N
+
     # Do coalescence & save xarray histograms for drift & no drift cases
     for drift_bool in [True, False]:
         # Histogram partons into an xarray dataarray, using the v2 optimized bin number -- 157 bins
@@ -457,6 +469,19 @@ def run_event(eventNo):
 
         # Perform coalescence at T = 155 MeV
         xr_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
+
+        # Assign event attributes
+        for da in [xr_partons, xr_hadrons]:
+            for n in [2, 3, 4]:
+                da.attrs['psi_{}_soft'.format(n)] = soft_psi_n
+                da.attrs['v_{}_soft'.format(n)] = soft_v_n
+            da.attrs['mult'] = event_mult
+            da.attrs['Tmax'] = event_Tmax
+            da.attrs['e_2'] = event_e2
+            da.attrs['seed'] = seed
+
+        # Save xarray dataarrays
+        xr_partons.to_netcdf(results_path + '/{}_coal_partons_drift{}.nc'.format(identifierString, drift_bool))
         xr_hadrons.to_netcdf(results_path + '/{}_coal_hadrons_drift{}.nc'.format(identifierString, drift_bool))
 
     return event_partons, event_hadrons, event_observables

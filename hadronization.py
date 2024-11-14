@@ -101,10 +101,16 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
             # Integrate over hard and soft pt for each flavor
             num_hadrons_dpt = 0
             for pt_hard in pt_array:
-                for pid_val in [21, 1]:  # Compute for bosons and fermions
+                for pid_val in [21, 1]:  # Compute for bosons and fermions - Note selection cut below takes all fermions
                     # Get num hard particles in this pt and phi bin
-                    num_hard = float(xr_partons.sel({"pt": pt_hard, "phi": phi, "pid": pid_val},
-                                                    method='nearest').sum())  # Get arrary of hard particles in this phi bin
+                    if pid_val == 21:
+                        # Take only gluons
+                        num_hard = float(xr_partons.sel({"pt": pt_hard, "phi": phi, "pid": pid_val},
+                                                        method='nearest').sum())
+                    else:
+                        # Take only light quarks
+                        num_hard = float(xr_partons.sel({"pt": pt_hard, "phi":phi}, method='nearest').sel(
+                            {"pid": slice(-3.4, 3.4)}).sum())
                     d_num_hard = num_hard / (pt_res * phi_res)
 
                     # Determine delta function constraints on soft pt
@@ -123,10 +129,7 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
                     # Perform integral over soft sector and add to the count
                     quad_result = integrate.quad(lambda x: d_num_hard * soft_parts_boltz(x, phi, pid=pid_val) / phi_res,
                                                  soft_min, soft_max, points=[0])
-                    if pid_val == 21:  # Assume only one boson -- the gluon
-                        num_hadrons_dpt += quad_result[0]
-                    else:  # Assume all other pids are fermions
-                        num_hadrons_dpt += (len(pid_array) - 1) * quad_result[0]
+                    num_hadrons_dpt += quad_result[0]
 
             # Add coalesced hadrons in this pt & phi bin from all flavors and all hard and soft pts
             num_hadrons = num_hadrons_dpt * pt_res  # integral from sum of bins

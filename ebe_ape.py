@@ -463,26 +463,39 @@ def run_event(eventNo):
 
     # Do coalescence & save xarray histograms for drift & no drift cases
     for drift_bool in [True, False]:
-        # Histogram partons into an xarray dataarray, using the v2 optimized bin number -- 157 bins
-        xr_partons = utilities.xarray_ify(event_partons, pt_series='pt_f', phi_series='phi_f', pid_series='id',
-                                          weight_series='weight', drift=drift_bool, cel=False, NUM_PHI=157)
+        for cel_bool in [False, True]:
+            # Histogram partons into an xarray dataarray, using the v2 optimized bin number -- 157 bins
+            xr_partons = utilities.xarray_ify(event_partons, pt_series='pt_f', phi_series='phi_f', pid_series='id',
+                                              weight_series='AA_weight', drift=drift_bool, cel=cel_bool, NUM_PHI=157)
 
-        # Perform coalescence at T = 155 MeV
-        xr_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
+            # Make fragmentation xarrays
+            xr_frag_hadrons_f = utilities.xarray_ify_ff(event_partons, pt_series='pt_f', phi_series='phi_f', z_series='z',
+                                                      weight_series='AA_weight', drift=drift_bool, cel=cel_bool, NUM_PHI=157)
+            xr_frag_hadrons_i = utilities.xarray_ify_ff(event_partons, pt_series='pt', phi_series='phi', z_series='pp_z',
+                                                        weight_series='AA_weight', drift=drift_bool, cel=cel_bool, NUM_PHI=157)
 
-        # Assign event attributes
-        for da in [xr_partons, xr_hadrons]:
-            for n in [2, 3, 4]:
-                da.attrs['psi_{}_soft'.format(n)] = soft_psi_n
-                da.attrs['v_{}_soft'.format(n)] = soft_v_n
-            da.attrs['mult'] = event_mult
-            da.attrs['Tmax'] = event_Tmax
-            da.attrs['e_2'] = event_e2
-            da.attrs['seed'] = seed
+            # Perform coalescence at T = 155 MeV
+            xr_coal_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
 
-        # Save xarray dataarrays
-        xr_partons.to_netcdf(results_path + '/{}_coal_partons_drift{}.nc'.format(identifierString, drift_bool))
-        xr_hadrons.to_netcdf(results_path + '/{}_coal_hadrons_drift{}.nc'.format(identifierString, drift_bool))
+            # Assign event attributes
+            for da in [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i, xr_coal_hadrons]:
+                for n in [2, 3, 4]:
+                    da.attrs['psi_{}_soft'.format(n)] = soft_psi_n
+                    da.attrs['v_{}_soft'.format(n)] = soft_v_n
+                da.attrs['mult'] = event_mult
+                da.attrs['Tmax'] = event_Tmax
+                da.attrs['e_2'] = event_e2
+                da.attrs['seed'] = seed
+
+            # Save xarray dataarrays
+            xr_partons.to_netcdf(results_path + '/{}_AA_partons_drift{}_cel{}.nc'.format(
+                identifierString, drift_bool, cel_bool))
+            xr_frag_hadrons_f.to_netcdf(results_path + '/{}_AA_frag_hadrons_drift{}_cel{}.nc'.format(
+                identifierString, drift_bool, cel_bool))
+            xr_frag_hadrons_i.to_netcdf(results_path + '/{}_pp_frag_hadrons_drift{}_cel{}.nc'.format(
+                identifierString, drift_bool, cel_bool))
+            xr_coal_hadrons.to_netcdf(results_path + '/{}_AA_coal_hadrons_drift{}_cel{}.nc'.format(
+                identifierString, drift_bool, cel_bool))
 
     return event_partons, event_hadrons, event_observables
 

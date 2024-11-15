@@ -140,17 +140,7 @@ def coal_xarray(xr_partons, T=0.155, max_pt=20):
         t_f = timeit.default_timer()
         print(t_f - t_0)
 
-    # Apply event metadata, if it exists
-    try:
-        xr_hadrons.attrs['psi_2'] = xr_partons.attrs['psi_2']
-        xr_hadrons.attrs['e_2'] = xr_partons.attrs['e_2']
-        xr_hadrons.attrs['v_2'] = xr_partons.attrs['v_2']
-        xr_hadrons.attrs['mult'] = xr_partons.attrs['mult']
-        xr_hadrons.attrs['Tmax'] = xr_partons.attrs['Tmax']
-        xr_hadrons.attrs['drift'] = xr_partons.attrs['drift']
-        xr_hadrons.attrs['cel'] = xr_partons.attrs['cel']
-        xr_hadrons.attrs['K_F_DRIFT'] = xr_partons.attrs['K_F_Drift']
-    except:
-        pass
+    # Apply event metadata
+    xr_hadrons.attrs = xr_partons.attrs
 
     return xr_hadrons

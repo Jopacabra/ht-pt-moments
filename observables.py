@@ -1,14 +1,10 @@
 import numpy as np
-import pandas as pd
 import xarray as xr
-import os
 import timeit
-import fnmatch
-import argparse
 
 
 # Function to compute vns for a grouping of hard particles in an xarray dataarray
-def compute_vns(xr_da, n_list=[2, 3, 4]):
+def compute_vns(xr_da, n_list=np.array([2, 3, 4])):
     ###################
     # Compute results #
     ###################

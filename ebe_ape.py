@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+import xarray as xr
 import logging
 import collision
 import plasma
@@ -11,6 +12,7 @@ from utilities import tempDir
 import timekeeper
 import pythia
 import hadronization
+import observables
 import traceback
 import argparse
 
@@ -377,10 +379,12 @@ def run_event(eventNo):
                           + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0]) / flow_N
 
     # Do coalescence & save xarray histograms for drift & no drift cases in all K_F_DRIFT options
+    logging.info('Iterating through cases:')
     for drift_bool in [True, False]:
         for cel_bool in [False, True]:
             for KF_val in event_partons[(event_partons['drift'] == drift_bool)
                                         & (event_partons['cel'] == cel_bool)]['K_F_DRIFT'].value_counts().index:
+                logging.info('K_F_DRIFT = {}, cel = {}'.format(KF_val, cel_bool))
                 # Histogram partons into an xarray dataarray, using the v2 optimized bin number -- 157 bins
                 xr_partons = utilities.xarray_ify(event_partons, pt_series='pt_f', phi_series='phi_f', pid_series='id',
                                                   weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
@@ -396,6 +400,7 @@ def run_event(eventNo):
 
                 # Perform coalescence at T = 155 MeV
                 if KF_val == 1.0 or KF_val == 0.0:
+                    logging.info('Coalescing...')
                     xr_coal_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
                     da_list = [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i, xr_coal_hadrons]
                 else:
@@ -415,6 +420,7 @@ def run_event(eventNo):
                     da.attrs['cel'] = cel_bool
                     da.attrs['K_F_Drift'] = KF_val
 
+                logging.info('Saving dataarrays...')
                 # Save xarray dataarrays
                 xr_partons.to_netcdf(results_path + '/{}_AA_partons_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
@@ -424,6 +430,26 @@ def run_event(eventNo):
                     identifierString, drift_bool, cel_bool, KF_val))
                 if KF_val == 1.0 or KF_val == 0.0:
                     xr_coal_hadrons.to_netcdf(results_path + '/{}_AA_coal_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                        identifierString, drift_bool, cel_bool, KF_val))
+
+                logging.info('Computing and saving observables...')
+                # Compute raa and vns
+                part_vns = observables.compute_vns(xr_partons, n_list=np.array([2, 3, 4]))
+                part_obs = part_vns.to_dataset(name='vns')
+                part_obs.to_netcdf(results_path + '/{}_AA_partons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+
+                frag_vns = observables.compute_vns(xr_frag_hadrons_f, n_list=np.array([2, 3, 4]))
+                frag_raa = observables.compute_raa(xr_frag_hadrons_f, xr_frag_hadrons_i)
+                frag_obs = xr.Dataset({})
+                frag_obs['RAA'] = frag_raa
+                frag_obs['vns'] = frag_vns
+                frag_obs.to_netcdf(results_path + '/{}_AA_frag_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+
+                if KF_val == 1.0 or KF_val == 0.0:
+                    coal_vns = observables.compute_vns(xr_coal_hadrons, n_list=np.array([2, 3, 4]))
+                    coal_vns.to_netcdf(results_path + '/{}_AA_coal_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                         identifierString, drift_bool, cel_bool, KF_val))
 
     return event_partons, event_hadrons, event_observables

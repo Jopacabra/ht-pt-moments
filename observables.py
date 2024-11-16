@@ -12,8 +12,8 @@ def compute_vns(xr_da, n_list=np.array([2, 3, 4])):
     # Compute v2
     t_0 = timeit.default_timer()
     # First we need to compute the pt and phi positions of all of the particles.
-    phis = xr_da.phi_f.to_numpy()
-    pts = xr_da.pt_f.to_numpy()
+    phis = xr_da.phi.to_numpy()
+    pts = xr_da.pt.to_numpy()
 
     # Create dictionaries for per-event usage
     event_hard_v = {}
@@ -27,7 +27,7 @@ def compute_vns(xr_da, n_list=np.array([2, 3, 4])):
     event_weight = np.array([])
     for pt in pts:
         # Get the weight in this pt bin, summed over all ids
-        weights = xr_da.sel(pt_f=pt).to_numpy()
+        weights = xr_da.sel(pt=pt).to_numpy()
         event_weight = np.append(event_weight, np.sum(weights))
         for n in n_list:
             # Compute hard psi_2

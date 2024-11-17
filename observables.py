@@ -27,7 +27,10 @@ def compute_vns(xr_da, n_list=np.array([2, 3, 4])):
     event_weight = np.array([])
     for pt in pts:
         # Get the weight in this pt bin, summed over all ids
-        weights = xr_da.sel(pt=pt).to_numpy()
+        try:  # Sum over flavors, if given a partonic xarray
+            weights = xr_da.sel(pt=pt).sum(dim=['pid']).to_numpy()
+        except ValueError:
+            weights = xr_da.sel(pt=pt).to_numpy()
         event_weight = np.append(event_weight, np.sum(weights))
         for n in n_list:
             # Compute hard psi_2

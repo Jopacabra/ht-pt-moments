@@ -435,15 +435,14 @@ def run_event(eventNo):
                 logging.info('Computing and saving observables...')
                 # Compute raa and vns
                 part_vns = observables.compute_vns(xr_partons, n_list=np.array([2, 3, 4]))
-                part_obs = part_vns.to_dataset(name='vns')
+                part_obs = part_vns
                 part_obs.to_netcdf(results_path + '/{}_AA_partons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
 
                 frag_vns = observables.compute_vns(xr_frag_hadrons_f, n_list=np.array([2, 3, 4]))
                 frag_raa = observables.compute_raa(xr_frag_hadrons_f, xr_frag_hadrons_i)
-                frag_obs = xr.Dataset({})
+                frag_obs = frag_vns
                 frag_obs['RAA'] = frag_raa
-                frag_obs['vns'] = frag_vns
                 frag_obs.to_netcdf(results_path + '/{}_AA_frag_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
 

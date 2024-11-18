@@ -236,7 +236,7 @@ def xarray_ify(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight
     id_list = df['id'].value_counts().index
 
     # Select bins for the coordinates
-    pt_bins = np.arange(0, 101, 0.5)
+    pt_bins = np.arange(0, 101, 1)
     pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
 
     phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)

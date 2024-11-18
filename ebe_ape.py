@@ -441,8 +441,7 @@ def run_event(eventNo):
 
                 frag_vns = observables.compute_vns(xr_frag_hadrons_f, n_list=np.array([2, 3, 4]))
                 frag_raa = observables.compute_raa(xr_frag_hadrons_f, xr_frag_hadrons_i)
-                frag_obs = frag_vns
-                frag_obs['RAA'] = frag_raa
+                frag_obs = xr.merge([frag_vns, frag_raa])
                 frag_obs.to_netcdf(results_path + '/{}_AA_frag_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
 

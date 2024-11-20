@@ -87,6 +87,7 @@ class jet:
     K_F_DRIFT = float(cfg['jet']['K_F_DRIFT'])
     K_FG_DRIFT = float(cfg['jet']['K_FG_DRIFT'])
     K_BBMG = 1  #float(cfg['jet']['K_BBMG'])
+    PT_BIN = float(cfg['jet']['PT_BIN'])
 
 
 # Global constants

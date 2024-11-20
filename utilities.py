@@ -6,6 +6,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 import xarray as xr
+import config
 
 # Command to run process in the terminal
 # Stolen and modified from DukeQCD "run-events.py":
@@ -236,7 +237,7 @@ def xarray_ify(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight
     id_list = df['id'].value_counts().index
 
     # Select bins for the coordinates
-    pt_bins = np.arange(0, 101, 1)
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
     pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
 
     phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
@@ -298,7 +299,7 @@ def xarray_ify_ff(df, pt_series='pt_f', phi_series='phi_f', z_series='z', weight
     if not drift:
         K_F_DRIFT = 0.0
     # Select bins for the coordinates
-    pt_bins = np.arange(0, 101, 1)
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
     pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
 
     phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
@@ -359,7 +360,7 @@ def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, w
     if not drift:
         K_F_DRIFT = 0.0
     # Select bins for the coordinates
-    pt_bins = np.arange(0, 101, 1)
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
     pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
 
     phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
@@ -427,7 +428,7 @@ def xarray_ify_many_ff(df, pt_series='pt_f', phi_series='phi_f', z_series='z', w
     if not drift:
         K_F_DRIFT = 0.0
     # Select bins for the coordinates
-    pt_bins = np.arange(0, 101, 1)
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
     pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
 
     phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)

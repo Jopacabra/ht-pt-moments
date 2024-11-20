@@ -20,7 +20,7 @@ executable = ../ebe_ape.sh
 #log = log/job.$(Cluster).$(Process).log
 transfer_output_remaps = "*.pickle = osdf:///ospool/ap21/data/jopacabra/tester/*.pickle"
 
-request_cpus = 1
+request_cpus = 2
 request_memory = 16 GB
 request_disk = 24 GB
 

@@ -6,6 +6,7 @@ import tempfile
 import numpy as np
 import pandas as pd
 import xarray as xr
+import config
 
 # Command to run process in the terminal
 # Stolen and modified from DukeQCD "run-events.py":
@@ -224,17 +225,19 @@ def ecc_more(ic, n):
     return abs(exp_phi.sum()) / W.sum(), np.angle(exp_phi.sum() / W.sum())
 
 # Function that takes a pandas dataframe and creates a histogramed weight xarray
-def xarray_ify(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight_series='weight',
-               drift=True, cel=False, NUM_PHI=157):
+def xarray_ify(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight_series='AA_weight',
+               drift=True, cel=False, NUM_PHI=157, K_F_DRIFT=1.0):
+    if not drift:
+        K_F_DRIFT = 0.0
 
     # Make cut
-    mask = (df['drift'] == drift) & (df['K_F_DRIFT'] == 1.0) & (df['cel'] == cel)
+    mask = (df['drift'] == drift) & (df['K_F_DRIFT'] == K_F_DRIFT) & (df['cel'] == cel)
 
     # Get list of ids
     id_list = df['id'].value_counts().index
 
     # Select bins for the coordinates
-    pt_bins = np.arange(0, 101, 0.5)
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
     pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
 
     phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
@@ -259,16 +262,105 @@ def xarray_ify(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight
 
         # Do 4D histogram
         H, edges = np.histogramdd(coords, bins=(pt_bins, phi_bins, pid_bins), weights=weights, density=False)
-    # H, edges = np.histogramdd((pt_0_array, pt_f_array, phi_0_array, phi_f_array, id_array), (pt_bins, pt_bins, phi_bins, phi_bins, id_bins), weights=weights)
+
+        # Make it an xarray DataArray
+        xr_hist = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels, "pid": pid_bin_labels})
+
+    else:
+        # Zip them up in ordered pair coordinates
+        coords = np.stack([pt_array, phi_array], axis=1)
+
+        # Do 4D histogram
+        H, edges = np.histogramdd(coords, bins=(pt_bins, phi_bins), weights=weights, density=False)
+
+        # Make it an xarray DataArray
+        xr_hist = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels})
+
+    # Record xarray attributes
+    event_psi_2 = df.loc[mask, 'psi_2'].to_numpy()[0]
+    event_mult = df.loc[mask, 'mult'].to_numpy()[0]
+    event_e_2 = df.loc[mask, 'e2'].to_numpy()[0]
+    event_v_2 = df.loc[mask, 'v_2'].to_numpy()[0]
+    event_Tmax = df.loc[mask, 'Tmax_event'].to_numpy()[0]
+    xr_hist.attrs['psi_2'] = event_psi_2
+    xr_hist.attrs['e_2'] = event_e_2
+    xr_hist.attrs['v_2'] = event_v_2
+    xr_hist.attrs['mult'] = event_mult
+    xr_hist.attrs['Tmax'] = event_Tmax
+    xr_hist.attrs['drift'] = drift
+    xr_hist.attrs['cel'] = cel
+    xr_hist.attrs['K_F_Drift'] = K_F_DRIFT
+
+    return xr_hist
+
+# Function to package one event's output into histogrammed xarray files of fragmented hadrons
+def xarray_ify_ff(df, pt_series='pt_f', phi_series='phi_f', z_series='z', weight_series='AA_weight',
+               drift=True, cel=False, NUM_PHI=157, K_F_DRIFT=1.0):
+    if not drift:
+        K_F_DRIFT = 0.0
+    # Select bins for the coordinates
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
+    pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
+
+    phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
+    phi_bin_labels = (phi_bins[1:] + phi_bins[0:-1]) / 2
+
+    # Cut to case & get info
+    loaded_pd_partons = df[(df['K_F_DRIFT'] == K_F_DRIFT)
+                           & (df['drift'] == drift) & (df['cel'] == cel)]
+    event_psi_2 = loaded_pd_partons.loc[:, 'psi_2'].to_numpy()[0]
+    event_mult = loaded_pd_partons.loc[:, 'mult'].to_numpy()[0]
+    event_e_2 = loaded_pd_partons.loc[:, 'e2'].to_numpy()[0]
+    event_v_2 = loaded_pd_partons.loc[:, 'v_2'].to_numpy()[0]
+    event_Tmax = loaded_pd_partons.loc[:, 'Tmax_event'].to_numpy()[0]
+
+    # Get the lists of coordinates
+    # Find out how many fragmentations were done:
+    num_frags = len(loaded_pd_partons['z'].to_numpy()[0])
+
+    # Get ordered list of fragmentations
+    z_vals = np.concatenate(loaded_pd_partons[z_series].to_numpy(), axis=0)
+    part_pt_array = np.repeat(loaded_pd_partons[pt_series].to_numpy(), repeats=num_frags)
+    had_pt_array = z_vals * part_pt_array
+    phi_array = np.repeat(loaded_pd_partons[phi_series].to_numpy(), repeats=num_frags)
+    weights = np.repeat(loaded_pd_partons[weight_series].to_numpy(), repeats=num_frags)
+
+    # Zip them up in ordered pair coordinates
+    coords = np.stack([had_pt_array, phi_array], axis=1)
+
+    # Do 3D histogram
+    H, edges = np.histogramdd(coords, bins=(pt_bins, phi_bins), weights=weights, density=False)
 
     # Make it an xarray DataArray
-    xr_weights = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels, "pid": pid_bin_labels})
-    return xr_weights
+    xr_hist = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels})
 
-def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight_series='weight',
-               drift=True, cel=False, NUM_PHI=157):
+    # Record xarray attributes
+    xr_hist.attrs['psi_2'] = event_psi_2
+    xr_hist.attrs['e_2'] = event_e_2
+    xr_hist.attrs['v_2'] = event_v_2
+    xr_hist.attrs['mult'] = event_mult
+    xr_hist.attrs['Tmax'] = event_Tmax
+    xr_hist.attrs['drift'] = drift
+    xr_hist.attrs['cel'] = cel
+    xr_hist.attrs['K_F_Drift'] = K_F_DRIFT
+
+    # Save some memory
+    del loaded_pd_partons
+    del part_pt_array
+    del had_pt_array
+    del phi_array
+    del weights
+
+    return xr_hist
+
+
+# Function to package many events' output into histogrammed xarray files of partons
+def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, weight_series='AA_weight',
+               drift=True, cel=False, NUM_PHI=157, K_F_DRIFT=1.0):
+    if not drift:
+        K_F_DRIFT = 0.0
     # Select bins for the coordinates
-    pt_bins = np.arange(0, 101, 1)
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
     pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
 
     phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
@@ -284,7 +376,7 @@ def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, w
         #print(i / len(seed_list))
         # Cut to one event
         seed = seed_list[i]
-        loaded_pd_partons = df[(df['seed'] == seed) & (df['K_F_DRIFT'] == 1.0)
+        loaded_pd_partons = df[(df['seed'] == seed) & (df['K_F_DRIFT'] == K_F_DRIFT)
                                & (df['drift'] == drift) & (df['cel'] == cel)]
         event_psi_2 = loaded_pd_partons.loc[:, 'psi_2'].to_numpy()[0]
         event_mult = loaded_pd_partons.loc[:, 'mult'].to_numpy()[0]
@@ -313,6 +405,9 @@ def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, w
         xr_hist.attrs['v_2'] = event_v_2
         xr_hist.attrs['mult'] = event_mult
         xr_hist.attrs['Tmax'] = event_Tmax
+        xr_hist.attrs['drift'] = drift
+        xr_hist.attrs['cel'] = cel
+        xr_hist.attrs['K_F_Drift'] = K_F_DRIFT
 
         # Add to growing list of events
         xr_all[str(seed)] = xr_hist
@@ -322,6 +417,76 @@ def xarray_ify_many(df, pt_series='pt_f', phi_series='phi_f', pid_series=None, w
         del pt_array
         del phi_array
         del pid_array
+        del weights
+
+    return xr_all
+
+
+# Function to package many events' output into histogrammed xarray files of fragmented hadrons
+def xarray_ify_many_ff(df, pt_series='pt_f', phi_series='phi_f', z_series='z', weight_series='AA_weight',
+               drift=True, cel=False, NUM_PHI=157, K_F_DRIFT=1.0):
+    if not drift:
+        K_F_DRIFT = 0.0
+    # Select bins for the coordinates
+    pt_bins = np.arange(0, 101, config.jet.PT_BIN)
+    pt_bin_labels = (pt_bins[1:] + pt_bins[0:-1]) / 2
+
+    phi_bins = np.linspace(0, 2 * np.pi, NUM_PHI)
+    phi_bin_labels = (phi_bins[1:] + phi_bins[0:-1]) / 2
+
+    # Iterate through events and combine to one dataset
+    xr_all = xr.Dataset({})
+    seed_list = df['seed'].value_counts().index.to_numpy()
+    for i in np.arange(0, len(seed_list)):
+        #print(i / len(seed_list))
+        # Cut to one event
+        seed = seed_list[i]
+        loaded_pd_partons = df[(df['seed'] == seed) & (df['K_F_DRIFT'] == K_F_DRIFT)
+                               & (df['drift'] == drift) & (df['cel'] == cel)]
+        event_psi_2 = loaded_pd_partons.loc[:, 'psi_2'].to_numpy()[0]
+        event_mult = loaded_pd_partons.loc[:, 'mult'].to_numpy()[0]
+        event_e_2 = loaded_pd_partons.loc[:, 'e2'].to_numpy()[0]
+        event_v_2 = loaded_pd_partons.loc[:, 'v_2'].to_numpy()[0]
+        event_Tmax = loaded_pd_partons.loc[:, 'Tmax_event'].to_numpy()[0]
+
+        # Get the lists of coordinates
+        # Find out how many fragmentations were done:
+        num_frags = len(loaded_pd_partons['z'].to_numpy()[0])
+
+        # Get ordered list of fragmentations
+        z_vals = np.concatenate(loaded_pd_partons[z_series].to_numpy(), axis=0)
+        part_pt_array = np.repeat(loaded_pd_partons[pt_series].to_numpy(), repeats=num_frags)
+        had_pt_array = z_vals * part_pt_array
+        phi_array = np.repeat(loaded_pd_partons[phi_series].to_numpy(), repeats=num_frags)
+        weights = np.repeat(loaded_pd_partons[weight_series].to_numpy(), repeats=num_frags)
+
+        # Zip them up in ordered pair coordinates
+        coords = np.stack([had_pt_array, phi_array], axis=1)
+
+        # Do 3D histogram
+        H, edges = np.histogramdd(coords, bins=(pt_bins, phi_bins), weights=weights, density=False)
+
+        # Make it an xarray DataArray
+        xr_hist = xr.DataArray(H, coords={"pt": pt_bin_labels, "phi": phi_bin_labels})
+
+        # Record psi_2 as xarray attribute
+        xr_hist.attrs['psi_2'] = event_psi_2
+        xr_hist.attrs['e_2'] = event_e_2
+        xr_hist.attrs['v_2'] = event_v_2
+        xr_hist.attrs['mult'] = event_mult
+        xr_hist.attrs['Tmax'] = event_Tmax
+        xr_hist.attrs['drift'] = drift
+        xr_hist.attrs['cel'] = cel
+        xr_hist.attrs['K_F_Drift'] = K_F_DRIFT
+
+        # Add to growing list of events
+        xr_all[str(seed)] = xr_hist
+
+        # Save some memory
+        del loaded_pd_partons
+        del part_pt_array
+        del had_pt_array
+        del phi_array
         del weights
 
     return xr_all

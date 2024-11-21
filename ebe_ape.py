@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+import xarray as xr
 import logging
 import collision
 import plasma
@@ -11,6 +12,7 @@ from utilities import tempDir
 import timekeeper
 import pythia
 import hadronization
+import observables
 import traceback
 import argparse
 
@@ -21,8 +23,6 @@ parser.add_argument("-e", "--eventtype", help="Type of initial conditions to use
 # Get command line arguments
 args = parser.parse_args()
 event_type = str(args.eventtype)  # Type of initial conditions to use
-
-lund_string = False
 
 # Function to downcast datatypes to minimum memory size for each column
 def downcast_numerics(df, verbose=True):
@@ -97,18 +97,8 @@ def safe_exit(resultsDataFrame, event_obs, temp_dir, filename, identifier, hadro
     logging.info('Downcasting numeric values to minimum memory size...')
     resultsDataFrame = downcast_numerics(resultsDataFrame)
 
-    if lund_string:
-        logging.info('LS Hadrons...')
-        logging.debug(hadrons_df)
-        logging.info('Converting datatypes to reasonable formats...')
-        hadrons_df = hadrons_df.convert_dtypes()
-        logging.info('Downcasting numeric values to minimum memory size...')
-        hadrons_df = downcast_numerics(hadrons_df)
-
     logging.info('Writing pickles...')
     resultsDataFrame.to_pickle(results_path + '/{}.pickle'.format(filename))  # Save dataframe to pickle
-    if lund_string:
-        hadrons_df.to_pickle(results_path + '/{}_hadrons.pickle'.format(filename))
 
     # Return to the directory in which we ran the script.
     os.chdir(home_path)
@@ -255,12 +245,12 @@ def run_event(eventNo):
                         config.constants.G = config.constants.G_RAD
 
                     if drift == True:
-                        kfdrift_list = [1, 1.25, 0.75]
+                        kfdrift_list = [1.0, 0.75, 1.25]
                     else:
-                        kfdrift_list = [1]
+                        kfdrift_list = [0.0]
                     for kfdrift in kfdrift_list:
                         config.jet.K_F_DRIFT = kfdrift
-
+                        kf_partons = pd.DataFrame({})
                         i = 0
                         jet_seed_num = -1
                         for index, particle in particles.iterrows():
@@ -342,98 +332,27 @@ def run_event(eventNo):
                             elif i == 1:
                                 parton2 = parton
 
-                            # Append current partons to the case partons
-                            case_partons = pd.concat([current_parton, case_partons], axis=0)
+                            # Append current partons to the current process run list
+                            kf_partons = pd.concat([kf_partons, current_parton], axis=0)
 
                             i += 1
 
-                        if lund_string:
-                            logging.info('Hadronizing...')
-                            # Hadronize jet pair
-                            scale = particles['scaleIn'].to_numpy()[-1]  # use last particle to set hard process scale
-                            case_hadrons = pythia.string_hadronize(jet1=parton1, jet2=parton2, scaleIn=scale, weight=chosen_weight)
+                        logging.info('Computing process-level observables')
+                        # Compute acoplanarity
+                        angles = kf_partons['phi_f'].to_numpy()
+                        pts = kf_partons['pt_f'].to_numpy()
+                        had_pts = kf_partons['hadron_pt_f'].to_numpy()
+                        aco = np.abs(np.abs(np.mod(angles[0] - angles[1] + np.pi, 2 * np.pi) - np.pi) - np.pi)
+                        kf_partons['partner_pt_f'] = np.flip(pts)
+                        kf_partons['partner_hadron_pt_f'] = np.flip(had_pts)
+                        kf_partons['aco'] = np.full(2, aco)
 
-                            logging.info('Appending event dataframe to hadrons')
-                            # Tack case, event, and process details onto the hadron dataframe
-                            num_hadrons = len(case_hadrons)
-                            event_mult = event_dataframe['mult']
-                            event_e2 = event_dataframe['e2']
-                            event_psi_e2 = event_dataframe['psi_e2']
-                            event_v2 = event_dataframe['v_2']
-                            event_psi_2 = event_dataframe['psi_2']
-                            event_e3 = event_dataframe['e3']
-                            event_psi_e3 = event_dataframe['psi_e3']
-                            event_v3 = event_dataframe['v_3']
-                            event_psi_3 = event_dataframe['psi_3']
-                            event_b = event_dataframe['b']
-                            event_ncoll = event_dataframe['ncoll']
-                            detail_df = pd.DataFrame(
-                                {
-                                    'hadron_tag': np.random.default_rng().uniform(0, 1000000000000, num_hadrons).astype(int),
-                                    'drift': np.full(num_hadrons, drift),
-                                    'el': np.full(num_hadrons, el),
-                                    'fg': np.full(num_hadrons, fg),
-                                    'process': np.full(num_hadrons, process_tag),
-                                    'e_2': np.full(num_hadrons, event_e2),
-                                    'psi_e2': np.full(num_hadrons, event_psi_e2),
-                                    'v_2': np.full(num_hadrons, event_v2),
-                                    'psi_2': np.full(num_hadrons, event_psi_2),
-                                    'e_3': np.full(num_hadrons, event_e3),
-                                    'psi_e3': np.full(num_hadrons, event_psi_e3),
-                                    'v_3': np.full(num_hadrons, event_v3),
-                                    'psi_3': np.full(num_hadrons, event_psi_3),
-                                    'mult': np.full(num_hadrons, event_mult),
-                                    'ncoll': np.full(num_hadrons, event_ncoll),
-                                    'b': np.full(num_hadrons, event_b),
-                                    'parent_id': np.empty(num_hadrons),
-                                    'parent_pt': np.empty(num_hadrons),
-                                    'parent_pt_f': np.empty(num_hadrons),
-                                    'parent_phi': np.empty(num_hadrons),
-                                    'parent_tag': np.empty(num_hadrons),
-                                    'z': np.empty(num_hadrons)
-                                }
-                            )
-                            case_hadrons = pd.concat([case_hadrons, detail_df], axis=1)
-
-                            logging.info('Hadron z_mean value')
-                            # Compute a rough z value for each hadron
-                            mean_part_pt = np.mean([parton1.p_T(), parton2.p_T()])
-                            case_hadrons['z_mean'] = case_hadrons['pt'] / mean_part_pt
-
-                            logging.info('Hadron phi value')
-                            # Compute a phi angle for each hadron
-                            case_hadrons['phi_f'] = np.arctan2(case_hadrons['py'].to_numpy().astype(float),
-                                                               case_hadrons['px'].to_numpy().astype(float)) + np.pi
-
-                            logging.info('CA-type parent finder')
-                            # Apply simplified Cambridge-Aachen-type algorithm to find parent parton
-                            for index in case_hadrons.index:
-                                min_dR = 10000
-                                parent = None
-
-                                # Check the Delta R to each jet
-                                # Set parent to the minimum Delta R jet
-                                for parton in [parton1, parton2]:
-                                    jet_rho, jet_phi = parton.polar_mom_coords()
-                                    dR = delta_R(phi1=case_hadrons.loc[index, 'phi_f'], phi2=jet_phi,
-                                                 y1=case_hadrons.loc[index, 'y'], y2=0)
-                                    if dR < min_dR:
-                                        min_dR = dR
-                                        parent = parton
-
-                                # Save parent info to hadron dataframe
-                                case_hadrons.at[index, 'parent_id'] = parent.id
-                                case_hadrons.at[index, 'parent_pt'] = parent.p_T0
-                                case_hadrons.at[index, 'parent_pt_f'] = parent.p_T()
-                                parent_rho, parent_phi = parent.polar_mom_coords()
-                                case_hadrons.at[index, 'parent_phi'] = parent_phi
-                                case_hadrons.at[index, 'parent_tag'] = parent.tag
-                                case_hadrons.at[index, 'z'] = case_hadrons.loc[index, 'pt'] / parent.p_T()  # "Actual" z-value
+                        # Append to the case partons
+                        case_partons = pd.concat([case_partons, kf_partons], axis=0)
 
                         process_run += 1
+
                     logging.info('Appending case results to process results')
-                    if lund_string:
-                        process_hadrons = pd.concat([process_hadrons, case_hadrons], axis=0)
                     process_partons = pd.concat([process_partons, case_partons], axis=0)
 
 
@@ -442,8 +361,6 @@ def run_event(eventNo):
             logging.info('- Jet Process Failed -')
             traceback.print_exc()
 
-        if lund_string:
-            event_hadrons = pd.concat([event_hadrons, process_hadrons], axis=0)
         event_partons = pd.concat([event_partons, process_partons], axis=0)
 
         # Declare jet complete
@@ -461,28 +378,77 @@ def run_event(eventNo):
         soft_v_n = np.abs(event_dataframe['urqmd_re_q_{}'.format(n)][0]
                           + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0]) / flow_N
 
-    # Do coalescence & save xarray histograms for drift & no drift cases
+    # Do coalescence & save xarray histograms for drift & no drift cases in all K_F_DRIFT options
+    logging.info('Iterating through cases:')
     for drift_bool in [True, False]:
-        # Histogram partons into an xarray dataarray, using the v2 optimized bin number -- 157 bins
-        xr_partons = utilities.xarray_ify(event_partons, pt_series='pt_f', phi_series='phi_f', pid_series='id',
-                                          weight_series='weight', drift=drift_bool, cel=False, NUM_PHI=157)
+        for cel_bool in [False, True]:
+            for KF_val in event_partons[(event_partons['drift'] == drift_bool)
+                                        & (event_partons['cel'] == cel_bool)]['K_F_DRIFT'].value_counts().index:
+                logging.info('K_F_DRIFT = {}, cel = {}'.format(KF_val, cel_bool))
+                # Histogram partons into an xarray dataarray, using the v2 optimized bin number -- 157 bins
+                xr_partons = utilities.xarray_ify(event_partons, pt_series='pt_f', phi_series='phi_f', pid_series='id',
+                                                  weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
+                                                  NUM_PHI=157, K_F_DRIFT=KF_val)
 
-        # Perform coalescence at T = 155 MeV
-        xr_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
+                # Make fragmentation xarrays
+                xr_frag_hadrons_f = utilities.xarray_ify_ff(event_partons, pt_series='pt_f', phi_series='phi_f', z_series='z',
+                                                          weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
+                                                            NUM_PHI=157, K_F_DRIFT=KF_val)
+                xr_frag_hadrons_i = utilities.xarray_ify_ff(event_partons, pt_series='pt_0', phi_series='phi_0', z_series='pp_z',
+                                                            weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
+                                                            NUM_PHI=157, K_F_DRIFT=KF_val)
 
-        # Assign event attributes
-        for da in [xr_partons, xr_hadrons]:
-            for n in [2, 3, 4]:
-                da.attrs['psi_{}_soft'.format(n)] = soft_psi_n
-                da.attrs['v_{}_soft'.format(n)] = soft_v_n
-            da.attrs['mult'] = event_mult
-            da.attrs['Tmax'] = event_Tmax
-            da.attrs['e_2'] = event_e2
-            da.attrs['seed'] = seed
+                # Perform coalescence at T = 155 MeV
+                if KF_val == 1.0 or KF_val == 0.0:
+                    logging.info('Coalescing...')
+                    xr_coal_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
+                    da_list = [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i, xr_coal_hadrons]
+                else:
+                    xr_coal_hadrons = None
+                    da_list = [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i]
 
-        # Save xarray dataarrays
-        xr_partons.to_netcdf(results_path + '/{}_coal_partons_drift{}.nc'.format(identifierString, drift_bool))
-        xr_hadrons.to_netcdf(results_path + '/{}_coal_hadrons_drift{}.nc'.format(identifierString, drift_bool))
+                # Assign event attributes
+                for da in da_list:
+                    for n in [2, 3, 4]:
+                        da.attrs['psi_{}_soft'.format(n)] = soft_psi_n
+                        da.attrs['v_{}_soft'.format(n)] = soft_v_n
+                    da.attrs['mult'] = event_mult
+                    da.attrs['Tmax'] = event_Tmax
+                    da.attrs['e_2'] = event_e2
+                    da.attrs['seed'] = seed
+                    da.attrs['drift'] = drift_bool
+                    da.attrs['cel'] = cel_bool
+                    da.attrs['K_F_Drift'] = KF_val
+
+                logging.info('Saving dataarrays...')
+                # Save xarray dataarrays
+                xr_partons.to_netcdf(results_path + '/{}_AA_partons_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+                xr_frag_hadrons_f.to_netcdf(results_path + '/{}_AA_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+                xr_frag_hadrons_i.to_netcdf(results_path + '/{}_pp_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+                if KF_val == 1.0 or KF_val == 0.0:
+                    xr_coal_hadrons.to_netcdf(results_path + '/{}_AA_coal_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                        identifierString, drift_bool, cel_bool, KF_val))
+
+                logging.info('Computing and saving observables...')
+                # Compute raa and vns
+                part_vns = observables.compute_vns(xr_partons, n_list=np.array([2, 3, 4]))
+                part_obs = part_vns
+                part_obs.to_netcdf(results_path + '/{}_AA_partons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+
+                frag_vns = observables.compute_vns(xr_frag_hadrons_f, n_list=np.array([2, 3, 4]))
+                frag_raa = observables.compute_raa(xr_frag_hadrons_f, xr_frag_hadrons_i)
+                frag_obs = xr.merge([frag_vns, frag_raa])
+                frag_obs.to_netcdf(results_path + '/{}_AA_frag_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+
+                if KF_val == 1.0 or KF_val == 0.0:
+                    coal_vns = observables.compute_vns(xr_coal_hadrons, n_list=np.array([2, 3, 4]))
+                    coal_vns.to_netcdf(results_path + '/{}_AA_coal_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
+                        identifierString, drift_bool, cel_bool, KF_val))
 
     return event_partons, event_hadrons, event_observables
 
@@ -535,8 +501,6 @@ try:
         # Append returned dataframe to current dataframe
         event_results, event_hadrons, event_observables = run_event(eventNo=int(identifierString))
         results = pd.concat([results, event_results], axis=0)
-        if lund_string:
-            hadrons = pd.concat([hadrons, event_hadrons], axis=0)
 
         # Exits directory, saves all current data, and dumps temporary files.
         safe_exit(resultsDataFrame=results, hadrons_df=hadrons, event_obs=event_observables, temp_dir=temp_dir,

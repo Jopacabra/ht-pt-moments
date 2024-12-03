@@ -251,7 +251,7 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
     # Select energy loss model and return appropriate energy loss
     if model == 'BBMG':
         # Note that we apply FERMI GeV twice... Once for the t factor, once for the (int dt).
-        return (config.jet.K_BBMG * (-1) * ((FmGeV) ** 2) * time * (T ** 3)
+        return (config.jet.K_BBMG * (-1) * ((FmGeV) ** 2) * (time - event.t0) * (T ** 3)
                 * zeta(q=-1) * (1 / np.sqrt(1 - (vel**2)))
                 * (1))
     elif model == 'GLV':

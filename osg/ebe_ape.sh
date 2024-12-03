@@ -16,6 +16,10 @@ source ~/.bash_profile
 source ~/.bashrc
 conda activate /usr/conda/ape
 
+# Move any user config file to be used
+echo "Attempting to move user config file to project dir"
+mv /srv/user_config.yml /usr/ape/user_config.yml
+
 # Run the script
 echo "Running event..."
 python3 /usr/ape/ebe_ape.py

@@ -487,7 +487,14 @@ logging.basicConfig(
 
 # Copy config file to results directory, tagged with identifier
 logging.info('Copying config.yml to results...')
-utilities.run_cmd(*['cp', project_path + 'config.yml', results_path + '/config_{}.yml'.format(identifierString)],
+try:
+    with open(project_path + '/user_config.yml', 'r') as ymlfile:
+        pass
+    utilities.run_cmd(
+        *['cp', project_path + 'user_config.yml', results_path + '/user_config_{}.yml'.format(identifierString)],
+        quiet=True)
+except:
+    utilities.run_cmd(*['cp', project_path + 'config.yml', results_path + '/config_{}.yml'.format(identifierString)],
                   quiet=True)
 
 # Run event loop

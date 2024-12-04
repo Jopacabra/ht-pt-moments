@@ -11,7 +11,7 @@ Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
 # We need the job to run the bash script that will call the ebe_ape.py script
 executable = ../ebe_ape.sh
 # We transfer in a user config, if we want
-# transfer_input_files = "user_config.yml"
+# transfer_input_files = user_config.yml
 
 #error = log/job.$(Cluster).$(Process).error
 #output = log/job.$(Cluster).$(Process).output

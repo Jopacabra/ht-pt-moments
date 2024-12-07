@@ -3,6 +3,7 @@ import xarray as xr
 import scipy.integrate as integrate
 import timeit
 import lhapdf
+import config
 
 def frag(parton, num=1):
     # Get jet properties
@@ -64,7 +65,7 @@ def frag(parton, num=1):
 
 
 # Function that takes an xarray dataarray and performs hard-soft coalescence on it using Boltzmann dist. thermal partons
-def coal_xarray(xr_partons, T=0.155, max_pt=20):
+def coal_xarray(xr_partons, T=config.jet.T_HRG, max_pt=20):
     def soft_parts_boltz(E, phi=0, T=T, pid=21):
         if pid == 21:
             term = -1  # Bose statistics

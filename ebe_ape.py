@@ -342,7 +342,7 @@ def run_event(eventNo):
                         angles = kf_partons['phi_f'].to_numpy()
                         pts = kf_partons['pt_f'].to_numpy()
                         had_pts = kf_partons['hadron_pt_f'].to_numpy()
-                        aco = np.abs(np.abs(np.mod(angles[0] - angles[1] + np.pi, 2 * np.pi) - np.pi) - np.pi)
+                        aco = np.abs(np.abs(np.mod(angles[0] - angles[1] + np.pi, 2 * np.pi) - np.pi))
                         kf_partons['partner_pt_f'] = np.flip(pts)
                         kf_partons['partner_hadron_pt_f'] = np.flip(had_pts)
                         kf_partons['aco'] = np.full(2, aco)

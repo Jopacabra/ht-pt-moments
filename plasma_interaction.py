@@ -408,8 +408,8 @@ class num_eloss_interpolator():
             self.g_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_g_1subdiv.npz')
             self.q_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_q_1subdiv.npz')
         elif config.constants.G == 2.2:
-            self.g_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_q_1subdiv.npz')
+            self.g_table = np.load(project_path + '/e_loss_tables/g2.2_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + '/e_loss_tables/g2.2_deltaE_samples_q_1subdiv.npz')
         elif config.constants.G < 2.2 and config.constants.G > 1.6:
             # Future: Interpolate between
             logging.error('No suitable energy loss table!!!')

@@ -6,7 +6,7 @@ mode:  # Operation mode flags
     KEEP_EVENT: False  # Keep plasma data for future analysis
     KEEP_RECORD: False  # Save xarray parton record - includes trajectory & pT history
 trento:  # Parameters used if Trento is run for initial conditions
-    NORM: 8  # Overall normalization factor for reduced thickness function (and thereby multiplicity) 0.4*20
+    NORM: 7  # Overall normalization factor for reduced thickness function (and thereby multiplicity) 0.4*0.871*20=6.968
     PROJ1: 'Au'  # Collisions species 1
     PROJ2: 'Au'  # Collisions species 2
     NUCLEON_WIDTH: 0.92  # [fm] Gaussian nucleon width in fm. Default 0.92 fm from DukeQCD BA

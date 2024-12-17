@@ -391,21 +391,25 @@ def run_event(eventNo):
                                                   NUM_PHI=157, K_F_DRIFT=KF_val)
 
                 # Make fragmentation xarrays
-                xr_frag_hadrons_f = utilities.xarray_ify_ff(event_partons, pt_series='pt_f', phi_series='phi_f', z_series='z',
+                xr_frag_hadrons_AA = utilities.xarray_ify_ff(event_partons, pt_series='pt_f', phi_series='phi_f', z_series='z',
                                                           weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
                                                             NUM_PHI=157, K_F_DRIFT=KF_val)
-                xr_frag_hadrons_i = utilities.xarray_ify_ff(event_partons, pt_series='pt_0', phi_series='phi_0', z_series='pp_z',
+                xr_frag_hadrons_pA = utilities.xarray_ify_ff(event_partons, pt_series='pt_0', phi_series='phi_0', z_series='pp_z',
                                                             weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
+                                                            NUM_PHI=157, K_F_DRIFT=KF_val)
+                xr_frag_hadrons_pp = utilities.xarray_ify_ff(event_partons, pt_series='pt_0', phi_series='phi_0',
+                                                            z_series='pp_z',
+                                                            weight_series='weight', drift=drift_bool, cel=cel_bool,
                                                             NUM_PHI=157, K_F_DRIFT=KF_val)
 
                 # Perform coalescence at T = 155 MeV
                 if KF_val == 1.0 or KF_val == 0.0:
                     logging.info('Coalescing...')
                     xr_coal_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
-                    da_list = [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i, xr_coal_hadrons]
+                    da_list = [xr_partons, xr_frag_hadrons_AA, xr_frag_hadrons_pA, xr_coal_hadrons]
                 else:
                     xr_coal_hadrons = None
-                    da_list = [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i]
+                    da_list = [xr_partons, xr_frag_hadrons_AA, xr_frag_hadrons_pA]
 
                 # Assign event attributes
                 for da in da_list:
@@ -424,9 +428,11 @@ def run_event(eventNo):
                 # Save xarray dataarrays
                 xr_partons.to_netcdf(results_path + '/{}_AA_partons_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
-                xr_frag_hadrons_f.to_netcdf(results_path + '/{}_AA_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                xr_frag_hadrons_AA.to_netcdf(results_path + '/{}_AA_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
-                xr_frag_hadrons_i.to_netcdf(results_path + '/{}_pp_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                xr_frag_hadrons_pA.to_netcdf(results_path + '/{}_pA_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+                xr_frag_hadrons_pp.to_netcdf(results_path + '/{}_pp_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
                 if KF_val == 1.0 or KF_val == 0.0:
                     xr_coal_hadrons.to_netcdf(results_path + '/{}_AA_coal_hadrons_drift{}_cel{}_KFD{}.nc'.format(
@@ -439,8 +445,8 @@ def run_event(eventNo):
                 part_obs.to_netcdf(results_path + '/{}_AA_partons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
 
-                frag_vns = observables.compute_vns(xr_frag_hadrons_f, n_list=np.array([2, 3, 4]))
-                frag_raa = observables.compute_raa(xr_frag_hadrons_f, xr_frag_hadrons_i)
+                frag_vns = observables.compute_vns(xr_frag_hadrons_AA, n_list=np.array([2, 3, 4]))
+                frag_raa = observables.compute_raa(xr_frag_hadrons_AA, xr_frag_hadrons_pp)
                 frag_obs = xr.merge([frag_vns, frag_raa])
                 frag_obs.to_netcdf(results_path + '/{}_AA_frag_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))

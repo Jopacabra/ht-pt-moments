@@ -371,11 +371,13 @@ def run_event(eventNo):
     event_e2 = event_dataframe['e2'][0]
     event_Tmax = event.max_temp()
     flow_N = event_dataframe['urqmd_flow_N'][0]
+    soft_psi_n = {}
+    soft_v_n = {}
     for n in [2, 3, 4]:
         # Compute vn and psin soft
-        soft_psi_n = np.angle(event_dataframe['urqmd_re_q_{}'.format(n)][0]
+        soft_psi_n[n] = np.angle(event_dataframe['urqmd_re_q_{}'.format(n)][0]
                               + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0])
-        soft_v_n = np.abs(event_dataframe['urqmd_re_q_{}'.format(n)][0]
+        soft_v_n[n] = np.abs(event_dataframe['urqmd_re_q_{}'.format(n)][0]
                           + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0]) / flow_N
 
     # Do coalescence & save xarray histograms for drift & no drift cases in all K_F_DRIFT options
@@ -414,8 +416,8 @@ def run_event(eventNo):
                 # Assign event attributes
                 for da in da_list:
                     for n in [2, 3, 4]:
-                        da.attrs['psi_{}_soft'.format(n)] = soft_psi_n
-                        da.attrs['v_{}_soft'.format(n)] = soft_v_n
+                        da.attrs['psi_{}_soft'.format(n)] = soft_psi_n[n]
+                        da.attrs['v_{}_soft'.format(n)] = soft_v_n[n]
                     da.attrs['mult'] = event_mult
                     da.attrs['Tmax'] = event_Tmax
                     da.attrs['e_2'] = event_e2

@@ -39,7 +39,7 @@ def compute_vns(xr_da, n_list=np.array([2, 3, 4])):
             hard_psi_n = (1 / n) * np.arctan2(sin_phases, cos_phases)
 
             # Compute the v2 phase associated with each phi position
-            phases = np.cos(n * (phis - hard_psi_n))
+            phases = np.exp(1j * n * phis)
 
             # Compute v2 and append to storage array -- divide by zero gives NaN for numpy array sums like this
             hard_vn = np.sum(weights * phases) / np.sum(weights)

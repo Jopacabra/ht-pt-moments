@@ -16,12 +16,14 @@ def compute_vns(xr_da, n_list=np.array([2, 3, 4])):
     pts = xr_da.pt.to_numpy()
 
     # Create dictionaries for per-event usage
-    event_hard_v = {}
+    re_event_hard_v = {}
+    im_event_hard_v = {}
     event_hard_psi = {}
 
     # Reset event arrays
     for n in n_list:
-        event_hard_v[n] = np.array([])
+        re_event_hard_v[n] = np.array([])
+        im_event_hard_v[n] = np.array([])
         event_hard_psi[n] = np.array([])
 
     event_weight = np.array([])
@@ -44,23 +46,27 @@ def compute_vns(xr_da, n_list=np.array([2, 3, 4])):
             # Compute v2 and append to storage array -- divide by zero gives NaN for numpy array sums like this
             hard_vn = np.sum(weights * phases) / np.sum(weights)
 
-            event_hard_v[n] = np.append(event_hard_v[n], hard_vn)
+            re_event_hard_v[n] = np.append(re_event_hard_v[n], np.real(hard_vn))
+            im_event_hard_v[n] = np.append(im_event_hard_v[n], np.imag(hard_vn))
             event_hard_psi[n] = np.append(event_hard_psi[n], hard_psi_n)
 
     # Record vn and psin
-    event_hard_vn_stacked = np.stack([event_hard_v[n] for n in n_list], axis=0)
+    re_event_hard_vn_stacked = np.stack([re_event_hard_v[n] for n in n_list], axis=0)
+    im_event_hard_vn_stacked = np.stack([im_event_hard_v[n] for n in n_list], axis=0)
     event_hard_psin_stacked = np.stack([event_hard_psi[n] for n in n_list], axis=0)
-    vn_dataarray = xr.DataArray(event_hard_vn_stacked, coords={"n": n_list, "pt": pts})
+    re_vn_dataarray = xr.DataArray(re_event_hard_vn_stacked, coords={"n": n_list, "pt": pts})
+    im_vn_dataarray = xr.DataArray(im_event_hard_vn_stacked, coords={"n": n_list, "pt": pts})
     psin_dataarray = xr.DataArray(event_hard_psin_stacked, coords={"n": n_list, "pt": pts})
     weight_dataarray = xr.DataArray(event_weight, coords={"pt": pts})
 
     # Apply attributes to output dataarray
-    for output_da in [vn_dataarray, psin_dataarray, weight_dataarray]:
+    for output_da in [re_vn_dataarray, im_vn_dataarray, psin_dataarray, weight_dataarray]:
         output_da.attrs = xr_da.attrs
 
     # Add arrays to proper dataframe
     result_ds = xr.Dataset({})
-    result_ds[str(seed) + "_vn"] = vn_dataarray
+    result_ds[str(seed) + "_re_vn"] = re_vn_dataarray
+    result_ds[str(seed) + "_im_vn"] = im_vn_dataarray
     result_ds[str(seed) + "_psin"] = psin_dataarray
     result_ds[str(seed) + "_weight"] = weight_dataarray
 

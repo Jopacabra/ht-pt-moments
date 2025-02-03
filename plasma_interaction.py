@@ -231,7 +231,7 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 
 
 # Integrand for energy loss
-def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, mean_el_rate=0):
+def energy_loss_integrand(event, parton, time, model='BBMG'):
     FmGeV = 1/0.19732687
 
     # Get parton coordinates

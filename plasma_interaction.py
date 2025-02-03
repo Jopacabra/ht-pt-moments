@@ -455,10 +455,20 @@ class num_eloss_interpolator():
         # Return energy loss rate for appropriate identity
         # Note minus sign - positive values in table correspond to energy loss
         if parton.part == 'g':
-            part = 'g'
+            # Use gluon tables
             return (-1) * float(self.g_dE_dx(np.array([E, T, L])))
         else:
-            part = 'q'
+            # Use light quark tables
+            return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
+
+    def eloss_rate_an(self, E, T, L, pid=21):
+        # Return energy loss rate for appropriate identity
+        # Note minus sign - positive values in table correspond to energy loss
+        if pid == 21:
+            # Use gluon tables
+            return (-1) * float(self.g_dE_dx(np.array([E, T, L])))
+        else:
+            # Use light quark tables
             return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
 
 # Integrand for energy loss

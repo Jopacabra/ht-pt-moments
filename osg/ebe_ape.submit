@@ -4,21 +4,18 @@
 # hardware where we compiled osu-hydro and trento (on the login node)
 Requirements = HAS_AVX == True && GLIDEIN_ResourceName =!= "UW-IT"
 
-# Send me an email if a job has some errors
+# Send an email if a job has some errors
 # notify_user = jbahder@nmsu.edu
 # notification = Error
 
-# We need the job to run the bash script that will update and call the EBE.py script
-# We'll specify unique filenames for each job by using
-# the job's 'cluster' value.
+# We need the job to run the bash script that will call the ebe_ape.py script
 executable = ../ebe_ape.sh
-# We don't feed any particular files to transfer, so all files in the /srv directory are transferred
-# transfer_output_files = /srv/*.pkl
+# We transfer in a user config, if we want
+# transfer_input_files = user_config.yml
 
 #error = log/job.$(Cluster).$(Process).error
 #output = log/job.$(Cluster).$(Process).output
 #log = log/job.$(Cluster).$(Process).log
-transfer_output_remaps = "*.pickle = osdf:///ospool/ap21/data/jopacabra/tester/*.pickle"
 
 request_cpus = 2
 request_memory = 16 GB

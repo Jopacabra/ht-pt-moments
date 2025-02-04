@@ -4,6 +4,7 @@ import config
 import utilities
 import logging
 from scipy.interpolate import RegularGridInterpolator
+import fnmatch
 
 # Function to return DeBye mass at a particular point
 # Ref - https://inspirehep.net/literature/1725162
@@ -59,7 +60,7 @@ def rho(temp, med_parton='g'):
         density = 0
     return density
 
-# Function to return inverse QGP drift mean free path in units of GeV^{-1}
+# Function to return inverse QGP drift mean free path in units of GeV
 # Total GW cross section, as per Sievert, Yoon, et. al.
 def inv_lambda(event=None, parton_type=None, point=None, med_parton='all', T=None):
     """
@@ -231,7 +232,7 @@ def zeta(q=0, maxAttempts=5, batch=1000):
 
 
 # Integrand for energy loss
-def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, mean_el_rate=0):
+def energy_loss_integrand(event, parton, time, model='BBMG'):
     FmGeV = 1/0.19732687
 
     # Get parton coordinates
@@ -251,7 +252,7 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
     # Select energy loss model and return appropriate energy loss
     if model == 'BBMG':
         # Note that we apply FERMI GeV twice... Once for the t factor, once for the (int dt).
-        return (config.jet.K_BBMG * (-1) * ((FmGeV) ** 2) * time * (T ** 3)
+        return (config.jet.K_BBMG * (-1) * ((FmGeV) ** 2) * (time - event.t0) * (T ** 3)
                 * zeta(q=-1) * (1 / np.sqrt(1 - (vel**2)))
                 * (1))
     elif model == 'GLV':
@@ -269,7 +270,7 @@ def energy_loss_integrand(event, parton, time, tau, model='BBMG', fgqhat=False, 
         alphas = (config.constants.G**2) / (4*np.pi)
 
         # Calculate and return energy loss per unit length of this step.
-        return (-1)*(CR * alphas / 2) * (((1 / FmGeV) ** 2)
+        return (-1)*(CR * alphas / 2) * (((FmGeV) ** 2)
                                          * (time - event.t0)
                                          * (mu**2)
                                          * inv_lambda_val
@@ -384,38 +385,33 @@ def fg_uperp_qhat_mod_factor(event, parton, time):
 class num_eloss_interpolator():
     # Instantiation statement. All parameters optional.
     def __init__(self):
-        logging.info('Loading numerical energy loss tables...')
+        logging.info(f'Loading numerical energy loss tables for g={config.constants.G:.1f}...')
         # Find directory of this file
         project_path = os.path.dirname(os.path.realpath(__file__))
 
-        # Load tables of computed fixed length energy loss
-        if config.constants.G == 1.6:
-            self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G == 1.7:
-            self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G == 1.8:
-            self.g_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g1.8_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G == 1.9:
-            self.g_table = np.load(project_path + '/e_loss_tables/g1.9_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g1.9_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G == 2:
-            self.g_table = np.load(project_path + '/e_loss_tables/g2.0_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g2.0_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G == 2.1:
-            self.g_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G == 2.2:
-            self.g_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_g_1subdiv.npz')
-            self.q_table = np.load(project_path + '/e_loss_tables/g2.1_deltaE_samples_q_1subdiv.npz')
-        elif config.constants.G < 2.2 and config.constants.G > 1.6:
-            # Future: Interpolate between
-            logging.error('No suitable energy loss table!!!')
-        else:
-            logging.error('No suitable energy loss table!!!')
-            raise Exception
+        # Load appropriate tables of computed fixed length energy loss
+        try:
+            # Get the coupling as a string
+            tag = f"{config.constants.G:.1f}"
+
+            # Load
+            self.g_table = np.load(project_path + f'/e_loss_tables/g{tag}_deltaE_samples_g_1subdiv.npz')
+            self.q_table = np.load(project_path + f'/e_loss_tables/g{tag}_deltaE_samples_q_1subdiv.npz')
+        except:
+            logging.error("Energy loss tables not found!")
+
+            # Find list of computed couplings
+            data_tables = np.array(os.listdir(project_path + "/e_loss_tables/"))
+            couplings = np.array([])
+            for filename in data_tables:
+                couplings = np.append(couplings, float(filename.split("g", 1)[1].split("_", 1)[0]))
+            couplings = np.sort(np.array(list(set(couplings))))
+
+            # Shout about it
+            logging.error("Available Couplings:")
+            logging.error(str(couplings))
+
+            raise FileNotFoundError
 
         # Compute pathlength gradient to get energy loss rate tables
         g_delta_E_grad_L = np.gradient(self.g_table['delta_E_vals'], self.g_table['L_points'], axis=2)
@@ -455,10 +451,20 @@ class num_eloss_interpolator():
         # Return energy loss rate for appropriate identity
         # Note minus sign - positive values in table correspond to energy loss
         if parton.part == 'g':
-            part = 'g'
+            # Use gluon tables
             return (-1) * float(self.g_dE_dx(np.array([E, T, L])))
         else:
-            part = 'q'
+            # Use light quark tables
+            return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
+
+    def eloss_rate_an(self, E, T, L, pid=21):
+        # Return energy loss rate for appropriate identity
+        # Note minus sign - positive values in table correspond to energy loss
+        if pid == 21:
+            # Use gluon tables
+            return (-1) * float(self.g_dE_dx(np.array([E, T, L])))
+        else:
+            # Use light quark tables
             return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
 
 # Integrand for energy loss

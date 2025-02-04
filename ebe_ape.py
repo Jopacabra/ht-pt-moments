@@ -342,7 +342,7 @@ def run_event(eventNo):
                         angles = kf_partons['phi_f'].to_numpy()
                         pts = kf_partons['pt_f'].to_numpy()
                         had_pts = kf_partons['hadron_pt_f'].to_numpy()
-                        aco = np.abs(np.abs(np.mod(angles[0] - angles[1] + np.pi, 2 * np.pi) - np.pi) - np.pi)
+                        aco = np.abs(np.abs(np.mod(angles[0] - angles[1] + np.pi, 2 * np.pi) - np.pi))
                         kf_partons['partner_pt_f'] = np.flip(pts)
                         kf_partons['partner_hadron_pt_f'] = np.flip(had_pts)
                         kf_partons['aco'] = np.full(2, aco)
@@ -371,11 +371,13 @@ def run_event(eventNo):
     event_e2 = event_dataframe['e2'][0]
     event_Tmax = event.max_temp()
     flow_N = event_dataframe['urqmd_flow_N'][0]
+    soft_psi_n = {}
+    soft_v_n = {}
     for n in [2, 3, 4]:
         # Compute vn and psin soft
-        soft_psi_n = np.angle(event_dataframe['urqmd_re_q_{}'.format(n)][0]
+        soft_psi_n[n] = np.angle(event_dataframe['urqmd_re_q_{}'.format(n)][0]
                               + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0])
-        soft_v_n = np.abs(event_dataframe['urqmd_re_q_{}'.format(n)][0]
+        soft_v_n[n] = np.abs(event_dataframe['urqmd_re_q_{}'.format(n)][0]
                           + 1j * event_dataframe['urqmd_im_q_{}'.format(n)][0]) / flow_N
 
     # Do coalescence & save xarray histograms for drift & no drift cases in all K_F_DRIFT options
@@ -391,27 +393,31 @@ def run_event(eventNo):
                                                   NUM_PHI=157, K_F_DRIFT=KF_val)
 
                 # Make fragmentation xarrays
-                xr_frag_hadrons_f = utilities.xarray_ify_ff(event_partons, pt_series='pt_f', phi_series='phi_f', z_series='z',
+                xr_frag_hadrons_AA = utilities.xarray_ify_ff(event_partons, pt_series='pt_f', phi_series='phi_f', z_series='z',
                                                           weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
                                                             NUM_PHI=157, K_F_DRIFT=KF_val)
-                xr_frag_hadrons_i = utilities.xarray_ify_ff(event_partons, pt_series='pt_0', phi_series='phi_0', z_series='pp_z',
+                xr_frag_hadrons_pA = utilities.xarray_ify_ff(event_partons, pt_series='pt_0', phi_series='phi_0', z_series='pp_z',
                                                             weight_series='AA_weight', drift=drift_bool, cel=cel_bool,
+                                                            NUM_PHI=157, K_F_DRIFT=KF_val)
+                xr_frag_hadrons_pp = utilities.xarray_ify_ff(event_partons, pt_series='pt_0', phi_series='phi_0',
+                                                            z_series='pp_z',
+                                                            weight_series='weight', drift=drift_bool, cel=cel_bool,
                                                             NUM_PHI=157, K_F_DRIFT=KF_val)
 
                 # Perform coalescence at T = 155 MeV
                 if KF_val == 1.0 or KF_val == 0.0:
                     logging.info('Coalescing...')
                     xr_coal_hadrons = hadronization.coal_xarray(xr_partons, T=0.155, max_pt=20)
-                    da_list = [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i, xr_coal_hadrons]
+                    da_list = [xr_partons, xr_frag_hadrons_AA, xr_frag_hadrons_pA, xr_coal_hadrons]
                 else:
                     xr_coal_hadrons = None
-                    da_list = [xr_partons, xr_frag_hadrons_f, xr_frag_hadrons_i]
+                    da_list = [xr_partons, xr_frag_hadrons_AA, xr_frag_hadrons_pA]
 
                 # Assign event attributes
                 for da in da_list:
                     for n in [2, 3, 4]:
-                        da.attrs['psi_{}_soft'.format(n)] = soft_psi_n
-                        da.attrs['v_{}_soft'.format(n)] = soft_v_n
+                        da.attrs['psi_{}_soft'.format(n)] = soft_psi_n[n]
+                        da.attrs['v_{}_soft'.format(n)] = soft_v_n[n]
                     da.attrs['mult'] = event_mult
                     da.attrs['Tmax'] = event_Tmax
                     da.attrs['e_2'] = event_e2
@@ -424,9 +430,11 @@ def run_event(eventNo):
                 # Save xarray dataarrays
                 xr_partons.to_netcdf(results_path + '/{}_AA_partons_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
-                xr_frag_hadrons_f.to_netcdf(results_path + '/{}_AA_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                xr_frag_hadrons_AA.to_netcdf(results_path + '/{}_AA_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
-                xr_frag_hadrons_i.to_netcdf(results_path + '/{}_pp_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                xr_frag_hadrons_pA.to_netcdf(results_path + '/{}_pA_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
+                    identifierString, drift_bool, cel_bool, KF_val))
+                xr_frag_hadrons_pp.to_netcdf(results_path + '/{}_pp_frag_hadrons_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
                 if KF_val == 1.0 or KF_val == 0.0:
                     xr_coal_hadrons.to_netcdf(results_path + '/{}_AA_coal_hadrons_drift{}_cel{}_KFD{}.nc'.format(
@@ -439,8 +447,8 @@ def run_event(eventNo):
                 part_obs.to_netcdf(results_path + '/{}_AA_partons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
 
-                frag_vns = observables.compute_vns(xr_frag_hadrons_f, n_list=np.array([2, 3, 4]))
-                frag_raa = observables.compute_raa(xr_frag_hadrons_f, xr_frag_hadrons_i)
+                frag_vns = observables.compute_vns(xr_frag_hadrons_AA, n_list=np.array([2, 3, 4]))
+                frag_raa = observables.compute_raa(xr_frag_hadrons_AA, xr_frag_hadrons_pp)
                 frag_obs = xr.merge([frag_vns, frag_raa])
                 frag_obs.to_netcdf(results_path + '/{}_AA_frag_hadrons_OBSERVABLES_drift{}_cel{}_KFD{}.nc'.format(
                     identifierString, drift_bool, cel_bool, KF_val))
@@ -487,7 +495,14 @@ logging.basicConfig(
 
 # Copy config file to results directory, tagged with identifier
 logging.info('Copying config.yml to results...')
-utilities.run_cmd(*['cp', project_path + 'config.yml', results_path + '/config_{}.yml'.format(identifierString)],
+try:
+    with open(project_path + '/user_config.yml', 'r') as ymlfile:
+        pass
+    utilities.run_cmd(
+        *['cp', project_path + 'user_config.yml', results_path + '/user_config_{}.yml'.format(identifierString)],
+        quiet=True)
+except:
+    utilities.run_cmd(*['cp', project_path + 'config.yml', results_path + '/config_{}.yml'.format(identifierString)],
                   quiet=True)
 
 # Run event loop

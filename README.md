@@ -127,6 +127,8 @@ The full list of properties is as follows
 
 'Tmax_event' - Maximum temperature of the event the parton was evolved in (parton did not necessarily see this Temp.)
 
+'K_F_DRIFT' - Multiplicative factor on the strength of drift in this trajectory.
+
 'drift' - Boolean flag determining if flow-mediated drift was enabled.
 
 'el' - Boolean flag determining if radiative energy loss was enabled.
@@ -202,9 +204,9 @@ The full list of properties is as follows
 
 'v_2' - Elliptic soft particle (from UrQMD) flow
 
-'z' - Sampled Fragmentation momentum fraction as sampled using 'pt_f'
+'z' - Sampled Fragmentation momentum fractions as sampled using 'pt_f'
 
-'pp_z' - Sampled Fragmentation momentum fraction as sampled using 'pt_0'
+'pp_z' - Sampled Fragmentation momentum fractions as sampled using 'pt_0'
 
 'hadron_pt_f' - 'z' * 'pt_f' -- Momentum of possible hard hadron with QGP interactions
 
@@ -212,4 +214,6 @@ The full list of properties is as follows
 
 'process_run' - Iteration of this hard process -- Each hard process is run for the inclusion of energy loss 
                 or energy loss and drift
+
+'aco' - Acoplanarity (smallest angle between particles) from this dihadron event
 

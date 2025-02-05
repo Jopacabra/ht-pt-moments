@@ -4,7 +4,6 @@ import config
 import utilities
 import logging
 from scipy.interpolate import RegularGridInterpolator
-import fnmatch
 
 # Function to return DeBye mass at a particular point
 # Ref - https://inspirehep.net/literature/1725162
@@ -452,20 +451,20 @@ class num_eloss_interpolator():
         # Note minus sign - positive values in table correspond to energy loss
         if parton.part == 'g':
             # Use gluon tables
-            return (-1) * float(self.g_dE_dx(np.array([E, T, L])))
+            return (-1) * float(self.g_dE_dx(np.array([E, T, L]))[0])
         else:
             # Use light quark tables
-            return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
+            return (-1) * float(self.q_dE_dx(np.array([E, T, L]))[0])
 
     def eloss_rate_an(self, E, T, L, pid=21):
         # Return energy loss rate for appropriate identity
         # Note minus sign - positive values in table correspond to energy loss
         if pid == 21:
             # Use gluon tables
-            return (-1) * float(self.g_dE_dx(np.array([E, T, L])))
+            return (-1) * float(self.g_dE_dx(np.array([E, T, L]))[0])
         else:
             # Use light quark tables
-            return (-1) * float(self.q_dE_dx(np.array([E, T, L])))
+            return (-1) * float(self.q_dE_dx(np.array([E, T, L]))[0])
 
 # Integrand for energy loss
 # https://journals.aps.org/prd/pdf/10.1103/PhysRevD.44.R2625

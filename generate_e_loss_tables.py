@@ -3,15 +3,27 @@ import scipy.integrate as integrate
 import plasma_interaction as pi
 import time
 import config
+import argparse
 
 """
 This file generates the tabulated energy loss values in the 'e_loss_tables' folder.
 """
+# Define command line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("-g", "--coupling", help="coupling to generate, e.g. 2.0 or 2.1")
+
+# Get command line arguments
+args = parser.parse_args()
+coupling_list = np.array([float(args.coupling)])  # Coupling to use
+
+# Use default hard coded list if not passed a coupling on the command line
+if coupling_list is None:
+    coupling_list = [1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6]
 
 subdiv = 1
 for parton in ['q', 'g']:
     print('Computing tables for parton: {}'.format(parton))
-    for coupling in [1.6, 1.7, 1.8, 1.9, 2.0, 2.1, 2.2]:
+    for coupling in coupling_list:
         print('Computing tables for g={}'.format(coupling))
         config.constants.G = coupling
         ALPHAS = (coupling ** 2) / (4 * np.pi)

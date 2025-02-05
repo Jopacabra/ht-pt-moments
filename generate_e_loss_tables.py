@@ -94,11 +94,9 @@ for parton in ['q', 'g']:
         # Sample Delta E Phase Space #
         ##############################
 
-        E_points = np.logspace(0, 2, 10)  # Logarithmic in 1 to 100 GeV
-        T_points = np.logspace(-0.826814, -0.154902,
-                               10)  # Logarithmic in 0.149 to 0.7 -- Seen in datasets as range of Tmax_event
-        L_points = np.logspace(-0.6020599913279624, 1.4,
-                               12)  # Logarithmic in 0.25 to 25 -- Seen in datasets range of time_total_plasma is 0.37-15, but we extend for gradients
+        E_points = np.logspace(-0.3010299956639812, 2, 15)  # Logarithmic, 0.5 to 100 GeV
+        T_points = np.logspace(-1.3010299956639813, 0, 15)  # Logarithmic, 0.05 to 1 GeV
+        L_points = np.concatenate([np.array([0.0]), np.logspace(-2, 1.4, 15)])  # Logarithmic, 0.01 to 25 fm
         #  g_points = np.array([1.8, 1.9, 2, 2.1, 2.2])
 
         Es, Ts, Ls = np.meshgrid(E_points, T_points, L_points, indexing='ij')

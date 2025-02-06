@@ -15,6 +15,10 @@ From: opensciencegrid/osgvo-el8
     conda init bash
     cd /usr
     git clone --recursive https://github.com/Jopacabra/ape.git
+    git clone -n --depth=1 --filter=tree:0 https://github.com/QCDHUB/JAM22.git
+    cd JAM22
+    git sparse-checkout set --no-cone /JAM22-FF_hadron_nlo
+    git checkout
     chmod +x /usr/ape/install.sh
     cd /usr/ape
     bash install.sh

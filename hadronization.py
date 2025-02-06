@@ -5,7 +5,7 @@ import timeit
 import lhapdf
 import config
 
-def frag(parton, num=1):
+def frag(parton, num=1, ff_name="JAM20-SIDIS_FF_hadron_nlo"):
     # Get jet properties
     jet_pt = parton.p_T()
     jet_pid = parton.id
@@ -27,7 +27,7 @@ def frag(parton, num=1):
         return p_z
 
     # Load fragmentation function
-    loaded_ff = lhapdf.mkPDF("JAM20-SIDIS_FF_hadron_nlo")
+    loaded_ff = lhapdf.mkPDF(ff_name)
 
     # Define probability distribution of z values for given p_T^{part} and max prob.
     p_z = frag_p_z(ff=loaded_ff, pid=jet_pid, pt_part=jet_pt)

@@ -332,8 +332,8 @@ def run_event(eventNo):
                             current_parton['pp_z_22'] = [pp_frag_z_22]
                             current_parton['hadron_pt_f'] = hadron_pt
                             current_parton['hadron_pt_0'] = hadron_pt_0
-                            current_parton['hadron_pt_22_f'] = hadron_22_pt
-                            current_parton['hadron_pt_22_0'] = hadron_22_pt_0
+                            current_parton['hadron_22_pt_f'] = hadron_22_pt
+                            current_parton['hadron_22_pt_0'] = hadron_22_pt_0
                             current_parton['process_run'] = process_run
 
                             # Save jet pair
